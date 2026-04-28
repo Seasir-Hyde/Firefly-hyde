@@ -1,0 +1,60 @@
+.expressive-code {
+  .frame {
+    @apply shadow-none!;
+  }
+
+  .title {
+    font-family:
+      "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco,
+      Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  /* Language Badge 样式适配主题色和亮暗色 */
+  /* 覆盖 expressive-code-language-badge 插件的默认样式 */
+  [data-language]::before {
+    color: var(--btn-content) !important;
+    background: var(--btn-regular-bg) !important;
+  }
+
+  /* 折叠按钮样式适配主题色和亮暗色 */
+  /* 只针对底部的toggle按钮，不改header-toggle */
+  .ec-collapse__toggle {
+    color: var(--btn-content) !important;
+    background-color: var(--btn-regular-bg) !important;
+    border-color: var(--line-color) !important;
+    opacity: var(--opacity-80) !important;
+
+    &:hover {
+      background-color: var(--btn-regular-bg-hover) !important;
+    }
+
+    &:active {
+      background-color: var(--btn-regular-bg-active) !important;
+    }
+  }
+}
+
+/* 透明模式下的代码块样式 */
+/*
+ * 仅处理外层容器背景，避免清空 ANSI token 的背景色。
+ * 之前的通配符规则会把行内背景也强制透明，导致 ANSI 背景色失效。
+ */
+body.wallpaper-transparent .expressive-code {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+body.wallpaper-transparent .expressive-code .frame pre,
+body.wallpaper-transparent .expressive-code .frame code,
+body.wallpaper-transparent .expressive-code .frame .code,
+body.wallpaper-transparent .expressive-code .frame .ec-code,
+body.wallpaper-transparent .expressive-code .frame .ec-code__inner {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+body.wallpaper-transparent .expressive-code .frame {
+  background-color: var(--card-bg-transparent) !important;
+  background: var(--card-bg-transparent) !important;
+}
+
