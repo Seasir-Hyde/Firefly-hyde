@@ -3,6 +3,12 @@
 .custom-md {
   overflow-wrap: break-word;
 
+  body.sticky-navbar & {
+    [id] {
+      scroll-margin-top: 5.5rem;
+    }
+  }
+
   h1 {
     @apply text-3xl;
   }
