@@ -300,6 +300,17 @@ export const zh_TW: Translation = {
 	[Key.galleryAlbums]: "本相簿",
 	[Key.galleryNoAlbums]: "暫無相簿",
 	[Key.galleryBackToAlbums]: "返回相簿列表",
+	[Key.albumsFilterAll]: "全部",
+
+	// 日記頁面
+	[Key.diary]: "日記",
+	[Key.diarySubtitle]: "記錄生活點滴",
+	[Key.diaryCount]: "條動態",
+	[Key.diaryMinutesAgo]: "分鐘前",
+	[Key.diaryHoursAgo]: "小時前",
+	[Key.diaryDaysAgo]: "天前",
+	[Key.diaryNoResults]: "暫無動態",
+	[Key.diaryTips]: "每一個瞬間都值得珍藏",
 
 	// 設備頁面
 	[Key.devices]: "設備",

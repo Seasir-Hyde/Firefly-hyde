@@ -308,6 +308,17 @@ export const ru: Translation = {
 	[Key.galleryAlbums]: "альбомов",
 	[Key.galleryNoAlbums]: "Пока нет альбомов",
 	[Key.galleryBackToAlbums]: "Вернуться к альбомам",
+	[Key.albumsFilterAll]: "Все",
+
+	// Страница дневника
+	[Key.diary]: "Дневник",
+	[Key.diarySubtitle]: "Записываю повседневные моменты",
+	[Key.diaryCount]: "записей",
+	[Key.diaryMinutesAgo]: "мин",
+	[Key.diaryHoursAgo]: "ч",
+	[Key.diaryDaysAgo]: "д",
+	[Key.diaryNoResults]: "Записей нет",
+	[Key.diaryTips]: "Каждый момент ценен",
 
 	// Страница устройств
 	[Key.devices]: "Устройства",

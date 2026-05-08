@@ -298,6 +298,17 @@ export const zh_CN: Translation = {
 	[Key.galleryAlbums]: "本相册",
 	[Key.galleryNoAlbums]: "暂无相册",
 	[Key.galleryBackToAlbums]: "返回相册列表",
+	[Key.albumsFilterAll]: "全部",
+
+	// 日记页面
+	[Key.diary]: "日记",
+	[Key.diarySubtitle]: "记录生活点滴",
+	[Key.diaryCount]: "条动态",
+	[Key.diaryMinutesAgo]: "分钟前",
+	[Key.diaryHoursAgo]: "小时前",
+	[Key.diaryDaysAgo]: "天前",
+	[Key.diaryNoResults]: "暂无动态",
+	[Key.diaryTips]: "每一个瞬间都值得珍藏",
 
 	// 设备页面
 	[Key.devices]: "设备",

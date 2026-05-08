@@ -294,6 +294,17 @@ enum I18nKey {
 	galleryAlbums = "galleryAlbums",
 	galleryNoAlbums = "galleryNoAlbums",
 	galleryBackToAlbums = "galleryBackToAlbums",
+	albumsFilterAll = "albumsFilterAll",
+
+	// 日记页面
+	diary = "diary",
+	diarySubtitle = "diarySubtitle",
+	diaryCount = "diaryCount",
+	diaryMinutesAgo = "diaryMinutesAgo",
+	diaryHoursAgo = "diaryHoursAgo",
+	diaryDaysAgo = "diaryDaysAgo",
+	diaryNoResults = "diaryNoResults",
+	diaryTips = "diaryTips",
 
 	// 设备页面
 	devices = "devices",

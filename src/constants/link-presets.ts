@@ -48,4 +48,9 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
 		url: "/devices/",
 		icon: "material-symbols:devices",
 	},
+	[LinkPreset.Diary]: {
+		name: i18n(I18nKey.diary),
+		url: "/diary/",
+		icon: "material-symbols:book",
+	},
 };

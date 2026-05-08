@@ -1,0 +1,138 @@
+---
+import { FilterTabs } from "../components/atoms";
+import { MomentCard } from "@components/features/diary";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { Icon } from "astro-icon/components";
+
+import { siteConfig } from "../config";
+import { getAllTags, getDiaryList } from "../data/diary";
+import I18nKey from "../i18n/i18nKey";
+import { i18n } from "../i18n/translation";
+
+if (!siteConfig.pages.diary) {
+	return Astro.redirect("/404/");
+}
+
+const moments = getDiaryList();
+const allTags = getAllTags();
+
+const filterTabs = [
+	{
+		value: "all",
+		label: i18n(I18nKey.albumsFilterAll),
+		icon: "material-symbols:apps",
+		count: moments.length,
+	},
+	...allTags.map((tag) => ({
+		value: tag,
+		label: tag,
+		count: moments.filter((m) => m.tags && m.tags.includes(tag)).length,
+	})),
+];
+
+const minutesAgo = i18n(I18nKey.diaryMinutesAgo);
+const hoursAgo = i18n(I18nKey.diaryHoursAgo);
+const daysAgo = i18n(I18nKey.diaryDaysAgo);
+
+const title = i18n(I18nKey.diary);
+const subtitle = i18n(I18nKey.diarySubtitle);
+---
+
+<MainGridLayout title={title} description={subtitle}>
+	<script is:inline src="/js/filter-tabs-handler.js"></script>
+
+	<div
+		class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32"
+	>
+		<div class="card-base z-10 relative w-full overflow-hidden">
+			<!-- Gradient Banner -->
+			<div class="px-6 sm:px-9 py-6">
+				<div
+					class="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark,var(--primary))] p-5 sm:p-6"
+				>
+					<div class="flex items-center justify-between gap-4">
+						<div class="min-w-0">
+							<h1
+								class="text-2xl sm:text-3xl font-bold text-white mb-1 drop-shadow-sm truncate"
+							>
+								{title}
+							</h1>
+							<p
+								class="text-sm sm:text-base text-white/80 truncate"
+							>
+								{subtitle}
+							</p>
+						</div>
+						<div class="shrink-0 text-center">
+							<span
+								class="block text-2xl sm:text-3xl font-bold text-white drop-shadow-sm"
+							>
+								{moments.length}
+							</span>
+							<span
+								class="block text-xs sm:text-sm text-white/70"
+							>
+								{i18n(I18nKey.diaryCount)}
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Content -->
+			<div class="px-6 sm:px-9 pt-2 pb-6">
+				{
+					moments.length > 0 && allTags.length > 0 && (
+						<div class="mb-8">
+							<FilterTabs tabs={filterTabs} dataAttr="tags" />
+						</div>
+					)
+				}
+
+				<div id="diary-list" class="space-y-4">
+					{
+						moments.map((moment, index) => (
+							<MomentCard
+								moment={moment}
+								index={index}
+								minutesAgo={minutesAgo}
+								hoursAgo={hoursAgo}
+								daysAgo={daysAgo}
+							/>
+						))
+					}
+				</div>
+
+				<div id="no-results" class="hidden text-center py-16">
+					<Icon
+						name="material-symbols:edit-note"
+						class="text-6xl text-black/15 dark:text-white/15 mb-4"
+					/>
+					<p class="text-black/40 dark:text-white/40 text-lg">
+						{i18n(I18nKey.diaryNoResults)}
+					</p>
+				</div>
+
+				{
+					moments.length === 0 && (
+						<div class="text-center py-16">
+							<Icon
+								name="material-symbols:edit-note"
+								class="text-6xl text-black/15 dark:text-white/15 mb-4"
+							/>
+							<h3 class="text-lg font-medium text-black/90 dark:text-white/90 mb-2">
+								{i18n(I18nKey.diaryNoResults)}
+							</h3>
+						</div>
+					)
+				}
+
+				<div
+					class="text-center mt-8 text-black/50 dark:text-white/50 text-sm italic"
+				>
+					{i18n(I18nKey.diaryTips)}
+				</div>
+			</div>
+		</div>
+	</div>
+</MainGridLayout>

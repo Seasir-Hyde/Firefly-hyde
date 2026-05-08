@@ -306,6 +306,17 @@ export const ja: Translation = {
 	[Key.galleryAlbums]: "冊のアルバム",
 	[Key.galleryNoAlbums]: "アルバムがありません",
 	[Key.galleryBackToAlbums]: "アルバム一覧に戻る",
+	[Key.albumsFilterAll]: "すべて",
+
+	// 日記ページ
+	[Key.diary]: "日記",
+	[Key.diarySubtitle]: "日常の瞬間を記録する",
+	[Key.diaryCount]: "件",
+	[Key.diaryMinutesAgo]: "分前",
+	[Key.diaryHoursAgo]: "時間前",
+	[Key.diaryDaysAgo]: "日前",
+	[Key.diaryNoResults]: "投稿がありません",
+	[Key.diaryTips]: "すべての瞬間は貴重です",
 
 	// デバイスページ
 	[Key.devices]: "デバイス",

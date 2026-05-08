@@ -307,6 +307,17 @@ export const en: Translation = {
 	[Key.galleryAlbums]: "albums",
 	[Key.galleryNoAlbums]: "No albums yet",
 	[Key.galleryBackToAlbums]: "Back to albums",
+	[Key.albumsFilterAll]: "All",
+
+	// Diary Page
+	[Key.diary]: "Diary",
+	[Key.diarySubtitle]: "Recording daily moments",
+	[Key.diaryCount]: "Moments",
+	[Key.diaryMinutesAgo]: "m",
+	[Key.diaryHoursAgo]: "h",
+	[Key.diaryDaysAgo]: "d",
+	[Key.diaryNoResults]: "No moments found",
+	[Key.diaryTips]: "Every moment is precious",
 
 	// Devices Page
 	[Key.devices]: "Devices",

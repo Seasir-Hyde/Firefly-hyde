@@ -140,6 +140,13 @@ export const siteConfig: SiteConfig = {
 		gallery: true,
 		// 设备页面开关
 		devices: true,
+		// 日记页面开关
+		diary: true,
+	},
+	// 日记页面配置
+	diary: {
+		// 默认头像
+		defaultAvatar: "https://i.postimg.cc/7YLVJqnp/wei-xin-tu-pian-2026-05-07-020150-883.jpg",
 	},
 
 	// 分类导航栏开关，在首页和归档页顶部显示分类快捷导航

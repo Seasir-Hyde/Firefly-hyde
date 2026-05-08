@@ -86,6 +86,12 @@ export type SiteConfig = {
 		bangumi: boolean;
 		gallery: boolean; // 相册页面开关
 		devices: boolean; // 设备页面开关
+		diary?: boolean; // 日记页面开关
+	};
+	// 日记页面配置
+	diary?: {
+		// 默认头像
+		defaultAvatar?: string;
 	};
 
 	// 分类导航栏开关
@@ -179,6 +185,7 @@ export enum LinkPreset {
 	Bangumi = 6,
 	Gallery = 7,
 	Devices = 8,
+	Diary = 9,
 }
 
 export type NavBarLink = {
