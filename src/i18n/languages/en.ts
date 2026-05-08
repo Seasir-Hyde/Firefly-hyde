@@ -214,6 +214,7 @@ export const en: Translation = {
 	// Wallpaper Mode
 	[Key.wallpaperMode]: "Wallpaper Mode",
 	[Key.wallpaperBannerMode]: "Banner Wallpaper",
+	[Key.wallpaperFullscreenMode]: "Fullscreen Wallpaper",
 	[Key.wallpaperOverlayMode]: "Overlay Wallpaper",
 	[Key.wallpaperNoneMode]: "None Wallpaper",
 
@@ -222,6 +223,7 @@ export const en: Translation = {
 	[Key.bannerTitle]: "Home Banner Title",
 	[Key.bannerCarousel]: "Banner Carousel",
 	[Key.wavesAnimation]: "Waves Animation",
+	[Key.gradientTransition]: "Gradient Transition",
 	[Key.overlaySettings]: "Transparency Settings",
 	[Key.overlayOpacity]: "Wallpaper Opacity",
 	[Key.overlayBlur]: "Background Blur",

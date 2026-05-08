@@ -3,6 +3,7 @@ import type {
 	LIGHT_MODE,
 	SYSTEM_MODE,
 	WALLPAPER_BANNER,
+	WALLPAPER_FULLSCREEN,
 	WALLPAPER_NONE,
 	WALLPAPER_OVERLAY,
 } from "../constants/constants";
@@ -288,6 +289,7 @@ export type LIGHT_DARK_MODE =
 
 export type WALLPAPER_MODE =
 	| typeof WALLPAPER_BANNER
+	| typeof WALLPAPER_FULLSCREEN
 	| typeof WALLPAPER_OVERLAY
 	| typeof WALLPAPER_NONE;
 
@@ -545,7 +547,7 @@ export type Live2DModelConfig = {
 };
 
 export type BackgroundWallpaperConfig = {
-	mode: "banner" | "overlay" | "none"; // 壁纸模式：banner横幅模式、overlay全屏透明覆盖模式或none纯色背景
+	mode: "banner" | "fullscreen" | "overlay" | "none"; // 壁纸模式：banner横幅模式、fullscreen全屏壁纸、overlay全屏透明覆盖模式或none纯色背景
 	switchable?: boolean; // 是否允许用户通过导航栏切换壁纸模式，默认true
 	src:
 		| string
@@ -554,6 +556,50 @@ export type BackgroundWallpaperConfig = {
 				desktop?: string | string[];
 				mobile?: string | string[];
 		  }; // 支持单个图片、图片数组或分别设置桌面端和移动端图片
+
+	// 横幅壁纸和全屏壁纸共享配置
+	common?: {
+		dimOpacity?: number; // 横幅文字遮罩暗度，0-1之间，值越大越暗，默认0.15
+		homeText?: {
+			enable: boolean; // 是否在首页显示自定义文字（全局开关）
+			switchable?: boolean; // 是否允许用户通过控制面板切换横幅标题显示
+			title?: string; // 主标题
+			subtitle?: string | string[]; // 副标题，支持单个字符串或字符串数组
+			titleSize?: string; // 主标题字体大小，如 "3.5rem"
+			subtitleSize?: string; // 副标题字体大小，如 "1.5rem"
+			typewriter?: {
+				enable: boolean; // 是否启用打字机效果
+				speed: number; // 打字速度（毫秒）
+				deleteSpeed: number; // 删除速度（毫秒）
+				pauseTime: number; // 完整显示后的暂停时间（毫秒）
+			};
+		};
+		navbar?: {
+			transparentMode?: "semi" | "full" | "semifull"; // 导航栏透明模式
+			enableBlur?: boolean; // 是否开启毛玻璃模糊效果
+			blur?: number; // 毛玻璃模糊度
+		};
+		waves?: {
+			enable:
+				| boolean
+				| {
+						desktop: boolean; // 桌面端是否启用水波纹动画效果
+						mobile: boolean; // 移动端是否启用水波纹动画效果
+				  }; // 是否启用水波纹动画效果，支持布尔值或分别设置桌面端和移动端
+			switchable?: boolean; // 是否允许用户通过控制面板切换水波纹动画
+		};
+		// 渐变过渡效果配置，当水波纹关闭时自动启用，提供壁纸底部到背景色的平滑过渡
+		gradient?: {
+			enable:
+				| boolean
+				| {
+						desktop: boolean; // 桌面端是否启用渐变过渡
+						mobile: boolean; // 移动端是否启用渐变过渡
+				  }; // 是否启用渐变过渡，支持布尔值或分别设置桌面端和移动端，默认true（水波纹关闭时自动生效）
+			height?: string; // 渐变高度，默认 "30vh"
+			switchable?: boolean; // 是否允许用户通过控制面板切换渐变过渡
+		};
+	};
 
 	// Banner模式特有配置
 	banner?: {
@@ -577,58 +623,10 @@ export type BackgroundWallpaperConfig = {
 			| "right center"
 			| "right bottom"
 			| string; // 壁纸位置，支持CSS object-position的所有值，包括百分比和像素值
-		homeText?: {
-			enable: boolean; // 是否在首页显示自定义文字（全局开关）
-			switchable?: boolean; // 是否允许用户通过控制面板切换横幅标题显示
-			title?: string; // 主标题
-			subtitle?: string | string[]; // 副标题，支持单个字符串或字符串数组
-			titleSize?: string; // 主标题字体大小，如 "3.5rem"
-			subtitleSize?: string; // 副标题字体大小，如 "1.5rem"
-			typewriter?: {
-				enable: boolean; // 是否启用打字机效果
-				speed: number; // 打字速度（毫秒）
-				deleteSpeed: number; // 删除速度（毫秒）
-				pauseTime: number; // 完整显示后的暂停时间（毫秒）
-			};
-		};
-		credit?: {
-			enable:
-				| boolean
-				| {
-						desktop: boolean; // 桌面端是否显示横幅图片来源文本
-						mobile: boolean; // 移动端是否显示横幅图片来源文本
-				  }; // 是否显示横幅图片来源文本，支持布尔值或分别设置桌面端和移动端
-			text:
-				| string
-				| {
-						desktop: string; // 桌面端显示的来源文本
-						mobile: string; // 移动端显示的来源文本
-				  }; // 横幅图片来源文本，支持字符串或分别设置桌面端和移动端
-			url?:
-				| string
-				| {
-						desktop: string; // 桌面端原始艺术品或艺术家页面的 URL 链接
-						mobile: string; // 移动端原始艺术品或艺术家页面的 URL 链接
-				  }; // 原始艺术品或艺术家页面的 URL 链接，支持字符串或分别设置桌面端和移动端
-		};
-		navbar?: {
-			transparentMode?: "semi" | "full" | "semifull"; // 导航栏透明模式
-			enableBlur?: boolean; // 是否开启毛玻璃模糊效果
-			blur?: number; // 毛玻璃模糊度
-		};
 		carousel?: {
 			enable: boolean; // 是否启用横幅图片轮播
 			interval?: number; // 轮播间隔时间，单位毫秒
 			switchable?: boolean; // 是否允许用户通过控制面板切换横幅轮播
-		};
-		waves?: {
-			enable:
-				| boolean
-				| {
-						desktop: boolean; // 桌面端是否启用水波纹动画效果
-						mobile: boolean; // 移动端是否启用水波纹动画效果
-				  }; // 是否启用水波纹动画效果，支持布尔值或分别设置桌面端和移动端
-			switchable?: boolean; // 是否允许用户通过控制面板切换水波纹动画
 		};
 	};
 	// 全屏透明覆盖模式特有配置
@@ -644,6 +642,10 @@ export type BackgroundWallpaperConfig = {
 		opacity?: number; // 壁纸透明度，0-1之间
 		blur?: number; // 背景模糊程度，单位px
 		cardOpacity?: number; // 卡片背景透明度，0-1之间
+	};
+	// 全屏壁纸模式特有配置
+	fullscreen?: {
+		position?: string; // 壁纸位置，支持CSS object-position的所有值
 	};
 };
 

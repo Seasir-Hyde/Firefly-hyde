@@ -204,6 +204,7 @@ enum I18nKey {
 	// 壁纸模式
 	wallpaperMode = "wallpaperMode",
 	wallpaperBannerMode = "wallpaperBannerMode",
+	wallpaperFullscreenMode = "wallpaperFullscreenMode",
 	wallpaperOverlayMode = "wallpaperOverlayMode",
 	wallpaperNoneMode = "wallpaperNoneMode",
 
@@ -212,6 +213,7 @@ enum I18nKey {
 	bannerTitle = "bannerTitle",
 	bannerCarousel = "bannerCarousel",
 	wavesAnimation = "wavesAnimation",
+	gradientTransition = "gradientTransition",
 	overlaySettings = "overlaySettings",
 	overlayOpacity = "overlayOpacity",
 	overlayBlur = "overlayBlur",

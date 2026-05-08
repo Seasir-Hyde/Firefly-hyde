@@ -25,10 +25,7 @@
     text-align: center;
 }
 
-/* 横幅背景暗层透明度 */
-.banner-dim-overlay {
-    background: rgba(0, 0, 0, 0.15);
-}
+/* 横幅背景暗层透明度 - 通过配置文件 common.dimOpacity 控制，内联样式覆盖 */
 
 .banner-post-title {
     font-size: clamp(2rem, 4vw, 3rem);
