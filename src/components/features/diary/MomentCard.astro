@@ -1,9 +1,8 @@
 ---
 import { Icon } from "astro-icon/components";
-
+import { siteConfig } from "../../../config/siteConfig";
 import { formatRelativeTime } from "../../../utils/timeFormat";
 import type { MomentCardProps } from "./types";
-import { siteConfig } from "../../../config/siteConfig";
 
 const { moment, index, minutesAgo, hoursAgo, daysAgo } =
 	Astro.props as MomentCardProps;
@@ -15,25 +14,29 @@ const relativeTime = formatRelativeTime(
 	daysAgo,
 );
 
-const avatarUrl = moment.avatar || siteConfig.diary?.defaultAvatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=default";
+const avatarUrl =
+	moment.avatar ||
+	siteConfig.diary?.defaultAvatar ||
+	"https://api.dicebear.com/7.x/avataaars/svg?seed=default";
 
 const images = moment.images || [];
 
 // 图片展示配置
 const imageDisplay = moment.imageDisplay || {
-	type: 'grid', // 默认使用网格布局
+	type: "grid", // 默认使用网格布局
 	autoPlay: true, //是否自动轮播
 	interval: 5000, //轮播时间
 	showIndicator: true,
 	showControls: true,
 };
 
-const isCarouselMode = imageDisplay.type === 'carousel' && images.length >= 2;
+const isCarouselMode = imageDisplay.type === "carousel" && images.length >= 2;
 
 const getVideoSrc = (videoUrl: string): string => {
 	if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
 		return videoUrl;
-	} else if (videoUrl.includes("bilibili.com")) {
+	}
+	if (videoUrl.includes("bilibili.com")) {
 		const bvidMatch = videoUrl.match(/BV[\w]+/);
 		if (bvidMatch) {
 			return `//player.bilibili.com/player.html?bvid=${bvidMatch[0]}&p=1&autoplay=0`;
@@ -202,7 +205,7 @@ const getVideoSrc = (videoUrl: string): string => {
 						height="100%"
 						src={getVideoSrc(moment.video)}
 						title={moment.video.includes("bilibili") ? "Bilibili video player" : "YouTube video player"}
-						frameborder="0"
+						
 						allowfullscreen
 						class="w-full h-full"
 					></iframe>
@@ -522,7 +525,7 @@ const getVideoSrc = (videoUrl: string): string => {
 		// 获取所有轮播容器
 		const carouselContainers = document.querySelectorAll('.carousel-container');
 		
-		carouselContainers.forEach((container, containerIndex) => {
+		carouselContainers.forEach((container) => {
 			const track = container.querySelector('[data-carousel-track]');
 			const prevBtn = container.querySelector('[data-carousel-prev]');
 			const nextBtn = container.querySelector('[data-carousel-next]');

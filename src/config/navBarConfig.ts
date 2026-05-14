@@ -40,10 +40,9 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			// 根据配置决定是否添加设备，在siteConfig关闭pages.devices时导航栏不显示设备
 			...(siteConfig.pages.devices ? [LinkPreset.Devices] : []),
 
-			
 			// 根据配置决定是否添加相册，在siteConfig关闭pages.gallery时导航栏不显示相册
 			...(siteConfig.pages.gallery ? [LinkPreset.Gallery] : []),
-			
+
 			// 根据配置决定是否添加日记，在siteConfig关闭pages.diary时导航栏不显示日记
 			...(siteConfig.pages.diary ? [LinkPreset.Diary] : []),
 
@@ -52,7 +51,7 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 根据配置决定是否添加时间线，在siteConfig关闭pages.timeline时导航栏不显示时间线
 			...(siteConfig.pages.timeline ? [LinkPreset.Timeline] : []),
-			
+
 			// 根据配置决定是否添加技能，在siteConfig关闭pages.skills时导航栏不显示技能
 			...(siteConfig.pages.skills ? [LinkPreset.Skills] : []),
 		],
@@ -139,7 +138,6 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	// 		LinkPreset.Friends,
 	// 	],
 	// });
-
 
 	// 仅返回链接，其它导航搜索相关配置在模块顶层常量中独立导出
 	return { links } as NavBarConfig;

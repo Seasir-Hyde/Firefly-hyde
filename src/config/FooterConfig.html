@@ -135,16 +135,16 @@
     <!-- 版本号自动获取 -->
     <script>
         fetch('/package.json')
-            .then(function(res) {
+            .then((res) => {
                 if (!res.ok) {
-                    throw new Error('HTTP ' + res.status);
+                    throw new Error(`HTTP ${res.status}`);
                 }
                 return res.json();
             })
-            .then(function(pkg) {
-                document.getElementById('versionText').textContent = '主题版本：v' + pkg.version;
+            .then((pkg) => {
+                document.getElementById('versionText').textContent = `主题版本：v${pkg.version}`;
             })
-            .catch(function(e) {
+            .catch((_e) => {
                 // Silently fail - version is already shown as fallback
             });
     </script>

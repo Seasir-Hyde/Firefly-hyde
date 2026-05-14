@@ -5,7 +5,7 @@ export const announcementConfig: AnnouncementConfig = {
 	title: "📢 欢迎来访者",
 
 	// 公告内容
-	content: `👋🏻 Hi，我是Hyde，欢迎您！`,
+	content: "👋🏻 Hi，我是Hyde，欢迎您！",
 
 	// 是否允许用户关闭公告
 	closable: false,

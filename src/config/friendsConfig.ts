@@ -24,8 +24,7 @@ export const friendsPageConfig: FriendsPageConfig = {
 export const friendsConfig: FriendLink[] = [
 	{
 		title: "Hyde Blog",
-		imgurl:
-			"/assets/avatar.avif",
+		imgurl: "/assets/avatar.avif",
 		desc: "人心中的成见是一座大山~",
 		siteurl: "https://teek.seasir.top/",
 		tags: ["Astro"],
@@ -43,8 +42,7 @@ export const friendsConfig: FriendLink[] = [
 	},
 	{
 		title: "RyuChan",
-		imgurl:
-			"https://ryu-chan.vercel.app/profile.png",
+		imgurl: "https://ryu-chan.vercel.app/profile.png",
 		desc: "Ciallo～(∠・ω<)⌒★",
 		siteurl: "https://ryu-chan.vercel.app/",
 		tags: ["Astro"],
@@ -80,7 +78,8 @@ export const friendsConfig: FriendLink[] = [
 	},
 	{
 		title: "One",
-		imgurl: "https://img.onedayxyy.cn/images/Teek/Teekwebsite/xyy-logo.avif?w=150&h=150&fit=crop&fm=webp&q=80",
+		imgurl:
+			"https://img.onedayxyy.cn/images/Teek/Teekwebsite/xyy-logo.avif?w=150&h=150&fit=crop&fm=webp&q=80",
 		desc: "上海修车spa足浴推拿反差狂魔one哥",
 		siteurl: "https://onedayxyy.cn/",
 		tags: ["One哥"],

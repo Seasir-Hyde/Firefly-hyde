@@ -1,8 +1,8 @@
 ---
-import { FilterTabs } from "../components/atoms";
 import { MomentCard } from "@components/features/diary";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { Icon } from "astro-icon/components";
+import { FilterTabs } from "../components/atoms";
 
 import { siteConfig } from "../config";
 import { getAllTags, getDiaryList } from "../data/diary";
@@ -26,7 +26,7 @@ const filterTabs = [
 	...allTags.map((tag) => ({
 		value: tag,
 		label: tag,
-		count: moments.filter((m) => m.tags && m.tags.includes(tag)).length,
+		count: moments.filter((m) => m.tags?.includes(tag)).length,
 	})),
 ];
 

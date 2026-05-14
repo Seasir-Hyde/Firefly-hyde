@@ -18,7 +18,7 @@ export function formatRelativeTime(
 	if (timezone) {
 		const match = timezone.match(/([+-]\d{2}):?(\d{2})?$/);
 		if (match) {
-			timeGap = parseInt(match[1], 10);
+			timeGap = Number.parseInt(match[1], 10);
 		} else if (timezone === "Asia/Shanghai") {
 			timeGap = 8;
 		} else if (timezone === "UTC") {

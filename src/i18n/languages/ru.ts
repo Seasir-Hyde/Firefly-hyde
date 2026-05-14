@@ -328,7 +328,8 @@ export const ru: Translation = {
 
 	// Страница устройств
 	[Key.devices]: "Устройства",
-	[Key.devicesSubtitle]: "Здесь показаны устройства, которые я использую ежедневно",
+	[Key.devicesSubtitle]:
+		"Здесь показаны устройства, которые я использую ежедневно",
 	[Key.devicesViewDetails]: "Подробнее",
 	[Key.albumsPhotoCount]: "фото",
 	[Key.albumsPhotosCount]: "фото",

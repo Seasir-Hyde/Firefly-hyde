@@ -346,7 +346,7 @@ enum I18nKey {
 	projectsSource = "projectsSource",
 	projectsVisit = "projectsVisit",
 	projectsGitHub = "projectsGitHub",
-	
+
 	// 时间线页面
 	timeline = "timeline",
 	timelineSubtitle = "timelineSubtitle",

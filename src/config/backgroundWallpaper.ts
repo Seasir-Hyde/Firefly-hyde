@@ -40,7 +40,8 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 	src: {
 		// 桌面背景图片（支持单张或多张随机）
 		// desktop: "assets/images/DesktopWallpaper/d1.avif",
-		desktop: ["https://t.alcy.cc/pc",
+		desktop: [
+			"https://t.alcy.cc/pc",
 			// "assets/images/DesktopWallpaper/d1.avif",
 			// "assets/images/DesktopWallpaper/d2.avif",
 			// "assets/images/DesktopWallpaper/d3.avif",
@@ -74,10 +75,7 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 			// 主页横幅主标题字体大小
 			titleSize: "3.8rem",
 			// 主页横幅副标题
-			subtitle: [
-				"欲买桂花同载酒，终不似，少年游！",
-				"花有重开日，人无再少年",
-			],
+			subtitle: ["欲买桂花同载酒，终不似，少年游！", "花有重开日，人无再少年"],
 			// 主页横幅副标题字体大小
 			subtitleSize: "1.5rem",
 			typewriter: {
