@@ -54,6 +54,7 @@ export const zh_TW: Translation = {
 		"您還未在配置文件中啟用評論系統，啟用後訪客才可在此留言",
 	[Key.friends]: "友鏈",
 	[Key.friendsDescription]: "這裡是我的朋友們，歡迎互相訪問交流",
+	[Key.friendsSearchPlaceholder]: "搜尋友鏈名稱或描述...",
 	[Key.guestbook]: "留言",
 	[Key.guestbookDescription]: "歡迎在這裡留下你的足跡，分享你的想法和建議",
 	[Key.untitled]: "無標題",
