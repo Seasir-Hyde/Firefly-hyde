@@ -51,7 +51,7 @@ export const friendsConfig: FriendLink[] = [
 	},
 	{
 		title: "Mizuki",
-		imgurl: "https://mizuki.mysqil.com/_astro/avatar.DodcwRNI_Z1iLucw.webp",
+		imgurl: "https://mizuki.mysqil.com/_astro/avatar.DodcwRNI_ZrnMU5.webp",
 		desc: "下一代Material Design 3 博客主题(Astro驱动)",
 		siteurl: "https://mizuki.mysqil.com/",
 		tags: ["Astro"],
@@ -89,7 +89,7 @@ export const friendsConfig: FriendLink[] = [
 	{
 		title: "楠枝小笺",
 		imgurl:
-			"https://nannax.top/upload/IMG_20260412_164454.ico",
+			"https://www.nannax.top/upload/Image_1777700231866_594.jpg?width=800",
 		desc: "安安静静地存在，就已经很好了。",
 		siteurl: "https://www.nannax.top/",
 		tags: ["Astro"],
@@ -106,6 +106,57 @@ export const friendsConfig: FriendLink[] = [
 		weight: 8,
 		enabled: true,
 	},
+	{
+		title: "versus0",
+		imgurl: "https://img.542000.xyz/file/friend_avatar/1778931720838_f167cb95af9d881f4378b92b3e181d89_4647054993754934443.jpg",
+		desc: "技术+算法blog。",
+		siteurl: "https://blog.542000.xyz",
+		tags: [
+			"Astro"
+		],
+		weight: 8,
+		enabled: true
+	},
+	{
+		title: "ZhiJing’s Blog",
+		imgurl: "https://iwexe.top/avatar.svg",
+		desc: "Go with the flow.",
+		siteurl: "https://iwexe.top",
+		tags: [
+			"Astro"
+		],
+		weight: 8,
+		enabled: true
+	},
+	{
+		title: "十三",
+		imgurl: "https://img.nw177.cn/blog/100.assets/avatar.webp",
+		desc: "欲买桂花同载酒，终不似，少年游。",
+		siteurl: "https://firefly.nw177.cn",
+		tags: [
+			"Astro"
+		],
+		weight: 8,
+		enabled: true
+	},
+	{
+		title: "星遐蝶梦",
+		imgurl: "https://blog.casto.top/_astro/avatar.BmbZMO2d_Z1ed0Se.webp",
+		desc: "星穹漫遐，蝶携清梦。",
+		siteurl: "https://blog.casto.top",
+		tags: [],
+		weight: 8,
+		enabled: true
+	},
+	{
+		title: "团子和蛋糕",
+		imgurl: "https://re.tsh520.cn/zl/tx.webp",
+		desc: "如果你喜欢那么欢迎来到我的世界！",
+		siteurl: "https://blog.tsh520.cn",
+		tags: [],
+		weight: 0,
+		enabled: true
+	}
 ];
 
 // 获取启用的友链并进行排序

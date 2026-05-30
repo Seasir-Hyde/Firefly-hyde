@@ -42,7 +42,7 @@ export const profileConfig: ProfileConfig = {
 		{
 			name: "cnb",
 			icon: "tdesign:logo-cnb-filled",
-			url: "https://api.whatsapp.com/send/?phone=13527063419&text=Hello",
+			url: "https://cnb.cool/W3C/Hyde/Firefly-hyde",
 			showName: false,
 		},
 		{
