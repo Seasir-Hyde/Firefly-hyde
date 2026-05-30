@@ -19,7 +19,7 @@ draft: false
 
 - [x] 修复生产环境下顶部滚动条刷新页面不显示
 - [ ] 浏览量一直加载中...
-- [ ] 生产环境下，https://v6-widget.51.la/v6/3MQCwI1AgSSiVg37/quote.js?theme= 重复请求，页面重复渲染，待修复
+- [ ] 自定义Footer页面生产环境不显示主题版本号，本地环境显示
 
 ## 优化
 
