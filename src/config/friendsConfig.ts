@@ -156,6 +156,15 @@ export const friendsConfig: FriendLink[] = [
 		tags: [],
 		weight: 0,
 		enabled: true
+	},
+	{
+		title: "年华",
+		imgurl: "https://q1.qlogo.cn/g?b=qq&nk=1323860289&s=640",
+		desc: "分享生活和技术。",
+		siteurl: "https://blog.520781.xyz",
+		tags: [],
+		weight: 0,
+		enabled: true
 	}
 ];
 

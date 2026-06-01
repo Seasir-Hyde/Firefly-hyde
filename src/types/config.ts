@@ -438,7 +438,8 @@ export type WidgetComponentType =
 	| "music"
 	| "schedule"
 	| "relationship"
-	| "quoteOfTheDay";
+	| "quoteOfTheDay"
+	| "umamiStats";
 
 // 恋爱计时小组件配置
 export type RelationshipConfig = {

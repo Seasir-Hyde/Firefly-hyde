@@ -55,6 +55,16 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			showOnPostPage: true,
 		},
 		{
+			// 组件类型：Umami 统计组件
+			type: "umamiStats",
+			// 是否启用该组件
+			enable: true,
+			// 组件位置
+			position: "top",
+			// 是否在文章详情页显示
+			showOnPostPage: true,
+		},
+		{
 			// 组件类型：音乐播放器
 			type: "music",
 			// 是否启用该组件

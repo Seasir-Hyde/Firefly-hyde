@@ -76,6 +76,13 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 根据配置决定是否添加技能，在siteConfig关闭pages.skills时导航栏不显示技能
 			...(siteConfig.pages.skills ? [LinkPreset.Skills] : []),
+
+			{
+				name: "统计",
+				url: "https://umami.seasir.top/share/cp5SqrNUOxbulLZt/seasir.top",
+				external: true,
+				icon: "fa7-solid:chart-simple",
+			},
 		],
 	});
 

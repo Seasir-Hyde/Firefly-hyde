@@ -12,6 +12,7 @@ import SiteStats from "@/components/widget/SiteStats.astro";
 import Tags from "@/components/widget/Tags.astro";
 import RelationshipTimer from "@/components/widget/RelationshipTimer.astro";
 import QuoteOfTheDay from "@/components/widget/QuoteOfTheDay.astro";
+import UmamiStats from "@/components/widget/UmamiStats.astro";
 
 import { sidebarLayoutConfig } from "@/config";
 import type {
@@ -56,6 +57,7 @@ const componentMap = {
 	schedule: Schedule,
 	relationship: RelationshipTimer,
 	quoteOfTheDay: QuoteOfTheDay,
+	umamiStats: UmamiStats,
 } satisfies Record<WidgetComponentType, typeof Profile>;
 
 // 获取侧边栏位置
@@ -198,6 +200,7 @@ const hasInitiallyVisibleTopComponents = topComponents.some(
 						const props = getComponentProps(comp, index) as any;
 						return <Component {...props} />;
 					})}
+					<UmamiStats class="onload-animation" style="animation-delay: 50ms" />
 				</div>
 			) : (
 				<>
