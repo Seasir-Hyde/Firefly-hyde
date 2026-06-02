@@ -245,6 +245,7 @@ export const en: Translation = {
 	[Key.postListLayout]: "Post List Layout",
 	[Key.postListLayoutList]: "List",
 	[Key.postListLayoutGrid]: "Grid",
+	[Key.postCoverImage]: "Post Cover Image",
 
 	// Sponsor Page
 	[Key.sponsor]: "Sponsor",

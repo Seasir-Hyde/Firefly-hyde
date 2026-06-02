@@ -365,4 +365,22 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
   :global(.grid-mode) .post-card-enter-btn {
     display: flex !important;
   }
+
+  /* === Hide Post Cover Image === */
+  /* 当 data-post-cover-enabled="false" 时隐藏封面图 */
+  :global([data-post-cover-enabled="false"]) .post-card-image {
+    display: none !important;
+  }
+  
+  :global([data-post-cover-enabled="false"]) .has-cover {
+    &.post-card-wrapper {
+      .post-card-content {
+        width: calc(100% - 52px - 12px) !important;
+      }
+    }
+  }
+  
+  :global([data-post-cover-enabled="false"]) .has-cover .post-card-enter-btn {
+    display: flex !important;
+  }
 </style>

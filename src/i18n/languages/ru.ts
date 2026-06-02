@@ -246,6 +246,7 @@ export const ru: Translation = {
 	[Key.postListLayout]: "Макет списка сообщений",
 	[Key.postListLayoutList]: "Список",
 	[Key.postListLayoutGrid]: "Сетка",
+	[Key.postCoverImage]: "Обложка поста",
 
 	// Страница спонсоров
 	[Key.sponsor]: "Спонсор",

@@ -1284,3 +1284,50 @@ export function applyBannerCarouselEnabledToDocument(enabled: boolean): void {
 		String(enabled),
 	);
 }
+
+// Post cover image functions
+export function getDefaultPostCoverImageEnabled(): boolean {
+	return siteConfig.postListLayout.showCover ?? true;
+}
+
+export function getStoredPostCoverImageEnabled(): boolean {
+	if (
+		typeof localStorage === "undefined" ||
+		typeof localStorage.getItem !== "function"
+	) {
+		return getDefaultPostCoverImageEnabled();
+	}
+	const stored = localStorage.getItem("postCoverImageEnabled");
+	if (stored === null) {
+		return getDefaultPostCoverImageEnabled();
+	}
+	return stored === "true";
+}
+
+export function setPostCoverImageEnabled(enabled: boolean): void {
+	if (
+		typeof localStorage === "undefined" ||
+		typeof localStorage.setItem !== "function"
+	) {
+		return;
+	}
+	localStorage.setItem("postCoverImageEnabled", String(enabled));
+	applyPostCoverImageEnabledToDocument(enabled);
+	if (typeof window !== "undefined") {
+		window.dispatchEvent(
+			new CustomEvent("postCoverImageChange", {
+				detail: { enabled },
+			}),
+		);
+	}
+}
+
+export function applyPostCoverImageEnabledToDocument(enabled: boolean): void {
+	if (typeof document === "undefined") {
+		return;
+	}
+	document.documentElement.setAttribute(
+		"data-post-cover-enabled",
+		String(enabled),
+	);
+}

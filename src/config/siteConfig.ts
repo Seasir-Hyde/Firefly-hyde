@@ -163,6 +163,10 @@ export const siteConfig: SiteConfig = {
 		descriptionLines: 2,
 		// 是否允许用户切换布局
 		allowSwitch: true,
+		// 是否允许用户切换文章封面图显示
+		allowCoverSwitch: true,
+		// 默认是否显示文章封面图
+		showCover: true,
 		// 网格布局配置，仅在 defaultMode 为 "grid" 或允许切换布局时生效
 		grid: {
 			// 是否开启瀑布流布局，同时有封面图和无封面图的混合文章推荐开启

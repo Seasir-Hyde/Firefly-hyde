@@ -15,6 +15,7 @@ import {
 	getDefaultOverlayBlur,
 	getDefaultOverlayCardOpacity,
 	getDefaultOverlayOpacity,
+	getDefaultPostCoverImageEnabled,
 	getDefaultSakuraEnabled,
 	getDefaultWavesEnabled,
 	getHue,
@@ -24,6 +25,7 @@ import {
 	getStoredOverlayBlur,
 	getStoredOverlayCardOpacity,
 	getStoredOverlayOpacity,
+	getStoredPostCoverImageEnabled,
 	getStoredSakuraEnabled,
 	getStoredWallpaperMode,
 	getStoredWavesEnabled,
@@ -34,9 +36,11 @@ import {
 	setOverlayBlur,
 	setOverlayCardOpacity,
 	setOverlayOpacity,
+	setPostCoverImageEnabled,
 	setSakuraEnabled,
 	setWallpaperMode,
 	setWavesEnabled,
+	applyPostCoverImageEnabledToDocument,
 } from "@utils/setting-utils";
 import { onMount } from "svelte";
 import Icon from "@/components/common/Icon.svelte";
@@ -88,6 +92,8 @@ let overlayBlur = $state(getDefaultOverlayBlur());
 const defaultOverlayBlur = getDefaultOverlayBlur();
 let overlayCardOpacity = $state(getDefaultOverlayCardOpacity());
 const defaultOverlayCardOpacity = getDefaultOverlayCardOpacity();
+let postCoverImageEnabled = $state(true);
+const defaultPostCoverImageEnabled = getDefaultPostCoverImageEnabled();
 
 const isWallpaperSwitchable = backgroundWallpaper.switchable ?? true;
 const allowLayoutSwitch = siteConfig.postListLayout.allowSwitch;
@@ -113,6 +119,8 @@ const isBannerCarouselSwitchable =
 	backgroundWallpaper.banner?.carousel?.switchable ?? false;
 // 是否允许用户切换樱花特效
 const isSakuraSwitchable = sakuraConfig?.switchable ?? false;
+// 是否允许用户切换文章封面图
+const isPostCoverImageSwitchable = siteConfig.postListLayout.allowCoverSwitch ?? true;
 // 是否有任何横幅设置可显示（后续添加新设置时在此处添加条件）
 const hasBannerSettings =
 	isWavesSwitchable ||
@@ -159,6 +167,7 @@ const hasAnyContent =
 	showThemeColor ||
 	isWallpaperSwitchable ||
 	allowLayoutSwitch ||
+	isPostCoverImageSwitchable ||
 	hasBannerSettings ||
 	hasOverlaySettings ||
 	isSakuraSwitchable;
@@ -309,6 +318,11 @@ function toggleSakuraEnabled() {
 	setSakuraEnabled(sakuraEnabled);
 }
 
+function togglePostCoverImageEnabled() {
+	postCoverImageEnabled = !postCoverImageEnabled;
+	setPostCoverImageEnabled(postCoverImageEnabled);
+}
+
 function switchWallpaperMode(newMode: WALLPAPER_MODE) {
 	wallpaperMode = newMode;
 	setWallpaperMode(newMode);
@@ -397,7 +411,12 @@ onMount(() => {
 	// 从localStorage读取樱花特效状态
 	sakuraEnabled = getStoredSakuraEnabled();
 
-	// 从localStorage读取全屏透明设置状态
+	// 从localStorage读取文章封面图状态
+		postCoverImageEnabled = getStoredPostCoverImageEnabled();
+		// 将状态应用到文档
+		applyPostCoverImageEnabledToDocument(postCoverImageEnabled);
+
+		// 从localStorage读取全屏透明设置状态
 	overlayOpacity = getStoredOverlayOpacity();
 	overlayBlur = getStoredOverlayBlur();
 	overlayCardOpacity = getStoredOverlayCardOpacity();
@@ -789,6 +808,41 @@ $effect(() => {
                         <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z"/>
                     </svg>
                     <span class="text-xs font-medium">{i18n(I18nKey.postListLayoutGrid)}</span>
+                </button>
+            </div>
+        </div>
+    {/if}
+
+    <!-- Post Cover Image Switch Section -->
+    {#if isPostCoverImageSwitchable}
+        <div class="mt-2 mb-2">
+            <div class="flex gap-2 font-bold text-lg text-neutral-900 dark:text-neutral-100 transition relative ml-3 mb-2
+                before:w-1 before:h-4 before:rounded-md before:bg-(--primary)
+                before:absolute before:-left-3 before:top-1/2 before:-translate-y-1/2"
+            >
+                {i18n(I18nKey.postCoverImage)}
+                <button aria-label="Reset to Default" class="btn-regular w-7 h-7 rounded-md  active:scale-90"
+                        class:opacity-0={postCoverImageEnabled === defaultPostCoverImageEnabled} class:pointer-events-none={postCoverImageEnabled === defaultPostCoverImageEnabled} onclick={() => { postCoverImageEnabled = defaultPostCoverImageEnabled; setPostCoverImageEnabled(defaultPostCoverImageEnabled); }}>
+                    <div class="text-(--btn-content)">
+                        <Icon icon="fa7-solid:arrow-rotate-left" class="text-[0.875rem]"></Icon>
+                    </div>
+                </button>
+            </div>
+            <div class="space-y-1">
+                <button
+                    class="w-full btn-regular rounded-md py-2 px-3 flex items-center gap-3 text-left active:scale-95 transition-all relative overflow-hidden"
+                    class:bg-(--btn-regular-bg-hover)={postCoverImageEnabled}
+                    onclick={togglePostCoverImageEnabled}
+                >
+                    <Icon icon="material-symbols:image" class="text-[1.25rem] shrink-0"></Icon>
+                    <span class="text-sm flex-1">{i18n(I18nKey.postCoverImage)}</span>
+                    <div class="w-10 h-5 rounded-full transition-all duration-200 relative"
+                         class:bg-(--primary)={postCoverImageEnabled}
+                         class:bg-(--btn-regular-bg-active)={!postCoverImageEnabled}>
+                        <div class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-200"
+                             class:left-0.5={!postCoverImageEnabled}
+                             class:left-5={postCoverImageEnabled}></div>
+                    </div>
                 </button>
             </div>
         </div>
