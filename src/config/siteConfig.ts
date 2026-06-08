@@ -7,7 +7,7 @@ const SITE_LANG = "zh_CN";
 
 export const siteConfig: SiteConfig = {
 	// 站点标题
-	title: "Hyde",
+	title: "Hyde Blog",
 
 	// 站点副标题
 	subtitle: "人心中的成见是一座大山",
@@ -17,10 +17,10 @@ export const siteConfig: SiteConfig = {
 
 	// 站点描述
 	description:
-		"Hyde 是一款基于 Astro 框架和 Fuwari 模板开发的清新美观且现代化个人博客主题模板，专为技术爱好者和内容创作者设计。该主题融合了现代 Web 技术栈，提供了丰富的功能模块和高度可定制的界面，让您能够轻松打造出专业且美观的个人博客网站。",
+		"Hyde 是一个记录折腾博客搭建教程、分享教程、随笔感悟，技术探索与生活记录，都在这里。",
 
 	// 站点关键词
-	keywords: ["Hyde", "Fuwari", "Astro", "ACGN", "博客", "技术博客", "静态博客"],
+	keywords: ["Hyde", "个人博客主题", "Astro", "ACGN", "博客", "技术博客", "静态博客","现代化博客","内容创作者","开源主题","番组追踪","技术分享","生活点滴","建站记录","技术折腾","个人博客","日常随笔","生活相册","折腾日记"],
 
 	// 主题色
 	themeColor: {

@@ -223,6 +223,15 @@ export const friendsConfig: FriendLink[] = [
 		weight: 0,
 		enabled: true
 	},
+	{
+		title: "新锐博客",
+		desc: "记录学习与分享资源",
+		siteurl: "https://blog.xrbk.cn",
+		imgurl: "https://blog.xrbk.cn/favicon.png",
+		tags: ["Blog"],
+		weight: 0,
+		enabled: true
+	},
 ];
 
 // 获取启用的友链并进行排序
