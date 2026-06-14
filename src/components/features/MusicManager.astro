@@ -35,6 +35,7 @@ const managerConfigStr = JSON.stringify({
 	volume: config.volume ?? 0.7,
 	playMode: config.playMode ?? "list",
 	showLyrics: config.showLyrics ?? true,
+	syncWithGlobalPlayer: config.syncWithGlobalPlayer ?? false,
 	i18n: {
 		noPlaying: i18n(I18nKey.musicNoPlaying),
 		lyrics: i18n(I18nKey.musicLyrics),
@@ -94,14 +95,42 @@ const managerConfigStr = JSON.stringify({
         return result.sort(function (a, b) { return a.time - b.time; });
     }
 
-    // ── Audio element (persistent, attached to body) ────────
-    var audio = document.createElement('audio');
-    audio.crossOrigin = 'anonymous';
-    audio.style.display = 'none';
-    document.body.appendChild(audio);
+    // ── Audio element ─────────────────────────────────────────
+    // Use GlobalAudio's element only when syncWithGlobalPlayer is true
+    // Otherwise create our own independent audio element for sidebar player
+    var usingGlobalAudio = config.syncWithGlobalPlayer === true;
+    var audio;
+    
+    if (usingGlobalAudio) {
+        // Wait for GlobalAudio to be ready (up to 2 seconds)
+        var waitTime = 0;
+        while (!document.getElementById('global-audio-player') && waitTime < 2000) {
+            // Note: This is synchronous wait in initial script execution
+            // In practice, GlobalAudio should be created before MusicManager
+            waitTime += 50;
+        }
+        audio = document.getElementById('global-audio-player');
+        if (audio) {
+            audio.crossOrigin = 'anonymous';
+        } else {
+            // Fallback: create our own audio element
+            audio = document.createElement('audio');
+            audio.id = 'sidebar-audio-player';
+            audio.crossOrigin = 'anonymous';
+            audio.style.display = 'none';
+            document.body.appendChild(audio);
+            usingGlobalAudio = false;
+        }
+    } else {
+        // Create independent audio element for sidebar player
+        audio = document.createElement('audio');
+        audio.id = 'sidebar-audio-player';
+        audio.crossOrigin = 'anonymous';
+        audio.style.display = 'none';
+        document.body.appendChild(audio);
+    }
 
     // ── State ────────────────────────────────────────────────
-    var loadVersion = 0; // incremented on each loadTrack to discard stale play() results
     var state = {
         playlist: [],
         currentIndex: 0,
@@ -205,7 +234,6 @@ const managerConfigStr = JSON.stringify({
         if (index < 0 || index >= state.playlist.length) return;
         state.currentIndex = index;
         var track = state.playlist[index];
-        var ver = ++loadVersion;
 
         audio.src = track.url;
 
@@ -215,12 +243,9 @@ const managerConfigStr = JSON.stringify({
 
         if (autoPlay) {
             audio.play().then(function () {
-                if (ver !== loadVersion) return; // stale, discard
                 state.isPlaying = true;
                 emit('fm:play-state', { isPlaying: true });
             }).catch(function (e) {
-                if (ver !== loadVersion) return; // stale, discard
-                if (e.name === 'AbortError') return; // interrupted by new load
                 console.warn('Autoplay blocked:', e);
             });
         } else {
@@ -312,42 +337,46 @@ const managerConfigStr = JSON.stringify({
     }
 
     // ── Audio events → broadcast ─────────────────────────────
-    audio.addEventListener('timeupdate', function () {
-        if (isNaN(audio.duration)) return;
-        var ct = audio.currentTime;
-        var dur = audio.duration;
-        var pct = (ct / dur) * 100;
+    // Only bind audio events if not using GlobalAudio's element
+    // GlobalAudio will handle these events and broadcast them
+    if (!usingGlobalAudio) {
+        audio.addEventListener('timeupdate', function () {
+            if (isNaN(audio.duration)) return;
+            var ct = audio.currentTime;
+            var dur = audio.duration;
+            var pct = (ct / dur) * 100;
 
-        emit('fm:time', {
-            currentTime: ct,
-            duration: dur,
-            progress: pct,
-            currentTimeStr: formatTime(ct),
-            durationStr: formatTime(dur)
+            emit('fm:time', {
+                currentTime: ct,
+                duration: dur,
+                progress: pct,
+                currentTimeStr: formatTime(ct),
+                durationStr: formatTime(dur)
+            });
+
+            // Lyrics sync
+            if (state.lyrics.length > 0) {
+                var idx = -1;
+                for (var i = 0; i < state.lyrics.length; i++) {
+                    if (ct >= state.lyrics[i].time) idx = i;
+                    else break;
+                }
+                if (idx !== state.currentLrcIndex) {
+                    state.currentLrcIndex = idx;
+                    emit('fm:lrc-index', { index: idx });
+                }
+            }
         });
 
-        // Lyrics sync
-        if (state.lyrics.length > 0) {
-            var idx = -1;
-            for (var i = 0; i < state.lyrics.length; i++) {
-                if (ct >= state.lyrics[i].time) idx = i;
-                else break;
-            }
-            if (idx !== state.currentLrcIndex) {
-                state.currentLrcIndex = idx;
-                emit('fm:lrc-index', { index: idx });
-            }
-        }
-    });
+        audio.addEventListener('ended', function () {
+            playNext(true);
+        });
 
-    audio.addEventListener('ended', function () {
-        playNext(true);
-    });
-
-    audio.addEventListener('error', function () {
-        state.error = 'Audio playback error';
-        emit('fm:error', { message: state.error });
-    });
+        audio.addEventListener('error', function () {
+            state.error = 'Audio playback error';
+            emit('fm:error', { message: state.error });
+        });
+    }
 
     // ── Init (idempotent) ────────────────────────────────────
     async function init() {
@@ -355,7 +384,40 @@ const managerConfigStr = JSON.stringify({
         state.initializing = true;
 
         try {
-            if (config.mode === 'meting' && config.meting) {
+            // Check if we should sync with GlobalAudio's playlist
+            const shouldSyncWithGlobal = config.syncWithGlobalPlayer === true;
+            
+            // If syncing with GlobalAudio, wait for it to be ready
+            if (shouldSyncWithGlobal) {
+                // Wait up to 2 seconds for GlobalAudio to be ready
+                let waitTime = 0;
+                while (!window.globalMusicPlayer && waitTime < 2000) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    waitTime += 100;
+                }
+                
+                const globalPlayer = window.globalMusicPlayer;
+                if (globalPlayer && globalPlayer.playlist && globalPlayer.playlist.length > 0) {
+                    // Sync with GlobalAudio's playlist
+                    state.playlist = globalPlayer.playlist.map(function (song) {
+                        return {
+                            name: song.title || song.name || 'Unknown',
+                            artist: song.artist || 'Unknown',
+                            url: song.url,
+                            pic: song.cover || song.pic || '',
+                            lrc: song.lrc || undefined
+                        };
+                    });
+                } else {
+                    // Fallback to local/meting config if GlobalAudio not available
+                    console.warn('GlobalAudio not available, using fallback config');
+                    if (config.mode === 'meting' && config.meting) {
+                        await fetchMetingData();
+                    } else if (config.mode === 'local') {
+                        state.playlist = config.localPlaylist || [];
+                    }
+                }
+            } else if (config.mode === 'meting' && config.meting) {
                 await fetchMetingData();
             } else if (config.mode === 'local') {
                 state.playlist = config.localPlaylist || [];

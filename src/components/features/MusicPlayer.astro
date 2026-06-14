@@ -647,11 +647,55 @@ const widgetId =
             ui.title.innerText = cfg.i18n.noSongs;
         }
     });
+    
+    // Listen for playlist change from GlobalAudio
+    on('fm:playlist-change', function (e) {
+        var d = e.detail;
+        if (d.playlist && d.playlist.length > 0) {
+            // Update local virtual scroll playlist
+            var vs = local.vs;
+            vs.playlist = d.playlist;
+            vs.currentIndex = 0; // Reset to first song
+            
+            // Re-render playlist
+            ui.playlistContainer.innerHTML = '';
+            vs.renderedStart = -1;
+            vs.renderedEnd = -1;
+            vs.renderedEls = {};
+            vsSetContainerHeight();
+            
+            // Always commit range to show new playlist
+            vsCommitRange();
+            
+            // Update first track info
+            if (d.playlist[0]) {
+                updateTrackUI(d.playlist[0]);
+            }
+        }
+    });
 
     on('fm:track', function (e) {
         var d = e.detail;
+        
+        // 更新歌曲信息（使用传入的 track 数据）
         updateTrackUI(d.track);
-        updatePlaylistActiveUI(d.index);
+        
+        // 根据歌曲 URL 查找侧边栏播放列表中的对应索引
+        var vs = local.vs;
+        var matchedIndex = -1;
+        if (d.track && d.track.url && vs.playlist) {
+            for (var i = 0; i < vs.playlist.length; i++) {
+                if (vs.playlist[i].url === d.track.url) {
+                    matchedIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        // 如果找到了匹配的歌曲，更新播放列表激活状态
+        if (matchedIndex >= 0) {
+            updatePlaylistActiveUI(matchedIndex);
+        }
     });
 
     on('fm:play-state', function (e) {

@@ -56,6 +56,9 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 日记
 			LinkPresets.Diary,
+
+			// 音乐
+			LinkPresets.Music,
 		],
 	});
 
@@ -193,7 +196,7 @@ export const LinkPresets: Record<string, NavBarLink> = {
 	Tags: {
 		name: "标签",
 		url: "/tags/",
-		icon: "material-symbols:tag-rounded",
+		icon: "material-symbols:label",
 	},
 	Friends: {
 		name: "友链",
@@ -249,6 +252,11 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		name: "时间线",
 		url: "/timeline/",
 		icon: "material-symbols:timeline",
+	},
+	Music: {
+		name: "音乐",
+		url: "/music/",
+		icon: "material-symbols:music-note-rounded",
 	},
 };
 

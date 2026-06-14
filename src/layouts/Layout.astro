@@ -11,6 +11,7 @@ import ScrollProgressBar from "@components/features/ScrollProgressBar.astro";
 import TitleChange from "@components/features/TitleChange.astro"; //网页标题切换组件
 import ConfigCarrier from "@components/layout/ConfigCarrier.astro";
 import CopyMessage from "@components/common/CopyMessage.svelte"; //复制内容提示组件
+import GlobalAudio from "@components/widgets/GlobalAudio.astro";
 
 import {
 	analyticsConfig,
@@ -578,6 +579,7 @@ const siteLang = lang.replace("_", "-");
     <div id="progress-bar"></div>
     <ScrollProgressBar />
     <TitleChange />
+    <GlobalAudio />
 
     <!-- 页面顶部渐变高光效果 - 只在full和semifull模式下显示 -->
     {shouldShowTopHighlight && <div class="top-gradient-highlight" />}

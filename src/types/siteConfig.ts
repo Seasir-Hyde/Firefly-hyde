@@ -150,6 +150,16 @@ export type SiteConfig = {
 		postsPerPage: number; // 每页显示的文章数量
 	};
 
+	// 音乐配置
+	music?: {
+		playlists?: {
+			id: string;
+			name: string;
+			server?: string;
+			type?: string;
+		}[];
+	};
+
 	// 图片优化配置
 	imageOptimization?: {
 		/**

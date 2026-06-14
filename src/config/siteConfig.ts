@@ -212,4 +212,20 @@ export const siteConfig: SiteConfig = {
 
 	// 站点语言，在本配置文件顶部SITE_LANG定义
 	lang: SITE_LANG,
+
+	// 音乐配置
+  music: {
+    // 歌单配置
+    playlists: [
+      { id: "17924204831", name: "纯音乐", server: "netease" },
+      { id: "17933567326", name: "我的喜欢", server: "netease" },
+      { id: "zhoujielun", name: "周杰伦", server: "netease", type: "custom" },
+      { id: "17964946766", name: "陶喆", server: "netease" },
+      { id: "17957187425", name: "方大同", server: "netease" },
+      { id: "17956985703", name: "G.E.M.邓紫棋", server: "netease" },
+      { id: "17957136689", name: "林俊杰", server: "netease" },
+      { id: "17957661244", name: "孙燕姿", server: "netease" },
+      { id: "17966019560", name: "告五人", server: "netease" },
+    ],
+  },
 };

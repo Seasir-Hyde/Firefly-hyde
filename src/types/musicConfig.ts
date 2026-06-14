@@ -15,6 +15,14 @@ export type MusicPlayerConfig = {
 	// 是否在导航栏显示音乐播放器
 	showInNavbar?: boolean;
 
+	// 是否显示迷你播放器
+	showMiniPlayer?: boolean;
+
+	// 是否同步全局播放器（当进入 /music 页面时）
+	// 设置为 true：侧边栏播放器完全同步 /music 页面的播放列表
+	// 设置为 false：侧边栏使用独立的本地/Meting 配置（默认）
+	syncWithGlobalPlayer?: boolean;
+
 	// Meting API 配置
 	meting?: {
 		// Meting API 地址
