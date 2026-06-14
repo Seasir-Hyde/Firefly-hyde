@@ -18,8 +18,8 @@ export const zh_TW: Translation = {
 
 	[Key.tags]: "標籤",
 	[Key.categories]: "分類",
-	[Key.allCategories]: "所有分類",
-	[Key.allTags]: "所有標籤",
+	[Key.allCategories]: "全部分類",
+	[Key.allTags]: "全部標籤",
 	[Key.recentPosts]: "最新文章",
 	[Key.postList]: "文章列表",
 	[Key.tableOfContents]: "文章目錄",
@@ -70,6 +70,8 @@ export const zh_TW: Translation = {
 	[Key.minutesCount]: "分鐘",
 	[Key.postCount]: "篇文章",
 	[Key.postsCount]: "篇文章",
+	[Key.tagsCount]: "個標籤",
+	[Key.noData]: "暫無資料",
 
 	[Key.themeColor]: "主題色相",
 

@@ -41,6 +41,8 @@ enum I18nKey {
 	minutesCount = "minutesCount",
 	postCount = "postCount",
 	postsCount = "postsCount",
+	tagsCount = "tagsCount",
+	noData = "noData",
 
 	// Music Widget
 	musicNoPlaying = "musicNoPlaying",
