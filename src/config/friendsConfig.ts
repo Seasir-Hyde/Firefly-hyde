@@ -259,6 +259,15 @@ export const friendsConfig: FriendLink[] = [
 		weight: 0,
 		enabled: true
 	},
+	{
+		title: "橘智",
+		desc: "开始思考和分享的地方",
+		siteurl: "https://juzhiart.com/home",
+		imgurl: "https://juzhiart.com/_nuxt/logo.B5tOjnXr.svg",
+		tags: ["Blog"],
+		weight: 0,
+		enabled: true
+	},
 ];
 
 // 获取启用的友链并进行排序

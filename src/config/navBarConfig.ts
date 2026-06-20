@@ -33,11 +33,25 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		],
 	});
 
-	// 友链
-	links.push(LinkPresets.Friends);
+	// 动态及其子菜单
+	links.push({
+		name: "动态",
+		url: "#",
+		icon: "material-symbols:bolt-outline",
+		children: [
+			// 朋友圈
+			LinkPresets.Moments,
 
-	// 留言板
-	links.push(LinkPresets.Guestbook);
+			// 相册
+			LinkPresets.Gallery,
+
+			// 留言板
+			LinkPresets.Guestbook,
+	
+			// 日记
+			LinkPresets.Diary,
+		],
+	});
 
 	// 我的及其子菜单
 	links.push({
@@ -45,17 +59,14 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		url: "#",
 		icon: "material-symbols:person",
 		children: [
-			// 相册
-			LinkPresets.Gallery,
+			// 友链
+			LinkPresets.Friends,
 
 			// 番组计划
 			LinkPresets.Bangumi,
 
 			// 设备
 			LinkPresets.Devices,
-
-			// 日记
-			LinkPresets.Diary,
 
 			// 音乐
 			LinkPresets.Music,
@@ -165,6 +176,7 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	// });
 
 	// 仅返回链接，其它导航搜索相关配置在模块顶层常量中独立导出
+
 	return { links } as NavBarConfig;
 };
 
@@ -262,6 +274,16 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		name: "音乐",
 		url: "/music/",
 		icon: "material-symbols:music-note-rounded",
+	},
+	Moments: {
+		name: "朋友圈",
+		url: "/moments/",
+		icon: "mdi:wechat",
+	},
+	Admin: {
+		name: "登录",
+		url: "/admin/",
+		icon: "material-symbols:lock",
 	},
 };
 

@@ -1,0 +1,632 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+import { Icon } from "astro-icon/components";
+import Markdown from "@/components/common/Markdown.astro";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
+import { getTagUrl } from "@/utils/url-utils";
+import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+
+interface Props {
+	moment: CollectionEntry<"moments">;
+}
+
+const { moment } = Astro.props;
+const { Content } = await render(moment);
+const { author, avatar, published, tags, location, device, pinned } =
+	moment.data;
+
+// 默认作者信息
+const defaultAuthor = externalMomentsConfig.defaultAuthor || "匿名";
+const defaultAvatar = externalMomentsConfig.defaultAvatar || "/avatar.png";
+
+// 相对时间
+const formatTimeAgo = (date: Date): string => {
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+	const minutes = Math.floor(diff / 60000);
+	const hours = Math.floor(diff / 3600000);
+	const days = Math.floor(diff / 86400000);
+
+	if (minutes < 1) return "刚刚";
+	if (minutes < 60) return `${minutes}分钟前`;
+	if (hours < 24) return `${hours}小时前`;
+	if (days < 30) return `${days}天前`;
+	return formatDateToYYYYMMDD(date);
+};
+---
+
+<div id={moment.id} class="moment-card group">
+		<div class="card-accent-bar"></div>
+	<!-- 卡片头部：头像 + 用户信息 -->
+	<div class="card-header">
+		<div class="card-avatar">
+			<img
+				src={avatar || defaultAvatar}
+				alt={author || defaultAuthor}
+				class="avatar-img"
+				loading="lazy"
+				onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23999%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M20 21a8 8 0 1 0-16 0%22/></svg>'"
+			/>
+		</div>
+		<div class="card-user-info">
+			<div class="user-row">
+				<span class="user-name">{author || defaultAuthor}</span>
+				{pinned && (
+					<span class="pinned-badge">
+						<Icon name="material-symbols:pinboard" class="pinned-icon" />
+						<span>置顶</span>
+					</span>
+				)}
+			</div>
+			<div class="meta-row">
+				<time
+					datetime={published.toISOString()}
+					title={formatDateToYYYYMMDD(published)}
+				>
+					{formatTimeAgo(published)}
+				</time>
+				{location && (
+					<>
+						<span class="meta-dot">·</span>
+						<span class="location">
+							<Icon
+								name="material-symbols:location-on-outline"
+								class="location-icon"
+							/>
+							{location}
+						</span>
+					</>
+				)}
+			</div>
+		</div>
+	</div>
+
+	<!-- 内容 -->
+	<div class="card-content">
+		<div
+			class="moment-markdown dark:text-neutral-100"
+		>
+			<Markdown class="moment-markdown-content">
+				<Content />
+			</Markdown>
+		</div>
+	</div>
+
+	<!-- 图片（由 Markdown 内容中的图片动态生成网格） -->
+
+	<!-- 底部标签 -->
+	{tags && tags.length > 0 && (
+		<div class="card-tags">
+			{tags.map((tag) => (
+				<a href={getTagUrl(tag)} class="tag-item">
+					#{tag.trim()}
+				</a>
+			))}
+		</div>
+	)}
+</div>
+
+<style>
+	@reference "../../styles/main.css";
+
+	/* ============================================
+	 * 卡片主体
+	 * ============================================ */
+	.moment-card {
+		position: relative;
+		background: var(--card-bg);
+		border-radius: var(--radius-large);
+		padding: 1.rem 1.rem 1.rem 1.rem;
+		overflow: hidden;
+		transition:
+			box-shadow 0.25s ease,
+			transform 0.25s ease,
+			border-color 0.25s ease;
+	}
+
+	:root.dark .moment-card {
+		border-color: #3f3f46;
+	}
+
+	.card-accent-bar {
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 4px;
+		opacity: 0.35;
+		border-radius: 0 2px 2px 0;
+	}
+
+	:root.dark .moment-card:hover {
+		border-color: #fff;
+		box-shadow: 0 4px 24px rgba(255, 255, 255, 0.08);
+	}
+
+	/* ============================================
+	 * 卡片头部
+	 * ============================================ */
+	.card-header {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		margin-bottom: 0.75rem;
+	}
+
+	/* 头像 */
+	.card-avatar {
+		flex-shrink: 0;
+	}
+
+	.avatar-img {
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 2px solid var(--primary);
+		box-sizing: border-box;
+	}
+
+	.card-user-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.user-row {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		margin-bottom: 0.125rem;
+	}
+
+	.user-name {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--primary);
+	}
+
+	.pinned-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.125rem 0.5rem;
+		background: var(--btn-regular-bg);
+		color: var(--btn-content);
+		border-radius: var(--radius);
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	.pinned-icon {
+		font-size: 0.875rem;
+	}
+
+	.meta-row {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.75rem;
+		color: var(--content-meta);
+	}
+
+	.meta-dot {
+		opacity: 0.5;
+	}
+
+	.location {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.125rem;
+		max-width: 120px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.location-icon {
+		font-size: 0.875rem;
+		flex-shrink: 0;
+	}
+
+	/* ============================================
+	 * 内容区域
+	 * ============================================ */
+	.card-content {
+		margin-bottom: 0.75rem;
+	}
+
+	.moment-markdown :global(p) {
+		margin-bottom: 0.375rem;
+		word-break: break-word;
+	}
+
+	.moment-markdown :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.moment-markdown :global(img) {
+		border-radius: var(--radius);
+		margin: 0.5rem 0;
+		max-width: 100%;
+	}
+
+	/* 覆盖 .card-images 内图片的 max-width，确保固定 100*100 尺寸 */
+	.moment-markdown :global(.card-images img) {
+		max-width: none;
+		margin: 0;
+		border-radius: 0;
+	}
+
+	/* Markdown 内容中的图片网格（动态创建，需要 :global） */
+	.moment-markdown :global(.card-images) {
+		display: grid;
+		gap: 0.375rem;
+		margin-bottom: 0.75rem;
+		grid-template-columns: repeat(3, 100px);
+		grid-template-rows: repeat(var(--image-rows, 1), 100px);
+	}
+
+	.moment-markdown :global(.card-images[style*="--image-count: 1"]) {
+		grid-template-columns: 100px;
+		grid-template-rows: 100px;
+		max-width: 100px;
+	}
+
+	.moment-markdown :global(.card-images[style*="--image-count: 2"]) {
+		grid-template-columns: repeat(2, 100px);
+		grid-template-rows: 100px;
+		max-width: 200px;
+	}
+
+	.moment-markdown :global(.card-images[style*="--image-count: 3"]) {
+		grid-template-columns: repeat(3, 100px);
+		grid-template-rows: 100px;
+		max-width: 300px;
+	}
+
+	.moment-markdown :global(.card-images[style*="--image-count: 4"]) {
+		grid-template-columns: repeat(2, 100px);
+		grid-template-rows: repeat(2, 100px);
+		max-width: 200px;
+	}
+
+	.moment-markdown :global(.card-images[style*="--image-count: 5"]),
+	.moment-markdown :global(.card-images[style*="--image-count: 6"]) {
+		grid-template-columns: repeat(3, 100px);
+		grid-template-rows: repeat(2, 100px);
+		max-width: 300px;
+	}
+
+	.moment-markdown :global(.card-images[style*="--image-count: 7"]),
+	.moment-markdown :global(.card-images[style*="--image-count: 8"]) {
+		grid-template-columns: repeat(3, 100px);
+		grid-template-rows: repeat(3, 100px);
+		max-width: 300px;
+	}
+
+	.moment-markdown :global(.card-images[style*="--image-count: 9"]) {
+		grid-template-columns: repeat(3, 100px);
+		grid-template-rows: repeat(3, 100px);
+		max-width: 300px;
+	}
+
+	.moment-markdown :global(.image-item) {
+		position: relative;
+		border-radius: var(--radius);
+		overflow: hidden;
+		cursor: pointer;
+		background: var(--bg-secondary);
+		aspect-ratio: 1;
+	}
+
+	.moment-markdown :global(.image-placeholder) {
+		visibility: hidden;
+		pointer-events: none;
+	}
+
+	.moment-markdown :global(.image-img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.3s ease, opacity 0.4s ease;
+		opacity: 0;
+		animation: imageFadeIn 0.5s ease forwards;
+	}
+
+	.moment-markdown :global(.image-item:hover .image-img) {
+		transform: scale(1.03);
+	}
+
+	.moment-markdown :global(.has-more .image-img) {
+		filter: brightness(0.6);
+	}
+
+	.moment-markdown :global(.more-overlay) {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.moment-markdown :global(.more-text) {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: white;
+		text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+	}
+
+	/* ============================================
+	 * 图片网格 - 响应式布局
+	 * ============================================ */
+	.card-images {
+		display: grid;
+		gap: 0.375rem;
+		margin-bottom: 0.75rem;
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(var(--image-rows, 1), 1fr);
+	}
+
+	/* 单张图片 */
+	.card-images[style*="--image-count: 1"] {
+		grid-template-columns: 1fr;
+		max-width: 300px;
+	}
+
+	/* 两张图片 */
+	.card-images[style*="--image-count: 2"] {
+		grid-template-columns: repeat(2, 1fr);
+		max-width: 420px;
+	}
+
+	/* 三张图片 */
+	.card-images[style*="--image-count: 3"] {
+		grid-template-columns: repeat(3, 1fr);
+		max-width: 500px;
+	}
+
+	/* 四张图片 */
+	.card-images[style*="--image-count: 4"] {
+		grid-template-columns: repeat(2, 1fr);
+		grid-template-rows: repeat(2, 1fr);
+		max-width: 420px;
+	}
+
+	/* 五六张图片 */
+	.card-images[style*="--image-count: 5"],
+	.card-images[style*="--image-count: 6"] {
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(2, 1fr);
+		max-width: 500px;
+	}
+
+	/* 七八张图片：3×3 网格，最后一行留空 */
+	.card-images[style*="--image-count: 7"],
+	.card-images[style*="--image-count: 8"] {
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(3, 1fr);
+		max-width: 500px;
+	}
+
+	/* 九张图片：完整 3×3 网格 */
+	.card-images[style*="--image-count: 9"] {
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(3, 1fr);
+		max-width: 500px;
+	}
+
+	.image-item {
+		position: relative;
+		border-radius: var(--radius);
+		overflow: hidden;
+		cursor: pointer;
+		background: var(--bg-secondary);
+		aspect-ratio: 1;
+	}
+
+	/* 占位元素（保持网格对齐） */
+	.image-placeholder {
+		visibility: hidden;
+		pointer-events: none;
+	}
+
+	.image-img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.3s ease, opacity 0.4s ease;
+		opacity: 0;
+		animation: imageFadeIn 0.5s ease forwards;
+	}
+
+	@keyframes imageFadeIn {
+		to { opacity: 1; }
+	}
+
+	.image-item:hover .image-img {
+		transform: scale(1.03);
+	}
+
+	.has-more .image-img {
+		filter: brightness(0.6);
+	}
+
+	.more-overlay {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.more-text {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: white;
+		text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+	}
+
+	/* ============================================
+	 * 标签 - 胶囊描边样式
+	 * ============================================ */
+	.card-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
+		padding-top: 0.625rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.tag-item {
+		padding: 0.25rem 0.625rem;
+		background: transparent;
+		border: 1px solid var(--primary);
+		border-radius: 9999px;
+		font-size: 0.75rem;
+		color: var(--primary);
+		transition: all 0.2s ease;
+	}
+
+	.tag-item:hover {
+		background: color-mix(in srgb, var(--primary) 10%, transparent);
+	}
+
+	/* ============================================
+	 * 响应式
+	 * ============================================ */
+	@media (max-width: 480px) {
+		.moment-card {
+			padding: 0.875rem;
+			border-radius: var(--radius);
+		}
+
+		.avatar-img {
+			width: 2.25rem;
+			height: 2.25rem;
+		}
+
+		.user-name {
+			font-size: 0.875rem;
+		}
+
+		.meta-row {
+			font-size: 0.6875rem;
+		}
+
+		.location {
+			max-width: 80px;
+		}
+
+		.card-images {
+			gap: 0.25rem;
+			/* 移动端自适应宽度 */
+			max-width: 100% !important;
+		}
+
+		.card-images .image-item {
+			aspect-ratio: 1;
+		}
+
+		/* Markdown 内容中的图片网格移动端样式 */
+		.moment-markdown :global(.card-images) {
+			gap: 0.25rem;
+			max-width: 100% !important;
+		}
+
+		.moment-markdown :global(.card-images .image-item) {
+			aspect-ratio: 1;
+		}
+
+		.moment-markdown :global(.more-text) {
+			font-size: 1.25rem;
+		}
+
+		.more-text {
+			font-size: 1.25rem;
+		}
+	}
+</style>
+
+<script>
+	// 处理 Markdown 内容中的连续图片，重新布局为网格
+	function processMarkdownImages(card: HTMLElement) {
+		const markdownContent = card.querySelector('.moment-markdown-content');
+		if (!markdownContent) return;
+
+		// 找到所有包含图片的段落
+		const paragraphs = markdownContent.querySelectorAll('p');
+		paragraphs.forEach(p => {
+			// 跳过已经包含 .card-images 的段落（避免重复处理）
+			if (p.querySelector('.card-images')) return;
+			const images = Array.from(p.querySelectorAll('img'));
+			if (images.length < 1) return; // 没有图片不处理
+
+			// 创建网格容器
+			const gridContainer = document.createElement('div');
+			gridContainer.className = 'card-images';
+			const count = Math.min(images.length, 9);
+			const rows = Math.ceil(count / 3);
+			gridContainer.style.cssText = `--image-count: ${count}; --image-rows: ${rows};`;
+
+			// 将图片移动到网格容器
+			images.slice(0, 9).forEach((img, idx) => {
+				const item = document.createElement('div');
+				item.className = 'image-item';
+
+				const newImg = document.createElement('img');
+				newImg.src = img.src;
+				newImg.alt = img.alt || '';
+				newImg.className = 'image-img';
+				newImg.loading = 'lazy';
+				newImg.dataset.fancybox = `gallery-md-${card.id}`;
+				newImg.dataset.src = img.src;
+
+				item.appendChild(newImg);
+				gridContainer.appendChild(item);
+			});
+
+			// 如果最后一行不满3个，添加占位元素
+			const remainder = count % 3;
+			if (remainder > 0 && count < 9) {
+				for (let i = 0; i < (3 - remainder); i++) {
+					const placeholder = document.createElement('div');
+					placeholder.className = 'image-placeholder';
+					gridContainer.appendChild(placeholder);
+				}
+			}
+
+			// 如果超过9张，添加遮罩
+			if (images.length > 9) {
+				const lastItem = gridContainer.querySelector('.image-item:last-of-type');
+				if (lastItem) {
+					lastItem.classList.add('has-more');
+					const overlay = document.createElement('div');
+					overlay.className = 'more-overlay';
+					overlay.innerHTML = `<span class="more-text">+${images.length - 9}</span>`;
+					lastItem.appendChild(overlay);
+				}
+			}
+
+			// 清空段落中的图片，插入网格容器
+			images.forEach(img => img.remove());
+			p.appendChild(gridContainer);
+		});
+	}
+
+	// 初始化处理
+	document.querySelectorAll('.moment-card').forEach(processMarkdownImages);
+
+	// 监听动态加载的内容
+	document.addEventListener('moments:loaded', () => {
+		setTimeout(() => {
+			document.querySelectorAll('.moment-card').forEach(processMarkdownImages);
+		}, 100);
+	});
+
+	// Swup SPA 路由切换后重新处理图片网格
+	document.addEventListener('swup:content:replace', () => {
+		setTimeout(() => {
+			document.querySelectorAll('.moment-card').forEach(processMarkdownImages);
+		}, 50);
+	});
+</script>

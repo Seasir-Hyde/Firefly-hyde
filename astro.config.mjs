@@ -276,6 +276,13 @@ export default defineConfig({
 		resolve: {
 			alias: {
 				"@rehype-callouts-theme": `rehype-callouts/theme/${siteConfig.post.rehypeCallouts.theme}`,
+				"@": "./src",
+				"@components": "./src/components",
+				"@assets": "./src/assets",
+				"@constants": "./src/constants",
+				"@utils": "./src/utils",
+				"@i18n": "./src/i18n",
+				"@layouts": "./src/layouts",
 			},
 		},
 		build: {

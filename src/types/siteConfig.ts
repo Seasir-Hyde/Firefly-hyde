@@ -97,6 +97,11 @@ export type SiteConfig = {
 		defaultAvatar:
 			"https://i.postimg.cc/7YLVJqnp/wei-xin-tu-pian-2026-05-07-020150-883.jpg",
 	},
+	// 说说页面封面配置（微信朋友圈风格）
+	momentsCover?: {
+		enable: boolean;
+		image?: string;
+	};
 
 	// 分类导航栏开关
 	categoryBar?: boolean;

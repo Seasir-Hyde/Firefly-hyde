@@ -85,8 +85,25 @@ import "@/styles/fancybox-custom.css";
       source: (el: any) => el.getAttribute("data-src") || el.getAttribute("href"),
     });
 
-    // 绑定其他
-    Fancybox.bind("[data-fancybox]:not(.moment-images a)", commonOptions);
+    // 绑定远程说说的图片链接
+    Fancybox.bind("a.fancybox-link[data-fancybox]", {
+      ...commonOptions,
+      groupAll: true,
+      Carousel: {
+        transition: "slide",
+        preload: 2,
+      },
+    });
+
+    // 绑定其他（包括日记卡片等）
+    Fancybox.bind("[data-fancybox]:not(.moment-images a):not(.fancybox-link)", {
+      ...commonOptions,
+      groupAll: true,
+      Carousel: {
+        transition: "slide",
+        preload: 2,
+      },
+    });
   }
 
   function cleanupFancybox() {
@@ -105,6 +122,11 @@ import "@/styles/fancybox-custom.css";
 
   // 加密文章解密后重新绑定灯箱
   document.addEventListener("password:decrypted", () => {
+    setTimeout(setup, 200);
+  });
+
+  // 外部说说加载后重新绑定灯箱
+  document.addEventListener("moments:loaded", () => {
     setTimeout(setup, 200);
   });
 </script>

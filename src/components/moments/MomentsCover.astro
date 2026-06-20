@@ -1,0 +1,177 @@
+---
+import { profileConfig, siteConfig } from "@/config";
+import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+const coverConfig = siteConfig.momentsCover;
+if (!coverConfig?.enable) return null;
+
+// 优先使用 externalMomentsConfig 的默认作者信息
+const avatar = externalMomentsConfig.defaultAvatar || profileConfig.avatar || "/avatar.png";
+const name = externalMomentsConfig.defaultAuthor || profileConfig.name || "";
+const bio = Array.isArray(profileConfig.bio)
+	? profileConfig.bio[1] || profileConfig.bio[0] || ""
+	: profileConfig.bio || "";
+---
+
+<div class:list={["wx-cover", className]}>
+  <!-- 封面图 -->
+  <div class="wx-cover-img-box">
+    <img
+      src={coverConfig.image}
+      alt="封面"
+      class="wx-cover-img"
+      loading="eager"
+    />
+  </div>
+
+  <!-- 个人信息栏（封面图下方） -->
+  <div class="wx-info-bar">
+    <!-- 头像：右侧，向上突出盖住封面图 -->
+    <div class="wx-avatar-box">
+      <img
+        src={avatar}
+        alt={name}
+        class="wx-avatar"
+        loading="eager"
+        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23999%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M20 21a8 8 0 1 0-16 0%22/></svg>'"
+      />
+    </div>
+    <!-- 昵称：头像左边，在封面图上 -->
+    <div class="wx-name">{name}</div>
+    <!-- 签名：右侧，头像下方 -->
+    {bio && <div class="wx-bio">{bio}</div>}
+  </div>
+</div>
+
+<style>
+  @reference "../../styles/main.css";
+
+  .wx-cover {
+    margin-bottom: 1.25rem;
+    border-radius: 12px;
+    overflow: visible;
+    position: relative;
+  }
+
+  /* ===== 封面图 ===== */
+  .wx-cover-img-box {
+    width: 100%;
+    height: 280px;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+  }
+
+  .wx-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.6s ease;
+    display: block;
+  }
+
+  .wx-cover:hover .wx-cover-img {
+    transform: scale(1.02);
+  }
+
+  /* ===== 个人信息栏 ===== */
+  .wx-info-bar {
+    position: relative;
+    background: var(--card-bg);
+    border: none;
+    border-radius: 0 0 12px 12px;
+    padding: 0.75rem 1.25rem 1rem;
+    min-height: 2rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  /* 签名：右侧，头像下方 */
+  .wx-bio {
+    font-size: 0.8125rem;
+    color: var(--content-meta);
+    line-height: 1.5;
+    text-align: right;
+    max-width: calc(100% - 8rem);
+    margin-left: auto;
+    margin-top: 2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 头像：右侧，向上突出 */
+  .wx-avatar-box {
+    position: absolute;
+    top: 0;
+    right: 1.25rem;
+    transform: translateY(-65%);
+    z-index: 20;
+  }
+
+  .wx-avatar {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 3px solid var(--card-bg);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    display: block;
+  }
+
+  /* 昵称：头像左边，在封面图上（绝对定位在封面图底部） */
+  .wx-name {
+    position: absolute;
+    right: 7rem;
+    top: 0;
+    transform: translateY(-110%);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+    z-index: 15;
+  }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 480px) {
+    .wx-cover-img-box {
+      height: 200px;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .wx-cover {
+      border-radius: 8px;
+    }
+
+    .wx-info-bar {
+      border-radius: 0 0 8px 8px;
+      padding: 0.625rem 1rem 0.75rem;
+    }
+
+    .wx-avatar {
+      width: 4rem;
+      height: 4rem;
+    }
+
+    .wx-avatar-box {
+      right: 1rem;
+    }
+
+    .wx-name {
+      right: 5.75rem;
+      font-size: 1.0625rem;
+    }
+
+    .wx-bio {
+      font-size: 0.75rem;
+    }
+  }
+</style>

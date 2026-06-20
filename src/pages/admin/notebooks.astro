@@ -1,0 +1,750 @@
+---
+// 笔记管理页面 - 往已有笔记本里写笔记，通过 GitHub Gist 存储
+import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
+
+// 从配置读取笔记本列表
+const notebookList = Object.keys(externalNotebooksConfig.notebookGists).sort();
+---
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>笔记管理</title>
+  <style is:inline>
+    :root {
+      --bg: #fff; --card: transparent; --border: #d9d9d9; --text: #1a1a1a;
+      --text-2: #595959; --text-3: #8c8c8c; --primary: #4d4d4d;
+      --input-bg: transparent; --hover: #f5f5f5; --danger: #cf1322;
+      --success: #389e0d; --code-bg: #f6f8fa;
+    }
+    :root.dark {
+      --bg: #141414; --card: transparent; --border: #404040; --text: #e8e8e8;
+      --text-2: #a6a6a6; --text-3: #737373; --input-bg: transparent;
+      --hover: #262626; --primary: #d9d9d9; --code-bg: #1e1e1e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Roboto', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .navbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+    }
+    .navbar-inner {
+      max-width: 960px; margin: 0 auto; padding: 0 1rem;
+      display: flex; align-items: center; justify-content: space-between; height: 48px;
+    }
+    .navbar-left { display: flex; align-items: center; gap: 0.5rem; }
+    .navbar-left h1 { font-size: 0.9375rem; font-weight: 600; color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      color: var(--text-2); text-decoration: none; font-size: 0.8125rem;
+      padding: 0.25rem 0.5rem; transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text); }
+    .back-link svg { width: 16px; height: 16px; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-3);
+      padding: 0.25rem 0.5rem; font-size: 0.6875rem;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      padding: 1.25rem; margin-bottom: 1rem;
+    }
+
+    .status-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.75rem; margin-bottom: 1rem;
+      border: 1px solid var(--border); font-size: 0.8125rem; color: var(--text-2);
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-dot.ok { background: var(--success); }
+    .status-dot.err { background: var(--danger); }
+
+    .field { margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      display: flex; align-items: center; gap: 0.375rem;
+      font-size: 0.75rem; font-weight: 500; color: var(--text-2);
+      margin-bottom: 0.5rem;
+    }
+    .field-label .icon { font-size: 0.875rem; }
+
+    .input-single {
+      width: 100%; padding: 0.4rem 0.625rem; border: 1px solid var(--border);
+      border-radius: 0; font-size: 0.8125rem; background: var(--input-bg);
+      color: var(--text); outline: none; transition: border-color 0.15s;
+    }
+    .input-single:focus { border-color: var(--primary); }
+    .input-single::placeholder { color: var(--text-3); }
+
+    select {
+      width: 100%; padding: 0.4rem 0.625rem; border: 1px solid var(--border);
+      border-radius: 0; font-size: 0.8125rem; background: var(--bg);
+      color: var(--text); outline: none; transition: border-color 0.15s;
+      cursor: pointer; appearance: auto;
+    }
+    select:focus { border-color: var(--primary); }
+
+    input[type="date"] {
+      width: 100%; padding: 0.4rem 0.625rem; border: 1px solid var(--border);
+      border-radius: 0; font-size: 0.8125rem; background: var(--input-bg);
+      color: var(--text); outline: none; transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    input[type="date"]:focus { border-color: var(--primary); }
+
+    textarea {
+      width: 100%; min-height: 60px; padding: 0.625rem 0.75rem;
+      border: 1px solid var(--border); border-radius: 0;
+      font-size: 0.875rem; line-height: 1.7; background: var(--input-bg);
+      color: var(--text); outline: none; resize: vertical;
+      font-family: inherit; transition: border-color 0.15s;
+    }
+    textarea:focus { border-color: var(--primary); }
+    textarea::placeholder { color: var(--text-3); }
+
+    /* ===== 编辑器 ===== */
+    .editor-container {
+      display: grid; grid-template-columns: 1fr; gap: 0;
+      border: 1px solid var(--border);
+    }
+    @media (min-width: 768px) {
+      .editor-container { grid-template-columns: 1fr 1fr; }
+    }
+    .editor-pane { display: flex; flex-direction: column; }
+    .editor-pane-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem; font-weight: 500; color: var(--text-3);
+    }
+    .editor-textarea {
+      width: 100%; min-height: 350px; padding: 0.75rem;
+      border: none; border-radius: 0;
+      font-size: 0.875rem; line-height: 1.8; background: var(--input-bg);
+      color: var(--text); outline: none; resize: vertical;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+    .editor-textarea::placeholder { color: var(--text-3); }
+    .preview-pane {
+      border-top: 1px solid var(--border);
+      min-height: 350px; padding: 0.75rem;
+      overflow-y: auto; font-size: 0.875rem; line-height: 1.8;
+    }
+    @media (min-width: 768px) {
+      .preview-pane { border-top: none; border-left: 1px solid var(--border); }
+    }
+    .preview-pane h1, .preview-pane h2, .preview-pane h3 { margin: 1em 0 0.5em; }
+    .preview-pane h1 { font-size: 1.5rem; }
+    .preview-pane h2 { font-size: 1.25rem; }
+    .preview-pane h3 { font-size: 1.1rem; }
+    .preview-pane p { margin: 0 0 0.75em; }
+    .preview-pane ul, .preview-pane ol { margin: 0 0 0.75em; padding-left: 1.5em; }
+    .preview-pane li { margin-bottom: 0.25em; }
+    .preview-pane blockquote { border-left: 3px solid var(--primary); padding-left: 1em; margin: 0 0 0.75em; color: var(--text-2); }
+    .preview-pane code { font-family: 'JetBrains Mono', monospace; background: var(--code-bg); padding: 0.15em 0.4em; font-size: 0.85em; }
+    .preview-pane pre { background: var(--code-bg); padding: 0.75em; margin: 0 0 0.75em; overflow-x: auto; }
+    .preview-pane pre code { background: none; padding: 0; }
+    .preview-pane img { max-width: 100%; }
+    .preview-pane a { color: var(--primary); }
+    .preview-pane hr { border: none; border-top: 1px solid var(--border); margin: 1.5em 0; }
+
+    .editor-toolbar { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+    .toolbar-btn {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); background: var(--bg); color: var(--text-2);
+      cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
+    }
+    .toolbar-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+      padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 0;
+      font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+      transition: all 0.15s; font-family: inherit; background: var(--bg); color: var(--text);
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .btn:active { background: var(--hover); }
+    .btn-primary { background: var(--text); color: var(--bg); width: 100%; border-color: var(--text); }
+    .btn-primary:hover { opacity: 0.85; color: var(--bg); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-sm { padding: 0.25rem 0.625rem; font-size: 0.75rem; background: transparent; color: var(--text-2); border: 1px solid var(--border); }
+    .btn-sm:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-danger-sm { padding: 0.25rem 0.5rem; font-size: 0.6875rem; background: transparent; color: var(--text-3); border: 1px solid var(--border); }
+    .btn-danger-sm:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ===== 笔记列表 ===== */
+    .list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .list-header .count { font-size: 0.75rem; color: var(--text-3); }
+
+    .entry-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+      padding: 0.625rem 0; border-bottom: 1px solid var(--border);
+    }
+    .entry-row:last-child { border-bottom: none; }
+    .entry-info { flex: 1; min-width: 0; }
+    .entry-title { font-size: 0.8125rem; font-weight: 500; color: var(--text); }
+    .entry-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem; font-size: 0.6875rem; color: var(--text-3); }
+    .entry-meta .sep { opacity: 0.4; }
+    .entry-preview {
+      font-size: 0.75rem; color: var(--text-3); margin-top: 0.15rem;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .entry-actions { display: flex; gap: 0.25rem; flex-shrink: 0; }
+
+    .empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-3); }
+    .empty-state .icon { font-size: 1.5rem; margin-bottom: 0.5rem; opacity: 0.4; }
+    .empty-state p { font-size: 0.8125rem; }
+
+    .toast {
+      position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-8px);
+      padding: 0.5rem 1rem; font-size: 0.8125rem;
+      font-weight: 500; z-index: 999; opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none; border: 1px solid var(--border);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.ok { background: var(--success); color: #fff; border-color: var(--success); }
+    .toast.err { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+    .dark-fab {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      width: 36px; height: 36px;
+      background: var(--bg); border: 1px solid var(--border);
+      cursor: pointer; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s;
+    }
+    .dark-fab:hover { border-color: var(--primary); }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 1.5px solid var(--border); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 0.375rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+    .edit-bar { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+
+    .notebook-tabs {
+      display: flex; gap: 0.25rem; flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .notebook-tab {
+      padding: 0.375rem 0.75rem; border: 1px solid var(--border);
+      font-size: 0.8125rem; cursor: pointer; transition: all 0.15s;
+      background: var(--bg); color: var(--text-2);
+    }
+    .notebook-tab:hover { border-color: var(--primary); color: var(--primary); }
+    .notebook-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    @media (min-width: 768px) {
+      .container { padding: 2rem 1.5rem 4rem; }
+      .card { padding: 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .navbar-inner { padding: 0 0.75rem; }
+      .container { padding: 1rem 0.75rem 3rem; }
+      .card { padding: 1rem; }
+      .editor-textarea { min-height: 250px; }
+      .preview-pane { min-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="admin-main">
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <div class="navbar-left">
+          <span class="dot"></span>
+          <h1>笔记管理</h1>
+        </div>
+        <div class="nav-right">
+          <a href="/admin/" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span>后台</span>
+          </a>
+          <button class="logout-btn" onclick="doLogout()">退出</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- 连接状态 -->
+      <div class="status-bar" id="status-bar">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">正在连接...</span>
+      </div>
+
+      <!-- Token 输入 -->
+      <div class="card" id="token-card">
+        <div class="field">
+          <div class="field-label"><span class="icon">🔑</span> GitHub Token</div>
+          <div style="display:flex;gap:0.5rem;">
+            <input type="text" id="token-input" placeholder="ghp_xxx 或 github_pat_xxx" autocomplete="off" class="input-single" style="flex:1;" />
+            <button class="btn btn-sm" onclick="applyToken()">连接</button>
+            <button class="btn btn-sm" id="disconnect-btn" onclick="disconnectToken()" style="display:none;">断开</button>
+          </div>
+          <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-3);">
+            与说说后台共用同一个 Token，需要 <a href="https://github.com/settings/tokens/new?scopes=gist&description=notebooks-writer" target="_blank" style="color:var(--primary);">gist 权限</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 选择笔记本 -->
+      <div class="card">
+        <div class="field-label"><span class="icon">📓</span> 选择笔记本</div>
+        <div class="notebook-tabs" id="notebook-tabs">
+          {notebookList.map((name) => {
+            const hasGist = externalNotebooksConfig.notebookGists?.[name];
+            return (
+              <button class="notebook-tab" data-notebook={name}>
+                {hasGist ? "✅ " : "⚠️ "}{name}
+              </button>
+            );
+          })}
+        </div>
+        <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-3);">
+          ⚠️ = 未配置 Gist（首次保存自动创建，需手动填回配置） ✅ = 已配置
+        </div>
+      </div>
+
+      <!-- 写笔记 -->
+      <div class="card" id="editor-card">
+        <div class="field-label"><span class="icon">✍️</span> 写笔记 → <strong id="target-notebook" style="margin-left:0.25rem;">未选择</strong></div>
+        <div class="field">
+          <div class="field-label">快速模板</div>
+          <div id="template-buttons" style="display:flex;gap:0.375rem;flex-wrap:wrap;"></div>
+        </div>
+        <div class="field">
+          <div class="field-label">标题</div>
+          <input type="text" class="input-single" id="entry-title" placeholder="笔记标题（可选）" />
+        </div>
+        <div class="field">
+          <div class="field-label">日期</div>
+          <input type="date" id="entry-date" />
+        </div>
+        <div class="field">
+          <div class="field-label">内容（Markdown）</div>
+          <div class="editor-container">
+            <div class="editor-pane">
+              <div class="editor-pane-header">
+                <span>编辑</span>
+                <div class="editor-toolbar">
+                  <button class="toolbar-btn" onclick="insertMd('**','**')" title="加粗">B</button>
+                  <button class="toolbar-btn" onclick="insertMd('*','*')" title="斜体">I</button>
+                  <button class="toolbar-btn" onclick="insertMd('`','`')" title="行内代码">&lt;&gt;</button>
+                  <button class="toolbar-btn" onclick="insertMd('\n```\n','\n```\n')" title="代码块">{}</button>
+                  <button class="toolbar-btn" onclick="insertMd('[','](url)')" title="链接">🔗</button>
+                  <button class="toolbar-btn" onclick="insertMd('![','](url)')" title="图片">🖼</button>
+                  <button class="toolbar-btn" onclick="insertMd('> ','')" title="引用">❝</button>
+                  <button class="toolbar-btn" onclick="insertMd('- ','')" title="列表">☰</button>
+                </div>
+              </div>
+              <textarea class="editor-textarea" id="content-input" placeholder="用 Markdown 写下你的笔记..."></textarea>
+            </div>
+            <div class="editor-pane">
+              <div class="editor-pane-header"><span>预览</span></div>
+              <div class="preview-pane" id="preview-pane">
+                <div class="empty-state" style="padding:2rem;"><p>开始编辑后预览内容</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitEntry()">保存笔记</button>
+        <div class="hidden" id="edit-bar" style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+          <button class="btn btn-sm" onclick="cancelEdit()" style="flex:1;">取消编辑</button>
+        </div>
+      </div>
+
+      <!-- 已有笔记 -->
+      <div class="card">
+        <div class="list-header">
+          <div class="field-label" style="margin:0"><span class="icon">📋</span> <span id="list-title">已有笔记</span></div>
+          <span class="count" id="list-count"></span>
+        </div>
+        <div id="entries-list">
+          <div class="empty-state"><p>请先选择笔记本</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="dark-fab" onclick="toggleDark()" title="切换暗色模式">🌙</button>
+  <div class="toast" id="toast"></div>
+
+  <script is:inline
+    data-token={externalNotebooksConfig.githubToken || ""}
+    data-gists={JSON.stringify(externalNotebooksConfig.notebookGists || {})}
+    data-templates={JSON.stringify(externalNotebooksConfig.templates || [])}>
+    var _script = document.currentScript;
+    var ENV_TOKEN = _script.getAttribute("data-token") || "";
+    var TOKEN = localStorage.getItem("gh_moments_token") || ENV_TOKEN || "";
+    var NOTEBOOK_GISTS = JSON.parse(_script.getAttribute("data-gists") || "{}");
+    var TEMPLATES = JSON.parse(_script.getAttribute("data-templates") || "[]");
+    var FILE_NAME = "notebooks-entries.json";
+    var API = "https://api.github.com";
+
+    var currentNotebook = "";
+    var editingEntryId = null;
+    var allEntries = [];
+
+    function $(id) { return document.getElementById(id); }
+    function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+    function toast(msg, type) {
+      var el = $("toast"); el.textContent = msg; el.className = "toast " + type + " show";
+      clearTimeout(el._t); el._t = setTimeout(function() { el.className = "toast"; }, 2800);
+    }
+    function toggleDark() {
+      document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+    }
+    if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+    function doLogout() { sessionStorage.removeItem("admin_auth"); window.location.href = "/admin/"; }
+    function setStatus(ok, text) {
+      $("status-dot").className = "status-dot " + (ok ? "ok" : "err");
+      $("status-text").textContent = text;
+    }
+
+    // ===== 笔记本标签切换 =====
+    var tabs = document.querySelectorAll(".notebook-tab");
+    tabs.forEach(function(tab) {
+      tab.addEventListener("click", function() {
+        tabs.forEach(function(t) { t.classList.remove("active"); });
+        tab.classList.add("active");
+        currentNotebook = tab.getAttribute("data-notebook");
+        $("target-notebook").textContent = currentNotebook;
+        $("list-title").textContent = currentNotebook + " 的笔记";
+        loadEntries();
+      });
+    });
+
+    // ===== Token =====
+    function applyToken() {
+      var t = $("token-input").value.trim();
+      if (!t) { toast("请输入 Token", "err"); return; }
+      TOKEN = t;
+      localStorage.setItem("gh_moments_token", t);
+      validateAndLoad();
+    }
+    function disconnectToken() {
+      TOKEN = "";
+      localStorage.removeItem("gh_moments_token");
+      $("token-input").value = "";
+      $("disconnect-btn").style.display = "none";
+      setStatus(false, "已断开");
+    }
+    function validateAndLoad() {
+      if (!TOKEN) { setStatus(false, "请输入 Token"); return; }
+      setStatus(false, "正在连接...");
+      $("disconnect-btn").style.display = "none";
+      fetch(API + "/user", { headers: { "Authorization": "Bearer " + TOKEN } })
+        .then(function(r) {
+          if (r.ok) { setStatus(true, "已连接"); $("disconnect-btn").style.display = ""; initGist(); }
+          else if (r.status === 401) { setStatus(false, "Token 无效"); }
+          else { setStatus(false, "连接失败 HTTP " + r.status); }
+        })
+        .catch(function(e) { setStatus(false, "网络错误: " + e.message); });
+    }
+
+    // ===== 初始化 =====
+    function initGist() {
+      var configured = Object.keys(NOTEBOOK_GISTS).filter(function(k) { return NOTEBOOK_GISTS[k]; });
+      setStatus(true, "已连接（" + configured.length + " 个笔记本已配置 Gist）");
+    }
+
+    // ===== 加载当前笔记本的笔记 =====
+    function loadEntries() {
+      if (!currentNotebook) return;
+      var gistId = NOTEBOOK_GISTS[currentNotebook];
+      if (!gistId) {
+        $("entries-list").innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>该笔记本未配置 Gist<br><span style="font-size:0.75rem;">首次保存时自动创建</span></p></div>';
+        $("list-count").textContent = "";
+        return;
+      }
+
+      $("entries-list").innerHTML = '<div class="empty-state"><span class="spinner"></span></div>';
+      fetch(API + "/gists/" + gistId, { headers: { "Authorization": "Bearer " + TOKEN } })
+        .then(function(r) { return r.json(); })
+        .then(function(gist) {
+          var file = gist.files[FILE_NAME];
+          allEntries = [];
+          if (file) { try { allEntries = JSON.parse(file.content || "[]"); } catch(e) {} }
+          renderEntries();
+        })
+        .catch(function() { $("entries-list").innerHTML = '<div class="empty-state" style="color:var(--danger)">加载失败</div>'; });
+    }
+
+    // ===== 渲染当前笔记本的笔记 =====
+    function renderEntries() {
+      var list = $("entries-list");
+      if (!currentNotebook) {
+        list.innerHTML = '<div class="empty-state"><p>请先选择笔记本</p></div>';
+        $("list-count").textContent = "";
+        return;
+      }
+      var filtered = allEntries.filter(function(e) { return e.notebook === currentNotebook; });
+      filtered.sort(function(a, b) { return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt); });
+      $("list-count").textContent = filtered.length + " 篇";
+
+      if (!filtered.length) {
+        list.innerHTML = '<div class="empty-state"><div class="icon">📝</div><p>该笔记本还没有远程笔记</p></div>';
+        return;
+      }
+
+      list.innerHTML = "";
+      filtered.forEach(function(e) {
+        var d = document.createElement("div"); d.className = "entry-row";
+        var date = e.date || (e.createdAt ? new Date(e.createdAt).toISOString().split("T")[0] : "");
+        var preview = (e.content || "").replace(/[#*`>\-\[\]!]/g, "").replace(/\n/g, " ").slice(0, 80);
+        d.innerHTML =
+          '<div class="entry-info">' +
+          '<div class="entry-title">' + esc(e.title || "无标题") + '</div>' +
+          '<div class="entry-meta"><span>' + date + '</span></div>' +
+          (preview ? '<div class="entry-preview">' + esc(preview) + '</div>' : "") +
+          '</div>' +
+          '<div class="entry-actions">' +
+          '<button class="btn btn-sm" onclick="editEntry(\'' + e.id + '\')">编辑</button>' +
+          '<button class="btn btn-danger-sm" onclick="deleteEntry(\'' + e.id + '\')">删除</button>' +
+          '</div>';
+        list.appendChild(d);
+      });
+    }
+
+    // ===== 模板 =====
+    // 从配置生成模板按钮
+    (function() {
+      var container = document.getElementById("template-buttons");
+      if (!container || !TEMPLATES.length) return;
+      TEMPLATES.forEach(function(tpl) {
+        var btn = document.createElement("button");
+        btn.className = "btn btn-sm";
+        btn.textContent = tpl.icon + " " + tpl.name;
+        btn.onclick = function() { applyTemplate(tpl); };
+        container.appendChild(btn);
+      });
+    })();
+
+    function applyTemplate(tpl) {
+      if ($("content-input").value.trim() && !confirm("当前内容将被覆盖，确定切换模板？")) return;
+      var today = new Date().toISOString().split("T")[0];
+      $("entry-title").value = (tpl.title || "").replace(/\{name\}/g, today);
+      $("content-input").value = tpl.content || "";
+      updatePreview();
+    }
+
+    // ===== 编辑器工具栏 =====
+    function insertMd(before, after) {
+      var ta = $("content-input");
+      var start = ta.selectionStart, end = ta.selectionEnd;
+      var text = ta.value, selected = text.substring(start, end) || "文本";
+      ta.value = text.substring(0, start) + before + selected + after + text.substring(end);
+      ta.focus(); ta.selectionStart = start + before.length; ta.selectionEnd = start + before.length + selected.length;
+      updatePreview();
+    }
+
+    var previewTimer = null;
+    function updatePreview() {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(function() {
+        var md = $("content-input").value;
+        $("preview-pane").innerHTML = md ? renderMarkdown(md) : '<div class="empty-state" style="padding:2rem;"><p>开始编辑后预览内容</p></div>';
+      }, 200);
+    }
+
+    function renderMarkdown(md) {
+      if (!md) return "";
+      var html = md;
+      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(m, l, c) { return '<pre><code>' + esc(c) + '</code></pre>'; });
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+      html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+      html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+      html = html.replace(/^---$/gm, '<hr>');
+      html = html.replace(/\n\n/g, '</p><p>');
+      html = html.replace(/\n/g, '<br>');
+      html = '<p>' + html + '</p>';
+      html = html.replace(/<p>\s*<\/p>/g, '');
+      html = html.replace(/<p>\s*(<h[1-6]>)/g, '$1');
+      html = html.replace(/(<\/h[1-6]>)\s*<\/p>/g, '$1');
+      html = html.replace(/<p>\s*(<pre>)/g, '$1');
+      html = html.replace(/(<\/pre>)\s*<\/p>/g, '$1');
+      html = html.replace(/<p>\s*(<ul>)/g, '$1');
+      html = html.replace(/(<\/ul>)\s*<\/p>/g, '$1');
+      html = html.replace(/<p>\s*(<blockquote>)/g, '$1');
+      html = html.replace(/(<\/blockquote>)\s*<\/p>/g, '$1');
+      html = html.replace(/<p>\s*(<hr>)/g, '$1');
+      html = html.replace(/(<hr>)\s*<\/p>/g, '$1');
+      return html;
+    }
+
+    // ===== 编辑 =====
+    function editEntry(id) {
+      var entry = allEntries.find(function(e) { return e.id === id; });
+      if (!entry) { toast("未找到", "err"); return; }
+      editingEntryId = id;
+      $("entry-title").value = entry.title || "";
+      $("entry-date").value = entry.date || "";
+      $("content-input").value = entry.content || "";
+      $("submit-btn").textContent = "保存修改";
+      $("edit-bar").classList.remove("hidden");
+      updatePreview();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      toast("正在编辑: " + (entry.title || "无标题"), "ok");
+    }
+
+    function cancelEdit() {
+      editingEntryId = null;
+      $("entry-title").value = "";
+      $("entry-date").value = new Date().toISOString().split("T")[0];
+      $("content-input").value = "";
+      $("submit-btn").textContent = "保存笔记";
+      $("edit-bar").classList.add("hidden");
+      updatePreview();
+    }
+
+    // ===== 提交 =====
+    function submitEntry() {
+      if (!currentNotebook) { toast("请先选择笔记本", "err"); return; }
+      var content = $("content-input").value.trim();
+      if (!content) { toast("请输入内容", "err"); return; }
+
+      var title = $("entry-title").value.trim();
+      var date = $("entry-date").value || new Date().toISOString().split("T")[0];
+      var btn = $("submit-btn");
+      var isEdit = !!editingEntryId;
+      btn.disabled = true; btn.textContent = "保存中...";
+
+      var gistId = NOTEBOOK_GISTS[currentNotebook];
+
+      function doSave(gid) {
+        var fetchGist = gid
+          ? fetch(API + "/gists/" + gid, { headers: { "Authorization": "Bearer " + TOKEN } }).then(function(r) { return r.json(); })
+          : Promise.resolve({ files: {} });
+
+        fetchGist.then(function(gist) {
+          var file = gist.files[FILE_NAME];
+          var entries = [];
+          if (file) { try { entries = JSON.parse(file.content || "[]"); } catch(e) {} }
+
+          if (isEdit) {
+            var idx = entries.findIndex(function(e) { return e.id === editingEntryId; });
+            if (idx !== -1) {
+              entries[idx].title = title;
+              entries[idx].date = date;
+              entries[idx].content = content;
+              entries[idx].updatedAt = new Date().toISOString();
+            }
+          } else {
+            entries.push({
+              id: "nb-" + Date.now(),
+              notebook: currentNotebook,
+              title: title, date: date, content: content,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            });
+          }
+
+          var method = gid ? "PATCH" : "POST";
+          var body = gid
+            ? JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(entries, null, 2) } } })
+            : JSON.stringify({ description: "firefly-notebook:" + currentNotebook, public: false, files: { [FILE_NAME]: { content: JSON.stringify(entries, null, 2) } } });
+
+          return fetch(gid ? API + "/gists/" + gid : API + "/gists", {
+            method: method,
+            headers: { "Authorization": "Bearer " + TOKEN, "Content-Type": "application/json" },
+            body: body
+          }).then(function(r) {
+            if (!r.ok) throw new Error("保存失败");
+            return r.json();
+          }).then(function(result) {
+            if (!gid) {
+              // 自动创建了新 Gist，提示用户填回配置
+              NOTEBOOK_GISTS[currentNotebook] = result.id;
+              toast("已保存 ✓ 新 Gist ID: " + result.id + "，请填回配置文件", "ok");
+              // 更新标签状态
+              tabs.forEach(function(t) {
+                if (t.getAttribute("data-notebook") === currentNotebook) {
+                  t.textContent = "✅ " + currentNotebook;
+                }
+              });
+            } else {
+              toast(isEdit ? "已保存 ✓" : "保存成功 ✓", "ok");
+            }
+            allEntries = entries;
+            cancelEdit();
+            renderEntries();
+          });
+        }).catch(function(e) {
+          toast("保存失败: " + e.message, "err");
+        }).finally(function() {
+          btn.disabled = false; btn.textContent = isEdit ? "保存修改" : "保存笔记";
+        });
+      }
+
+      doSave(gistId);
+    }
+
+    // ===== 删除 =====
+    function deleteEntry(id) {
+      if (!confirm("确定删除该笔记？")) return;
+      var gistId = NOTEBOOK_GISTS[currentNotebook];
+      if (!gistId) return;
+
+      fetch(API + "/gists/" + gistId, { headers: { "Authorization": "Bearer " + TOKEN } })
+        .then(function(r) { return r.json(); })
+        .then(function(gist) {
+          var file = gist.files[FILE_NAME];
+          var entries = [];
+          if (file) { try { entries = JSON.parse(file.content || "[]"); } catch(e) {} }
+          entries = entries.filter(function(e) { return e.id !== id; });
+
+          return fetch(API + "/gists/" + gistId, {
+            method: "PATCH",
+            headers: { "Authorization": "Bearer " + TOKEN, "Content-Type": "application/json" },
+            body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(entries, null, 2) } } })
+          });
+        })
+        .then(function(r) {
+          if (!r.ok) throw new Error("删除失败");
+          allEntries = allEntries.filter(function(e) { return e.id !== id; });
+          toast("已删除", "ok");
+          renderEntries();
+        })
+        .catch(function(e) { toast("删除失败: " + e.message, "err"); });
+    }
+
+    // ===== 初始化 =====
+    (function() {
+      if (sessionStorage.getItem("admin_auth") !== "1") { window.location.href = "/admin/"; return; }
+      $("entry-date").value = new Date().toISOString().split("T")[0];
+      $("content-input").addEventListener("input", updatePreview);
+      if (TOKEN) { $("token-input").value = TOKEN; }
+      validateAndLoad();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,783 @@
+---
+// 说说写作页面 - 通过 GitHub Gist 存储，完全免费，不修改仓库代码
+import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+---
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>写说说</title>
+  <style is:inline>
+    :root {
+      --bg: #fff; --card: transparent; --border: #d9d9d9; --text: #1a1a1a;
+      --text-2: #595959; --text-3: #8c8c8c; --primary: #4d4d4d;
+      --input-bg: transparent; --hover: #f5f5f5; --danger: #cf1322;
+      --success: #389e0d;
+    }
+    :root.dark {
+      --bg: #141414; --card: transparent; --border: #404040; --text: #e8e8e8;
+      --text-2: #a6a6a6; --text-3: #737373; --input-bg: transparent;
+      --hover: #262626; --primary: #d9d9d9;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Roboto', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== 导航栏 ===== */
+    .navbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+    }
+    .navbar-inner {
+      max-width: 640px; margin: 0 auto; padding: 0 1rem;
+      display: flex; align-items: center; justify-content: space-between; height: 48px;
+    }
+    .navbar-left { display: flex; align-items: center; gap: 0.5rem; }
+    .navbar-left h1 { font-size: 0.9375rem; font-weight: 600; color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      color: var(--text-2); text-decoration: none; font-size: 0.8125rem;
+      padding: 0.25rem 0.5rem; transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text); }
+    .back-link svg { width: 16px; height: 16px; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-3);
+      padding: 0.25rem 0.5rem; font-size: 0.6875rem;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ===== 主容器 ===== */
+    .container { max-width: 640px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+
+    /* ===== 卡片 ===== */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      padding: 1.25rem; margin-bottom: 1rem;
+    }
+
+    /* ===== 状态栏 ===== */
+    .status-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.75rem; margin-bottom: 1rem;
+      border: 1px solid var(--border); font-size: 0.8125rem; color: var(--text-2);
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-dot.ok { background: var(--success); }
+    .status-dot.err { background: var(--danger); }
+
+    /* ===== 表单 ===== */
+    .field { margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      display: flex; align-items: center; gap: 0.375rem;
+      font-size: 0.75rem; font-weight: 500; color: var(--text-2);
+      margin-bottom: 0.5rem;
+    }
+    .field-label .icon { font-size: 0.875rem; }
+
+    textarea {
+      width: 100%; min-height: 140px; padding: 0.625rem 0.75rem;
+      border: 1px solid var(--border); border-radius: 0;
+      font-size: 0.875rem; line-height: 1.7; background: var(--input-bg);
+      color: var(--text); outline: none; resize: vertical;
+      font-family: inherit; transition: border-color 0.15s;
+    }
+    textarea:focus { border-color: var(--primary); }
+    textarea::placeholder { color: var(--text-3); }
+
+    .input-row { display: flex; gap: 0.5rem; }
+    .input-row input[type="text"] {
+      flex: 1; padding: 0.4rem 0.625rem; border: 1px solid var(--border);
+      border-radius: 0; font-size: 0.8125rem; background: var(--input-bg);
+      color: var(--text); outline: none; transition: border-color 0.15s;
+    }
+    .input-row input[type="text"]:focus { border-color: var(--primary); }
+    .input-row input[type="text"]::placeholder { color: var(--text-3); }
+
+    .input-single {
+      width: 100%; padding: 0.4rem 0.625rem; border: 1px solid var(--border);
+      border-radius: 0; font-size: 0.8125rem; background: var(--input-bg);
+      color: var(--text); outline: none; transition: border-color 0.15s;
+    }
+    .input-single:focus { border-color: var(--primary); }
+    .input-single::placeholder { color: var(--text-3); }
+
+    input[type="datetime-local"] {
+      width: 100%; padding: 0.4rem 0.625rem; border: 1px solid var(--border);
+      border-radius: 0; font-size: 0.8125rem; background: var(--input-bg);
+      color: var(--text); outline: none; transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    input[type="datetime-local"]:focus { border-color: var(--primary); }
+    .custom-time-panel {
+      margin-top: 0.5rem; padding-top: 0.5rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    /* 图片预览 */
+    .img-list { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.5rem; }
+    .img-thumb {
+      position: relative; width: 48px; height: 48px;
+      overflow: hidden; border: 1px solid var(--border); flex-shrink: 0;
+    }
+    .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .img-thumb .remove {
+      position: absolute; top: 0; right: 0;
+      width: 16px; height: 16px; border-radius: 0;
+      background: rgba(0,0,0,0.6); color: #fff; border: none;
+      font-size: 10px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    .img-thumb:hover .remove { opacity: 1; }
+
+    /* ===== 置顶开关 ===== */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none;
+    }
+    .toggle-label {
+      display: flex; align-items: center; gap: 0.375rem;
+      font-size: 0.75rem; font-weight: 500; color: var(--text-2);
+    }
+    .toggle-label .icon { font-size: 0.875rem; }
+    .toggle-checkbox { display: none; }
+    .toggle-switch {
+      position: relative; width: 36px; height: 20px;
+      background: var(--border); border-radius: 10px;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .toggle-switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; transition: transform 0.15s;
+    }
+    .toggle-checkbox:checked + .toggle-switch { background: var(--primary); }
+    .toggle-checkbox:checked + .toggle-switch::after { transform: translateX(16px); }
+
+    /* ===== 按钮 ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+      padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 0;
+      font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+      transition: all 0.15s; font-family: inherit; background: var(--bg); color: var(--text);
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .btn:active { background: var(--hover); }
+    .btn-primary {
+      background: var(--text); color: var(--bg); width: 100%; border-color: var(--text);
+    }
+    .btn-primary:hover { opacity: 0.85; color: var(--bg); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-sm {
+      padding: 0.25rem 0.625rem; font-size: 0.75rem;
+      background: transparent; color: var(--text-2); border: 1px solid var(--border);
+    }
+    .btn-sm:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-danger-sm {
+      padding: 0.25rem 0.5rem; font-size: 0.6875rem;
+      background: transparent; color: var(--text-3); border: 1px solid var(--border);
+    }
+    .btn-danger-sm:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ===== 说说列表 ===== */
+    .list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .list-header .count { font-size: 0.75rem; color: var(--text-3); }
+
+    .moment-row {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;
+      padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+    }
+    .moment-row:last-child { border-bottom: none; }
+    .moment-body { flex: 1; min-width: 0; }
+    .moment-text {
+      font-size: 0.8125rem; line-height: 1.6; color: var(--text);
+      word-break: break-word;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .moment-meta {
+      display: flex; align-items: center; gap: 0.5rem; margin-top: 0.375rem;
+      font-size: 0.6875rem; color: var(--text-3);
+    }
+    .moment-meta .sep { opacity: 0.4; }
+    .moment-images { display: flex; gap: 0.25rem; margin-top: 0.375rem; }
+    .moment-images img {
+      width: 40px; height: 40px; object-fit: cover;
+      border: 1px solid var(--border);
+    }
+
+    .empty-state {
+      text-align: center; padding: 2rem 1rem; color: var(--text-3);
+    }
+    .empty-state .icon { font-size: 1.5rem; margin-bottom: 0.5rem; opacity: 0.4; }
+    .empty-state p { font-size: 0.8125rem; }
+
+    /* ===== Toast ===== */
+    .toast {
+      position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-8px);
+      padding: 0.5rem 1rem; font-size: 0.8125rem;
+      font-weight: 500; z-index: 999; opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none; border: 1px solid var(--border);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.ok { background: var(--success); color: #fff; border-color: var(--success); }
+    .toast.err { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+    /* ===== 暗色切换 ===== */
+    .dark-fab {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      width: 36px; height: 36px;
+      background: var(--bg); border: 1px solid var(--border);
+      cursor: pointer; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s;
+    }
+    .dark-fab:hover { border-color: var(--primary); }
+
+    /* ===== 加载 ===== */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 1.5px solid var(--border); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 0.375rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* ===== 响应式 ===== */
+    @media (min-width: 640px) {
+      .container { padding: 2rem 1.5rem 4rem; }
+      .card { padding: 1.5rem; }
+      textarea { min-height: 160px; }
+    }
+    @media (max-width: 480px) {
+      .navbar-inner { padding: 0 0.75rem; }
+      .container { padding: 1rem 0.75rem 3rem; }
+      .card { padding: 1rem; }
+      .img-thumb { width: 40px; height: 40px; }
+      .img-thumb .remove { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 后台主页 ===== -->
+  <div id="admin-main">
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <div class="navbar-left">
+          <span class="dot"></span>
+          <h1>写说说</h1>
+        </div>
+        <div class="nav-right">
+          <a href="/admin/" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span>后台</span>
+          </a>
+          <button class="logout-btn" onclick="doLogout()">退出</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- 连接状态 -->
+      <div class="status-bar" id="status-bar">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">正在连接...</span>
+      </div>
+
+      <!-- Token 输入 -->
+      <div class="card" id="token-card">
+        <div class="field">
+          <div class="field-label"><span class="icon">🔑</span> GitHub Token</div>
+          <div class="input-row">
+            <input type="text" id="token-manual" placeholder="ghp_xxx 或 github_pat_xxx" autocomplete="off" />
+            <button class="btn btn-sm" onclick="applyManualToken()">连接</button>
+            <button class="btn btn-sm" id="disconnect-btn" onclick="disconnectToken()" style="display:none;">断开</button>
+          </div>
+          <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-3);">
+            Token 仅保存在浏览器本地，需要 <a href="https://github.com/settings/tokens/new?scopes=gist&description=moments-writer" target="_blank" style="color:var(--primary);">gist 权限</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 写说说 -->
+      <div class="card">
+        <div class="field">
+          <div class="field-label"><span class="icon">✍️</span> 内容</div>
+          <textarea id="content-input" placeholder="分享此刻的想法..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label"><span class="icon">🖼️</span> 图片</div>
+          <div class="input-row">
+            <input type="text" id="image-input" placeholder="粘贴图片链接，回车添加" />
+            <button class="btn btn-sm" onclick="addImage()">添加</button>
+          </div>
+          <div style="margin-top:0.375rem;">
+            <button class="btn btn-sm" onclick="toggleBatchImages()" id="batch-toggle-btn" style="font-size:0.6875rem;">📋 批量添加</button>
+          </div>
+          <div class="hidden" id="batch-panel" style="margin-top:0.375rem;">
+            <textarea id="batch-images-input" placeholder="每行一个图片链接，支持批量粘贴&#10;https://example.com/1.jpg&#10;https://example.com/2.jpg&#10;https://example.com/3.jpg" style="min-height:80px;font-size:0.8125rem;padding:0.5rem 0.75rem;"></textarea>
+            <button class="btn btn-sm" onclick="applyBatchImages()" style="margin-top:0.375rem;">确认添加</button>
+          </div>
+          <div class="img-list" id="img-preview"></div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span class="icon">🏷️</span> 标签</div>
+          <input type="text" class="input-single" id="tags-input" placeholder="逗号分隔，如：日常, 生活" value="日常" />
+        </div>
+        <div class="field">
+          <div class="field-label"><span class="icon">📍</span> 位置</div>
+          <div class="input-row">
+            <input type="text" class="input-single" id="location-input" placeholder="可选" style="flex:1;" />
+            <button class="btn btn-sm" onclick="fetchLocation()" id="geo-btn" title="获取当前位置">📍</button>
+          </div>
+          <div id="geo-status" style="margin-top:0.25rem;font-size:0.6875rem;color:var(--text-3);display:none;"></div>
+        </div>
+        <div class="field">
+          <label class="toggle-row" for="custom-time-toggle">
+            <span class="toggle-label"><span class="icon">🕐</span> 自定义发布时间</span>
+            <input type="checkbox" id="custom-time-toggle" class="toggle-checkbox" onchange="toggleCustomTime()" />
+            <span class="toggle-switch"></span>
+          </label>
+          <div class="custom-time-panel hidden" id="custom-time-panel">
+            <input type="datetime-local" id="time-input" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="toggle-row" for="pinned-input">
+            <span class="toggle-label"><span class="icon">📌</span> 置顶</span>
+            <input type="checkbox" id="pinned-input" class="toggle-checkbox" />
+            <span class="toggle-switch"></span>
+          </label>
+        </div>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitMoment()">发布</button>
+        <div class="hidden" id="edit-bar" style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+          <button class="btn btn-sm" onclick="cancelEdit()" style="flex:1;">取消编辑</button>
+        </div>
+      </div>
+
+      <!-- 已有说说 -->
+      <div class="card">
+        <div class="list-header">
+          <div class="field-label" style="margin:0"><span class="icon">📋</span> 已发布</div>
+          <span class="count" id="list-count"></span>
+        </div>
+        <div id="moments-list">
+          <div class="empty-state"><span class="spinner"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="dark-fab" onclick="toggleDark()" title="切换暗色模式">🌙</button>
+  <div class="toast" id="toast"></div>
+
+  <script is:inline
+    data-token={externalMomentsConfig.githubToken || ""}
+    data-gist={externalMomentsConfig.gistId || ""}
+    data-file={externalMomentsConfig.fileName || "moments.json"}>
+    var _script = document.currentScript;
+    var ENV_TOKEN = _script.getAttribute("data-token") || "";
+    var TOKEN = localStorage.getItem("gh_moments_token") || ENV_TOKEN || "";
+    var GIST_ID = _script.getAttribute("data-gist") || "";
+    var FILE_NAME = _script.getAttribute("data-file") || "moments.json";
+    var API = "https://api.github.com";
+
+    // ===== 工具 =====
+    function $(id) { return document.getElementById(id); }
+    function getImages() { try { return JSON.parse(localStorage.getItem("moment_imgs") || "[]"); } catch(e) { return []; } }
+    function setImages(v) { localStorage.setItem("moment_imgs", JSON.stringify(v)); }
+    function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+
+    function toast(msg, type) {
+      var el = $("toast"); el.textContent = msg; el.className = "toast " + type + " show";
+      clearTimeout(el._t); el._t = setTimeout(function() { el.className = "toast"; }, 2800);
+    }
+
+    // ===== 暗色 =====
+    function toggleDark() {
+      document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+    }
+    if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+
+    // ===== 退出 =====
+    function doLogout() {
+      sessionStorage.removeItem("admin_auth");
+      window.location.href = "/admin/";
+    }
+
+    // ===== Token 验证 =====
+    function setStatus(ok, text) {
+      $("status-dot").className = "status-dot " + (ok ? "ok" : "err");
+      $("status-text").textContent = text;
+    }
+
+    function applyManualToken() {
+      var t = $("token-manual").value.trim();
+      if (!t) { toast("请输入 Token", "err"); return; }
+      TOKEN = t;
+      localStorage.setItem("gh_moments_token", t);
+      validateAndLoad();
+    }
+
+    function disconnectToken() {
+      TOKEN = "";
+      localStorage.removeItem("gh_moments_token");
+      $("token-manual").value = "";
+      $("disconnect-btn").style.display = "none";
+      setStatus(false, "已断开，请重新输入 Token");
+      showEmpty();
+    }
+
+    function validateAndLoad() {
+      if (!TOKEN) {
+        setStatus(false, "请输入 Token 后点击连接");
+        showEmpty();
+        return;
+      }
+      if (!GIST_ID) {
+        setStatus(false, "未配置 Gist ID");
+        showEmpty();
+        return;
+      }
+      setStatus(false, "正在连接...");
+      $("disconnect-btn").style.display = "none";
+      fetch(API + "/gists/" + GIST_ID, {
+        headers: { "Authorization": "Bearer " + TOKEN, "Accept": "application/vnd.github+json" }
+      }).then(function(r) {
+        if (r.ok) {
+          setStatus(true, "已连接");
+          $("disconnect-btn").style.display = "";
+          loadMoments();
+        }
+        else if (r.status === 401) { setStatus(false, "Token 无效或已过期"); }
+        else { setStatus(false, "连接失败（HTTP " + r.status + "）"); }
+      }).catch(function(e) { setStatus(false, "网络错误: " + e.message); });
+    }
+
+    // ===== 图片 =====
+    function addImage() {
+      var input = $("image-input"), url = input.value.trim();
+      if (!url) return;
+      var imgs = getImages(); imgs.push(url); setImages(imgs);
+      input.value = ""; renderImgs();
+      toast("已添加第 " + imgs.length + " 张图片", "ok");
+    }
+
+    function removeImage(i) {
+      var imgs = getImages(); imgs.splice(i, 1); setImages(imgs); renderImgs();
+    }
+
+    function renderImgs() {
+      var imgs = getImages(), c = $("img-preview"); c.innerHTML = "";
+      imgs.forEach(function(url, i) {
+        var d = document.createElement("div"); d.className = "img-thumb";
+        d.innerHTML = '<img src="' + url + '" alt="" onerror="this.style.opacity=\'0.3\'"><button class="remove" onclick="removeImage(' + i + ')">×</button>';
+        c.appendChild(d);
+      });
+    }
+
+    $("image-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") { e.preventDefault(); addImage(); }
+    });
+
+    // ===== 批量添加图片 =====
+    function toggleBatchImages() {
+      var panel = $("batch-panel");
+      var btn = $("batch-toggle-btn");
+      if (panel.classList.contains("hidden")) {
+        panel.classList.remove("hidden");
+        btn.textContent = "收起批量添加";
+      } else {
+        panel.classList.add("hidden");
+        btn.textContent = "📋 批量添加";
+      }
+    }
+
+    function applyBatchImages() {
+      var text = $("batch-images-input").value.trim();
+      if (!text) { toast("请输入图片链接", "err"); return; }
+      var urls = text.split(/[\n\r]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+      if (!urls.length) { toast("未识别到链接", "err"); return; }
+      var imgs = getImages();
+      urls.forEach(function(u) { imgs.push(u); });
+      setImages(imgs);
+      renderImgs();
+      $("batch-images-input").value = "";
+      $("batch-panel").classList.add("hidden");
+      $("batch-toggle-btn").textContent = "📋 批量添加";
+      toast("已添加 " + urls.length + " 张图片", "ok");
+    }
+
+    // ===== 获取当前位置 =====
+    function fetchLocation() {
+      var statusEl = $("geo-status");
+      var btn = $("geo-btn");
+      if (!navigator.geolocation) {
+        statusEl.textContent = "浏览器不支持定位"; statusEl.style.display = ""; return;
+      }
+      statusEl.textContent = "正在定位..."; statusEl.style.color = "var(--text-3)"; statusEl.style.display = "";
+      btn.disabled = true; btn.textContent = "⏳";
+
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          var lat = pos.coords.latitude, lng = pos.coords.longitude;
+          statusEl.textContent = "正在解析地址...";
+          // BigDataCloud: 免费、无需 key、支持 CORS、支持中文
+          fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lng + "&localityLanguage=zh")
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              var parts = [];
+              if (data.city) parts.push(data.city);
+              else if (data.locality) parts.push(data.locality);
+              if (data.principalSubdivision) parts.push(data.principalSubdivision);
+              var loc = parts.join("-") || data.locality || data.countryName || (lat.toFixed(4) + ", " + lng.toFixed(4));
+              $("location-input").value = loc;
+              statusEl.textContent = "✓ " + loc; statusEl.style.color = "var(--success)";
+              btn.disabled = false; btn.textContent = "📍";
+            })
+            .catch(function() {
+              // 解析失败，回退到 IP 定位
+              fetch("https://ipapi.co/json/")
+                .then(function(r) { return r.json(); })
+                .then(function(ip) {
+                  var loc = [ip.city, ip.region].filter(Boolean).join("-") || (lat.toFixed(4) + ", " + lng.toFixed(4));
+                  $("location-input").value = loc;
+                  statusEl.textContent = "✓ " + loc + "（IP 回退）"; statusEl.style.color = "var(--success)";
+                  btn.disabled = false; btn.textContent = "📍";
+                })
+                .catch(function() {
+                  $("location-input").value = lat.toFixed(4) + ", " + lng.toFixed(4);
+                  statusEl.textContent = "已获取坐标，地址解析失败"; statusEl.style.color = "var(--text-3)";
+                  btn.disabled = false; btn.textContent = "📍";
+                });
+            });
+        },
+        function(err) {
+          var msg = { 1: "定位权限被拒绝，请在浏览器设置中允许定位", 2: "无法获取位置", 3: "定位超时" }[err.code] || "定位失败";
+          statusEl.textContent = msg; statusEl.style.color = "var(--danger)";
+          btn.disabled = false; btn.textContent = "📍";
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+      );
+    }
+
+    // ===== 加载列表 =====
+    function loadMoments() {
+      var list = $("moments-list");
+      list.innerHTML = '<div class="empty-state"><span class="spinner"></span></div>';
+
+      fetch(API + "/gists/" + GIST_ID, {
+        headers: { "Authorization": "Bearer " + TOKEN, "Accept": "application/vnd.github+json" }
+      }).then(function(r) { return r.json(); }).then(function(gist) {
+        var file = gist.files[FILE_NAME];
+        if (!file) { showEmpty(); return; }
+        var moments = JSON.parse(file.content || "[]");
+        if (!moments.length) { showEmpty(); return; }
+
+        moments.sort(function(a, b) { return new Date(b.published) - new Date(a.published); });
+        $("list-count").textContent = moments.length + " 条";
+        list.innerHTML = "";
+
+        moments.forEach(function(m) {
+          var d = document.createElement("div"); d.className = "moment-row";
+          var date = new Date(m.published);
+          var ds = date.toLocaleDateString("zh-CN") + " " + date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+          var text = (m.content || "").slice(0, 120) + ((m.content || "").length > 120 ? "..." : "");
+          var imgs = (m.images || []);
+          var imgHtml = imgs.length ? '<div class="moment-images">' + imgs.slice(0, 4).map(function(u) {
+            return '<img src="' + u + '" alt="">';
+          }).join("") + (imgs.length > 4 ? '<span style="font-size:0.75rem;color:var(--text-3);align-self:center;">+' + (imgs.length - 4) + '</span>' : "") + '</div>' : "";
+          var tags = (m.tags || []);
+          var tagStr = tags.length ? '<span class="sep">·</span><span>#' + tags.join(" #") + '</span>' : "";
+          var loc = m.location ? '<span class="sep">·</span><span>📍 ' + esc(m.location) + '</span>' : "";
+
+          d.innerHTML = '<div class="moment-body"><div class="moment-text">' + esc(text) + '</div>' + imgHtml + '<div class="moment-meta"><span>' + ds + '</span>' + tagStr + loc + '</div></div><div style="display:flex;gap:0.375rem;flex-shrink:0;"><button class="btn btn-sm" onclick="editMoment(\'' + m.id + '\')">编辑</button><button class="btn btn-danger-sm" onclick="deleteMoment(\'' + m.id + '\')">删除</button></div>';
+          list.appendChild(d);
+        });
+      }).catch(function() { list.innerHTML = '<div class="empty-state" style="color:var(--danger)">加载失败</div>'; });
+    }
+
+    function showEmpty() {
+      $("moments-list").innerHTML = '<div class="empty-state"><div class="icon">💭</div><p>还没有说说</p></div>';
+      $("list-count").textContent = "";
+    }
+
+    // ===== 自定义时间 =====
+    function toggleCustomTime() {
+      var panel = $("custom-time-panel");
+      if ($("custom-time-toggle").checked) {
+        panel.classList.remove("hidden");
+      } else {
+        panel.classList.add("hidden");
+        $("time-input").value = "";
+      }
+    }
+
+    function getPublishedTime() {
+      if ($("custom-time-toggle").checked) {
+        var custom = $("time-input").value;
+        if (custom) {
+          var d = new Date(custom);
+          if (!isNaN(d.getTime())) return d.toISOString();
+        }
+      }
+      return new Date().toISOString();
+    }
+
+    // ===== 编辑状态 =====
+    var editingId = null;
+
+    function editMoment(id) {
+      fetch(API + "/gists/" + GIST_ID, {
+        headers: { "Authorization": "Bearer " + TOKEN, "Accept": "application/vnd.github+json" }
+      }).then(function(r) { return r.json(); }).then(function(gist) {
+        var file = gist.files[FILE_NAME];
+        var moments = []; try { moments = JSON.parse(file.content || "[]"); } catch(e) {}
+        var m = moments.find(function(x) { return x.id === id; });
+        if (!m) { toast("未找到该条说说", "err"); return; }
+
+        editingId = id;
+        $("content-input").value = m.content || "";
+        $("tags-input").value = (m.tags || []).join(", ");
+        $("location-input").value = m.location || "";
+        $("pinned-input").checked = !!m.pinned;
+        setImages(m.images || []); renderImgs();
+
+        // 时间
+        if (m.published) {
+          $("custom-time-toggle").checked = true;
+          $("custom-time-panel").classList.remove("hidden");
+          var d = new Date(m.published);
+          var pad = function(n) { return String(n).padStart(2, "0"); };
+          $("time-input").value = d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+        }
+
+        $("submit-btn").textContent = "保存修改";
+        $("edit-bar").classList.remove("hidden");
+        $("content-input").focus();
+        $("content-input").scrollIntoView({ behavior: "smooth", block: "center" });
+        toast("正在编辑（ID: " + id.slice(-6) + "）", "ok");
+      }).catch(function() { toast("加载失败", "err"); });
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      $("content-input").value = "";
+      $("tags-input").value = "日常";
+      $("location-input").value = "";
+      $("pinned-input").checked = false;
+      $("time-input").value = "";
+      $("custom-time-toggle").checked = false;
+      $("custom-time-panel").classList.add("hidden");
+      setImages([]); renderImgs();
+      $("submit-btn").textContent = "发布";
+      $("edit-bar").classList.add("hidden");
+    }
+
+    // ===== 发布/更新 =====
+    function submitMoment() {
+      var content = $("content-input").value.trim();
+      if (!content) { toast("请输入内容", "err"); return; }
+
+      var images = getImages();
+      var tags = $("tags-input").value.split(",").map(function(s) { return s.trim(); }).filter(Boolean);
+      var location = $("location-input").value.trim();
+      var pinned = $("pinned-input").checked;
+      var published = getPublishedTime();
+      var btn = $("submit-btn");
+      var isEdit = !!editingId;
+      btn.disabled = true;
+      btn.textContent = isEdit ? "保存中..." : (images.length ? "发布中...（含 " + images.length + " 张图）" : "发布中...");
+
+      fetch(API + "/gists/" + GIST_ID, {
+        headers: { "Authorization": "Bearer " + TOKEN, "Accept": "application/vnd.github+json" }
+      }).then(function(r) { return r.json(); }).then(function(gist) {
+        var file = gist.files[FILE_NAME];
+        var moments = [];
+        if (file) { try { moments = JSON.parse(file.content || "[]"); } catch(e) {} }
+
+        if (isEdit) {
+          var idx = moments.findIndex(function(x) { return x.id === editingId; });
+          if (idx === -1) { throw new Error("未找到"); }
+          moments[idx] = {
+            id: editingId, content: content,
+            published: published,
+            images: images, tags: tags, location: location,
+            pinned: pinned || false,
+            author: moments[idx].author,
+            avatar: moments[idx].avatar,
+          };
+        } else {
+          moments.push({
+            id: "ext-" + Date.now(), content: content,
+            published: published,
+            images: images, tags: tags, location: location,
+            pinned: pinned || false
+          });
+        }
+
+        return fetch(API + "/gists/" + GIST_ID, {
+          method: "PATCH",
+          headers: { "Authorization": "Bearer " + TOKEN, "Accept": "application/vnd.github+json", "Content-Type": "application/json" },
+          body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(moments, null, 2) } } })
+        });
+      }).then(function(r) {
+        if (r.ok) {
+          toast(isEdit ? "已保存 ✓" : "发布成功 ✓", "ok");
+          cancelEdit();
+          loadMoments();
+        } else { toast(isEdit ? "保存失败" : "发布失败", "err"); }
+      }).catch(function() { toast("网络错误", "err"); })
+      .finally(function() { btn.disabled = false; if (!editingId) btn.textContent = "发布"; });
+    }
+
+    // ===== 删除 =====
+    function deleteMoment(id) {
+      if (!confirm("确定删除？")) return;
+      fetch(API + "/gists/" + GIST_ID, {
+        headers: { "Authorization": "Bearer " + TOKEN, "Accept": "application/vnd.github+json" }
+      }).then(function(r) { return r.json(); }).then(function(gist) {
+        var file = gist.files[FILE_NAME];
+        var moments = []; try { moments = JSON.parse(file.content || "[]"); } catch(e) {}
+        moments = moments.filter(function(m) { return m.id !== id; });
+        return fetch(API + "/gists/" + GIST_ID, {
+          method: "PATCH",
+          headers: { "Authorization": "Bearer " + TOKEN, "Accept": "application/vnd.github+json", "Content-Type": "application/json" },
+          body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(moments, null, 2) } } })
+        });
+      }).then(function(r) {
+        if (r.ok) { toast("已删除", "ok"); loadMoments(); }
+        else { toast("删除失败", "err"); }
+      }).catch(function() { toast("网络错误", "err"); });
+    }
+
+    // ===== 初始化 =====
+    (function() {
+      // 未登录则跳转回后台入口
+      if (sessionStorage.getItem("admin_auth") !== "1") {
+        window.location.href = "/admin/";
+        return;
+      }
+      // 预填 Token 输入框
+      if (TOKEN) { $("token-manual").value = TOKEN; }
+      renderImgs();
+      validateAndLoad();
+    })();
+  </script>
+</body>
+</html>

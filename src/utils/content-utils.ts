@@ -5,8 +5,6 @@ import { getCategoryUrl, getPostUrlBySlug } from "@utils/url-utils";
 import { getDiaryList } from "@/data/diary";
 import { siteConfig } from "@/config/siteConfig";
 import type { UserSubjectCollection } from "@/types/bangumi";
-
-// // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
 	const allBlogPosts = await getCollection("posts", ({ data }) => {
 		return import.meta.env.PROD ? data.draft !== true : true;
@@ -71,6 +69,36 @@ export async function getTagList(): Promise<Tag[]> {
 			countMap[tag]++;
 		});
 	});
+
+	// 从 moments collection 获取标签
+	const momentsCollection = await getCollection("moments");
+	momentsCollection.forEach((moment) => {
+		moment.data.tags?.forEach((tag: string) => {
+			if (!countMap[tag]) countMap[tag] = 0;
+			countMap[tag]++;
+		});
+	});
+
+	// 从远程说说获取标签
+	try {
+		const { externalMomentsConfig } = await import("@/config/externalMomentsConfig");
+		if (externalMomentsConfig.enable && externalMomentsConfig.gistId) {
+			// 使用 raw URL 直接获取，不需要认证（更可靠的 URL 格式）
+			const rawUrl = `https://gist.githubusercontent.com/raw/${externalMomentsConfig.gistId}/${externalMomentsConfig.fileName}`;
+			const response = await fetch(rawUrl);
+			if (response.ok) {
+				const moments = await response.json();
+				moments.forEach((m: { tags?: string[] }) => {
+					m.tags?.forEach((tag: string) => {
+						if (!countMap[tag]) countMap[tag] = 0;
+						countMap[tag]++;
+					});
+				});
+			}
+		}
+	} catch (e) {
+		console.warn("[Tags] 获取远程说说标签失败:", e);
+	}
 
 	// sort tags
 	const keys: string[] = Object.keys(countMap).sort((a, b) => {
@@ -194,11 +222,72 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 		};
 	});
 
+	// 从 moments collection 读取数据
+	const momentsCollection = await getCollection("moments");
+	const momentsFromCollection: ArchiveItem[] = momentsCollection.map((moment) => {
+		let title = moment.id || "";
+		title = title.replace(/[#*`]/g, "").trim();
+		if (title.length > 50) title = `${title.substring(0, 50)}...`;
+		if (!title) title = i18n(I18nKey.moments) || "日常动态";
+
+		return {
+			id: `moment-${moment.id}`,
+			type: "moment",
+			link: "/moments/",
+			data: {
+				title: title,
+				published: new Date(moment.data.published),
+				tags: moment.data.tags || [],
+				category: null,
+			},
+		};
+	});
+
 	// 获取 Bangumi 数据
 	const bangumiItems: ArchiveItem[] = await fetchBangumiArchiveData();
 	const lifeItems: ArchiveItem[] = [];
 
-	return [...postItems, ...momentItems, ...bangumiItems, ...lifeItems].sort((a, b) => {
+	// 获取远程说说数据
+	let externalMomentsItems: ArchiveItem[] = [];
+	try {
+		const { externalMomentsConfig } = await import("@/config/externalMomentsConfig");
+		if (externalMomentsConfig.enable && externalMomentsConfig.gistId) {
+			// 使用 raw URL 直接获取，不需要认证（更可靠的 URL 格式）
+			const rawUrl = `https://gist.githubusercontent.com/raw/${externalMomentsConfig.gistId}/${externalMomentsConfig.fileName}`;
+			const response = await fetch(rawUrl);
+			if (response.ok) {
+				const moments = await response.json() as Array<{
+					id: string;
+					content: string;
+					published: string;
+					tags?: string[];
+					pinned?: boolean;
+				}>;
+				externalMomentsItems = moments.map((m) => {
+					let title = m.content || "";
+					title = title.replace(/[#*`]/g, "").trim();
+					if (title.length > 50) title = `${title.substring(0, 50)}...`;
+					if (!title) title = i18n(I18nKey.moments) || "日常动态";
+
+					return {
+						id: `ext-${m.id}`,
+						type: "moment",
+						link: "/moments/",
+						data: {
+							title: title,
+							published: new Date(m.published),
+							tags: m.tags || [],
+							category: null,
+						},
+					};
+				});
+			}
+		}
+	} catch (e) {
+		console.warn("[Archive] 获取远程说说数据失败:", e);
+	}
+
+	return [...postItems, ...momentItems, ...momentsFromCollection, ...externalMomentsItems, ...bangumiItems, ...lifeItems].sort((a, b) => {
 		const timeA = a.data.published.getTime();
 		const timeB = b.data.published.getTime();
 		return timeB - timeA;

@@ -890,7 +890,7 @@ const showMini = musicPlayerConfig.showMiniPlayer ?? false;
 
             const renderItem = (song, index) => `
                 <li class="playlist-item group flex items-center gap-3 p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 border border-transparent transition-all cursor-pointer ${index === this.currentIndex ? 'active border-gray-300 dark:border-gray-600 bg-black/5 dark:bg-white/5' : ''}" data-index="${index}" data-search="${(song.title || '').replace(/"/g, '&quot;')} ${(song.artist || '').replace(/"/g, '&quot;')} ${(song.duration || '').replace(/"/g, '&quot;')}">
-                    <span class="font-mono text-gray-500 dark:text-gray-400 text-sm font-bold w-6 text-center group-hover:text-gray-900 dark:text-white transition-colors">${String(index + 1).padStart(2, '0')}</span>
+                    <span class="font-mono text-gray-500 dark:text-gray-400 text-sm font-bold w-6 text-center group-hover:text-gray-100 dark:text-white transition-colors">${String(index + 1).padStart(2, '0')}</span>
                     <div class="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700/50">
                         <img src="${song.cover || ''}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="cover" loading="lazy"/>
                         <div class="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-[.active]:opacity-100 transition-opacity">

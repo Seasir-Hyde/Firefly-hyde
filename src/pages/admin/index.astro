@@ -1,0 +1,514 @@
+---
+// 后台管理入口 - 动画角色登录页
+import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+---
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台管理</title>
+  <style is:inline>
+    :root {
+      --bg: #f8f8f8; --card: #fff; --border: #e8e8e8; --text: #1a1a1a;
+      --text-2: #666; --text-3: #999; --primary: #8b5cf6;
+      --input-bg: #fafafa; --hover: #f3f0ff; --danger: #ef4444;
+      --success: #22c55e; --radius: 12px;
+    }
+    :root.dark {
+      --bg: #111; --card: #1a1a1a; --border: #2a2a2a; --text: #eee;
+      --text-2: #aaa; --text-3: #666; --input-bg: #222; --hover: #2a2040;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== 双栏布局 ===== */
+    .login-split {
+      display: grid; grid-template-columns: 1fr; min-height: 100vh;
+    }
+    @media (min-width: 1024px) {
+      .login-split { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ===== 左侧动画区 ===== */
+    .login-left {
+      display: none; position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #7c3aed 0%, #6C3FF5 40%, #5b21b6 100%);
+    }
+    @media (min-width: 1024px) {
+      .login-left { display: flex; flex-direction: column; justify-content: space-between; }
+    }
+    .login-left::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 30% 70%, rgba(255,255,255,0.05) 0%, transparent 50%);
+    }
+    .left-brand {
+      position: relative; z-index: 2; padding: 2rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      color: rgba(255,255,255,0.9); font-size: 1.125rem; font-weight: 600;
+    }
+    .left-brand .logo {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .left-footer {
+      position: relative; z-index: 2; padding: 2rem;
+      display: flex; gap: 2rem;
+      font-size: 0.8125rem; color: rgba(255,255,255,0.5);
+    }
+    .left-footer a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+    .left-footer a:hover { color: rgba(255,255,255,0.9); }
+
+    /* ===== 角色容器 ===== */
+    .characters {
+      position: relative; z-index: 2;
+      display: flex; align-items: flex-end; justify-content: center;
+      height: 420px; padding: 0 2rem;
+    }
+    .char-stage {
+      position: relative; width: 450px; height: 400px;
+    }
+
+    /* ===== 角色通用 ===== */
+    .character {
+      position: absolute; bottom: 0; transform-origin: bottom center;
+      transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), height 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+    .char-eyes {
+      position: absolute; display: flex; gap: 0;
+      transition: left 0.7s ease, top 0.7s ease;
+    }
+    .eye {
+      border-radius: 50%; background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; transition: height 0.15s ease;
+      position: relative;
+    }
+    .eye-pupil {
+      border-radius: 50%; background: #2D2D2D;
+      transition: transform 0.1s ease-out;
+      position: absolute;
+    }
+    /* 纯瞳孔（无白眼） */
+    .pupil-only {
+      border-radius: 50%; background: #2D2D2D;
+      transition: transform 0.1s ease-out;
+    }
+
+    /* ===== 紫色角色（高个子） ===== */
+    .char-purple {
+      left: 70px; width: 140px; height: 350px;
+      background: #6C3FF5; border-radius: 10px 10px 0 0; z-index: 1;
+    }
+    .char-purple .char-eyes { gap: 28px; left: 38px; top: 40px; }
+    .char-purple .eye { width: 18px; height: 18px; }
+    .char-purple .eye-pupil { width: 7px; height: 7px; }
+
+    /* ===== 黑色角色（中等） ===== */
+    .char-black {
+      left: 200px; width: 100px; height: 270px;
+      background: #2D2D2D; border-radius: 8px 8px 0 0; z-index: 2;
+    }
+    .char-black .char-eyes { gap: 20px; left: 22px; top: 28px; }
+    .char-black .eye { width: 16px; height: 16px; }
+    .char-black .eye-pupil { width: 6px; height: 6px; }
+
+    /* ===== 橙色角色（半圆） ===== */
+    .char-orange {
+      left: 0; width: 200px; height: 170px;
+      background: #FF9B6B; border-radius: 100px 100px 0 0; z-index: 3;
+    }
+    .char-orange .char-eyes { gap: 28px; left: 68px; top: 75px; }
+    .char-orange .pupil-only { width: 12px; height: 12px; }
+
+    /* ===== 黄色角色（高半圆） ===== */
+    .char-yellow {
+      left: 260px; width: 120px; height: 200px;
+      background: #E8D754; border-radius: 60px 60px 0 0; z-index: 4;
+    }
+    .char-yellow .char-eyes { gap: 20px; left: 40px; top: 35px; }
+    .char-yellow .pupil-only { width: 12px; height: 12px; }
+    .char-yellow .mouth {
+      position: absolute; width: 50px; height: 3px;
+      background: #2D2D2D; border-radius: 2px;
+      left: 35px; top: 80px;
+      transition: left 0.2s, top 0.2s;
+    }
+
+    /* ===== 右侧登录区 ===== */
+    .login-right {
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem; background: var(--bg);
+    }
+    .login-form-wrap {
+      width: 100%; max-width: 400px;
+    }
+    .login-header { text-align: center; margin-bottom: 2.5rem; }
+    .login-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.375rem; }
+    .login-header p { font-size: 0.875rem; color: var(--text-3); }
+
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label {
+      display: block; font-size: 0.8125rem; font-weight: 500;
+      color: var(--text-2); margin-bottom: 0.5rem;
+    }
+    .form-input {
+      width: 100%; height: 48px; padding: 0 1rem;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 1rem; background: var(--input-bg); color: var(--text);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+    }
+    .form-input::placeholder { color: var(--text-3); }
+
+    .login-submit {
+      width: 100%; height: 48px; margin-top: 0.5rem;
+      background: var(--primary); color: #fff; border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: filter 0.15s, transform 0.15s;
+    }
+    .login-submit:hover { filter: brightness(1.1); }
+    .login-submit:active { transform: scale(0.97); }
+
+    .login-error {
+      font-size: 0.8125rem; color: var(--danger);
+      margin-top: 0.75rem; min-height: 1.25rem; text-align: center;
+    }
+    .login-back {
+      display: block; text-align: center; margin-top: 2rem;
+      font-size: 0.8125rem; color: var(--text-3);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .login-back:hover { color: var(--primary); }
+
+    /* ===== 后台主页 ===== */
+    .navbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .navbar-inner {
+      max-width: 640px; margin: 0 auto; padding: 0 1rem;
+      display: flex; align-items: center; justify-content: space-between; height: 52px;
+    }
+    .navbar-left { display: flex; align-items: center; gap: 0.75rem; }
+    .navbar-left h1 { font-size: 1rem; font-weight: 600; }
+    .navbar-left .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      color: var(--text-2); text-decoration: none; font-size: 0.8125rem;
+      padding: 0.375rem 0.625rem; border-radius: 8px; transition: all 0.15s;
+    }
+    .back-link:hover { background: var(--hover); color: var(--primary); }
+    .back-link svg { width: 16px; height: 16px; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-3);
+      padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.6875rem;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+    .container { max-width: 640px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+
+    .admin-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;
+    }
+    .admin-card {
+      display: flex; flex-direction: column; align-items: center;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem 1rem;
+      text-decoration: none; color: var(--text);
+      transition: all 0.2s; cursor: pointer;
+    }
+    .admin-card:hover {
+      border-color: var(--primary); transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(139,92,246,0.1);
+    }
+    .admin-card-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .admin-card-title { font-size: 0.9375rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .admin-card-desc { font-size: 0.75rem; color: var(--text-3); text-align: center; }
+    .admin-welcome { text-align: center; margin-bottom: 1.5rem; }
+    .admin-welcome h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .admin-welcome p { font-size: 0.8125rem; color: var(--text-3); }
+
+    .hidden { display: none !important; }
+
+    /* 防止未认证时闪烁：默认隐藏后台主页，JS 判断后再显示 */
+    body:not(.authed) #admin-main { display: none !important; }
+
+    .dark-fab {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--card); border: 1px solid var(--border);
+      cursor: pointer; font-size: 1.125rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s;
+    }
+    .dark-fab:hover { border-color: var(--primary); transform: scale(1.05); }
+
+    @media (max-width: 480px) {
+      .login-right { padding: 1.5rem; }
+      .login-header h1 { font-size: 1.5rem; }
+      .navbar-inner { padding: 0 0.75rem; }
+      .container { padding: 1rem 0.75rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 登录页 ===== -->
+  <div class="login-split" id="login-page">
+    <!-- 左侧动画 -->
+    <div class="login-left">
+      <div class="left-brand">
+        <div class="logo">✍️</div>
+        <span>后台管理</span>
+      </div>
+
+      <div class="characters">
+        <div class="char-stage" id="stage">
+          <!-- 紫色高个子 -->
+          <div class="character char-purple" id="char-purple">
+            <div class="char-eyes">
+              <div class="eye"><div class="eye-pupil" data-char="purple"></div></div>
+              <div class="eye"><div class="eye-pupil" data-char="purple"></div></div>
+            </div>
+          </div>
+          <!-- 黑色中等 -->
+          <div class="character char-black" id="char-black">
+            <div class="char-eyes">
+              <div class="eye"><div class="eye-pupil" data-char="black"></div></div>
+              <div class="eye"><div class="eye-pupil" data-char="black"></div></div>
+            </div>
+          </div>
+          <!-- 橙色半圆 -->
+          <div class="character char-orange" id="char-orange">
+            <div class="char-eyes">
+              <div class="pupil-only" data-char="orange"></div>
+              <div class="pupil-only" data-char="orange"></div>
+            </div>
+          </div>
+          <!-- 黄色高半圆 -->
+          <div class="character char-yellow" id="char-yellow">
+            <div class="char-eyes">
+              <div class="pupil-only" data-char="yellow"></div>
+              <div class="pupil-only" data-char="yellow"></div>
+            </div>
+            <div class="mouth" id="yellow-mouth"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="left-footer">
+        <a href="/">首页</a>
+        <a href="/moments/">说说</a>
+        <a href="/life/notebooks/">笔记</a>
+      </div>
+    </div>
+
+    <!-- 右侧表单 -->
+    <div class="login-right">
+      <div class="login-form-wrap">
+        <div class="login-header">
+          <h1>Welcome back!</h1>
+          <p>输入密码以进入后台</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">密码</label>
+          <input type="password" class="form-input" id="login-pwd" placeholder="••••••••" autocomplete="off" />
+        </div>
+        <button class="login-submit" onclick="doLogin()">进入后台</button>
+        <div class="login-error" id="login-error"></div>
+        <a href="/" class="login-back">← 返回首页</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 后台主页 ===== -->
+  <div id="admin-main" class="hidden">
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <div class="navbar-left">
+          <span class="dot"></span>
+          <h1>后台管理</h1>
+        </div>
+        <div class="nav-right">
+          <a href="/" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span>首页</span>
+          </a>
+          <button class="logout-btn" onclick="doLogout()">退出</button>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <div class="admin-welcome">
+        <h2>👋 欢迎回来</h2>
+        <p>选择要管理的功能</p>
+      </div>
+      <div class="admin-grid">
+        <a href="/admin/moments/" class="admin-card">
+          <div class="admin-card-icon">✍️</div>
+          <div class="admin-card-title">说说管理</div>
+          <div class="admin-card-desc">发布、编辑、删除说说</div>
+        </a>
+        <a href="/admin/notebooks/" class="admin-card">
+          <div class="admin-card-icon">📓</div>
+          <div class="admin-card-title">笔记管理</div>
+          <div class="admin-card-desc">管理笔记本和笔记</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <button class="dark-fab" onclick="toggleDark()" title="切换暗色模式">🌙</button>
+
+  <script is:inline data-hash={externalMomentsConfig.adminPasswordHash || ""}>
+    // ===== 工具 =====
+    var passwordHash = document.currentScript.getAttribute("data-hash") || "";
+    function $(id) { return document.getElementById(id); }
+    async function sha256(str) {
+      var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, "0"); }).join("");
+    }
+    function toggleDark() {
+      document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+    }
+    if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+
+    // ===== 登录 =====
+    async function doLogin() {
+      var input = $("login-pwd").value;
+      if (!input) { $("login-error").textContent = "请输入密码"; return; }
+      if (!passwordHash) { $("login-error").textContent = "未配置密码哈希"; return; }
+      var hash = await sha256(input);
+      if (hash === passwordHash) {
+        $("login-error").textContent = "";
+        sessionStorage.setItem("admin_auth", "1");
+        document.body.classList.add("authed");
+        $("login-page").style.display = "none";
+        $("admin-main").classList.remove("hidden");
+        $("admin-main").style.display = "";
+      } else {
+        $("login-error").textContent = "密码错误";
+        $("login-pwd").value = "";
+        $("login-pwd").focus();
+      }
+    }
+    function doLogout() {
+      sessionStorage.removeItem("admin_auth");
+      $("admin-main").classList.add("hidden");
+      $("login-page").style.display = "";
+      $("login-pwd").value = "";
+      $("login-error").textContent = "";
+    }
+    $("login-pwd").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") { e.preventDefault(); doLogin(); }
+    });
+
+    // ===== 角色动画 =====
+    (function() {
+      if (sessionStorage.getItem("admin_auth") === "1") {
+        document.body.classList.add("authed");
+        $("login-page").style.display = "none";
+        $("admin-main").classList.remove("hidden");
+        return; // 不需要动画
+      }
+      $("login-pwd").focus();
+
+      var mouseX = 0, mouseY = 0;
+      var isTyping = false;
+      var typingTimer = null;
+      var blinkTimers = {};
+
+      // 鼠标追踪
+      document.addEventListener("mousemove", function(e) {
+        mouseX = e.clientX; mouseY = e.clientY;
+      });
+
+      // 输入检测
+      var pwdInput = $("login-pwd");
+      pwdInput.addEventListener("input", function() {
+        isTyping = true;
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(function() { isTyping = false; }, 1500);
+      });
+
+      // 瞨眼
+      function scheduleBlink(charId) {
+        var delay = 3000 + Math.random() * 4000;
+        blinkTimers[charId] = setTimeout(function() {
+          var eyes = document.querySelectorAll("#char-" + charId + " .eye");
+          eyes.forEach(function(el) { el.style.height = "2px"; });
+          setTimeout(function() {
+            eyes.forEach(function(el) { el.style.height = ""; });
+            scheduleBlink(charId);
+          }, 150);
+        }, delay);
+      }
+      scheduleBlink("purple");
+      scheduleBlink("black");
+
+      // 计算瞳孔位置
+      function getPupilPos(el, maxDist) {
+        var rect = el.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height / 2;
+        var dx = mouseX - cx, dy = mouseY - cy;
+        var dist = Math.min(Math.sqrt(dx*dx + dy*dy), maxDist);
+        var angle = Math.atan2(dy, dx);
+        return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist };
+      }
+
+      // 动画循环
+      function animate() {
+        var purpleEl = $("char-purple");
+        var blackEl = $("char-black");
+        var orangeEl = $("char-orange");
+        var yellowEl = $("char-yellow");
+
+        if (!purpleEl || $("login-page").style.display === "none") return;
+
+        // 瞳孔追踪
+        document.querySelectorAll('[data-char]').forEach(function(pupil) {
+          var char = pupil.getAttribute("data-char");
+          var maxDist = char === "purple" ? 5 : char === "black" ? 4 : 5;
+          var parent = pupil.classList.contains("eye-pupil") ? pupil.parentElement : pupil;
+          var pos = getPupilPos(parent, maxDist);
+          pupil.style.transform = "translate(" + pos.x + "px," + pos.y + "px)";
+        });
+
+        // 身体倾斜
+        var stageRect = $("stage").getBoundingClientRect();
+        var stageCX = stageRect.left + stageRect.width / 2;
+        var dx = mouseX - stageCX;
+
+        var skew = Math.max(-6, Math.min(6, dx / 120));
+        purpleEl.style.transform = "skewX(" + (skew - 2) + "deg)";
+        blackEl.style.transform = "skewX(" + (skew * 1.2) + "deg)";
+        orangeEl.style.transform = "skewX(" + (skew * 0.5) + "deg)";
+        yellowEl.style.transform = "skewX(" + (skew * 0.8) + "deg)";
+
+        // 输入时角色互相看
+        if (isTyping) {
+          purpleEl.style.transform = "skewX(-12deg) translateX(30px)";
+          blackEl.style.transform = "skewX(10deg) translateX(15px)";
+        }
+
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    })();
+  </script>
+</body>
+</html>

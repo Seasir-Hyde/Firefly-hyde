@@ -1,0 +1,487 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import Comment from "@/components/comment/index.astro";
+import MomentCard from "@/components/moments/MomentCard.astro";
+import MomentsCover from "@/components/moments/MomentsCover.astro";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+
+const moments = await getCollection("moments");
+const sortedMoments = moments
+	.filter((m) => !m.data.pinned)
+	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+
+// 置顶说说
+const pinnedMoments = moments
+	.filter((m) => m.data.pinned)
+	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+
+// 获取 moments 资产目录下的所有图片
+const momentAssets = import.meta.glob<{ default: ImageMetadata }>(
+	"../content/moments/assets/*.{jpeg,jpg,png,gif,webp,avif}",
+	{ eager: true },
+);
+
+// 解析图片路径
+const parseImages = (imagesData: any): (string | ImageMetadata)[] => {
+	let rawPaths: string[] = [];
+	if (Array.isArray(imagesData)) {
+		rawPaths = imagesData.map((img) =>
+			typeof img === "string" ? img : img.src || img,
+		);
+	} else if (typeof imagesData === "string" && imagesData.trim()) {
+		rawPaths = imagesData
+			.split(/[,;]/)
+			.map((img) => img.trim())
+			.filter((img) => img);
+	}
+
+	return Array.from(new Set(rawPaths))
+		.map((img) => {
+			if (
+				img.startsWith("http://") ||
+				img.startsWith("https://") ||
+				img.startsWith("/")
+			) {
+				return img;
+			}
+			const cleanPath = img.replace(/^\.\//, "");
+			if (cleanPath.startsWith("assets/")) {
+				const fileName = cleanPath.replace("assets/", "");
+				for (const path in momentAssets) {
+					if (path.endsWith(fileName)) {
+						return momentAssets[path].default;
+					}
+				}
+			}
+			return img;
+		})
+		.filter((img) => img);
+};
+
+// 预处理置顶说说
+const pinnedData = pinnedMoments.map((m) => ({
+	images: parseImages(m.data.images),
+	body: m.body || "",
+	date: m.data.published,
+}));
+
+// const albums = await getCollection("album");
+---
+
+<MainGridLayout title="动态" description="记录生活中的点点滴滴">
+  <!-- 微信朋友圈风格封面 -->
+  <MomentsCover />
+
+  <!-- 置顶说说（始终渲染容器，JS 可动态追加外部置顶） -->
+  <a href="/moments/pinned/" class="wx-pinned" id="pinned-block" style={pinnedData.length === 0 ? 'display:none' : ''}>
+    <div class="wx-pinned-tag">
+      <span>置顶</span>
+    </div>
+    <div class="wx-pinned-items" id="pinned-items">
+      {pinnedData.map((item) => (
+        <div class="wx-pinned-preview">
+          {item.images.length > 0 ? (
+            <div class={`wx-pimgs wx-pimgs-${Math.min(item.images.length, 9)}`}>
+              {item.images.slice(0, 9).map((img) => (
+                typeof img === "string" ? (
+                  <img src={img} alt="" class="wx-pinned-img" loading="lazy" />
+                ) : (
+                  <Image src={img} alt="" class="wx-pinned-img" loading="lazy" />
+                )
+              ))}
+            </div>
+          ) : (
+            <p class="wx-ptxt">{item.body.slice(0, 60)}{item.body.length > 60 ? '...' : ''}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  </a>
+
+  <!-- 说说列表（本地 + 外部合并，按时间排序） -->
+  <div class="wx-feed" id="moments-feed">
+    {sortedMoments.length > 0 ? (
+      sortedMoments.map((moment) => (
+        <div class="wx-feed-item" data-published={moment.data.published.toISOString()}>
+          <MomentCard moment={moment} />
+        </div>
+      ))
+    ) : (
+      <div class="wx-empty" id="moments-empty">
+        <div class="wx-empty-icon">
+          <Icon name="material-symbols:sentiment-neutral-outline" />
+        </div>
+        <h3>还没有发布任何说说</h3>
+        <p>快去记录你的生活点滴吧</p>
+      </div>
+    )}
+  </div>
+
+  <!-- 评论区 -->
+  <div id="moments-comments">
+    <Comment customPath="/moments/" />
+  </div>
+
+  <!-- 访客统计 -->
+  <div class="wx-visitor">
+    <Icon name="material-symbols:visibility-outline" class="wx-visitor-icon" />
+    <span class="waline-count" data-path="/moments/">-</span>
+    <span>次浏览</span>
+  </div>
+
+  <!-- 外部朋友圈数据获取配置 -->
+  {externalMomentsConfig.enable && externalMomentsConfig.gistId && (
+    <script id="moments-config" is:inline data-swup-ignore-script
+      data-gist={externalMomentsConfig.gistId}
+      data-file={externalMomentsConfig.fileName}
+      data-author={externalMomentsConfig.defaultAuthor}
+      data-avatar={externalMomentsConfig.defaultAvatar}>
+    </script>
+  )}
+</MainGridLayout>
+
+<!-- 引入外部朋友圈数据获取脚本 -->
+<script>
+  import "@/data/moments.ts";
+</script>
+
+<script is:inline>
+  var countElements = document.querySelectorAll('.waline-count[data-path="/moments/"]');
+  if (countElements.length > 0) {
+    var serverURL = "https://co.tsh520.cn";
+    fetch(serverURL + "/api/uv?path=/moments/")
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var count = data.data ? data.data.unique_visitor || data.uv || 0 : (data.uv || 0);
+        countElements.forEach(function(el) { el.textContent = String(count); });
+      })
+      .catch(function() {
+        countElements.forEach(function(el) { el.textContent = "-"; });
+      });
+  }
+</script>
+
+
+<style>
+  /* 置顶块样式在底部 <style is:global> 中，
+     因为 JS 动态创建的外部置顶元素没有 Astro scoped 属性 */
+
+  /* ============================================
+   * 说说列表
+   * ============================================ */
+  .wx-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1rem 0 2rem;
+  }
+
+  .wx-feed-item {
+    position: relative;
+  }
+
+  .wx-feed-item + .wx-feed-item::before {
+    content: '';
+    position: absolute;
+    top: -0.75rem;
+    left: 1rem;
+    right: 1rem;
+    height: 1px;
+    background: var(--border);
+    opacity: 0.7;
+  }
+
+  /* 空状态 */
+  .wx-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .wx-empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--btn-regular-bg);
+    border-radius: 50%;
+    color: var(--content-meta);
+    font-size: 2rem;
+  }
+
+  .wx-empty h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.375rem;
+  }
+
+  .wx-empty p {
+    font-size: 0.875rem;
+    color: var(--content-meta);
+    margin: 0;
+  }
+
+  /* 访客统计 */
+  .wx-visitor {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    margin: 1.5rem auto 0;
+    padding: 0.75rem;
+    color: var(--content-meta);
+    font-size: 0.8125rem;
+  }
+
+  .wx-visitor-icon {
+    font-size: 1rem;
+  }
+
+  /* 响应式 */
+  @media (max-width: 480px) {
+    .wx-feed {
+      gap: 1.25rem;
+      padding: 0.75rem 0 1.5rem;
+    }
+
+    .wx-feed-item + .wx-feed-item::before {
+      top: -0.625rem;
+      left: 0.75rem;
+      right: 0.75rem;
+    }
+  }
+</style>
+
+<style is:global>
+  /* ============================================
+   * 置顶块样式（需要 is:global，
+   * 因为 JS 动态创建的外部置顶元素没有 Astro scoped 属性）
+   * ============================================ */
+  .wx-pinned {
+    display: flex;
+    align-items: stretch;
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+    min-height: 4.5rem;
+    text-decoration: none;
+    color: var(--text-color);
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+  }
+  .wx-pinned:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  .wx-pinned-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.75rem;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 1.625rem;
+    font-weight: 400;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  :root.dark .wx-pinned-tag {
+    background: #00000000;
+    color: #fff;
+  }
+  .wx-pinned-items {
+    display: flex;
+    flex: 1;
+    justify-content: flex-end;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    gap: 0;
+  }
+  .wx-pinned-items::-webkit-scrollbar {
+    display: none;
+  }
+  .wx-pinned-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    min-width: 4rem;
+    max-width: 7.5rem;
+    flex: 1;
+    border-left: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .wx-pinned-preview:first-child {
+    border-left: none;
+  }
+  .wx-pimgs {
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .wx-pimgs-1 { grid-template-columns: 1fr; }
+  .wx-pimgs-2 { grid-template-columns: 1fr 1fr; }
+  .wx-pimgs-3 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .wx-pimgs-3 .wx-pinned-img:first-child { grid-row: 1 / 3; }
+  .wx-pimgs-4 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .wx-pimgs-5,
+  .wx-pimgs-6 {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .wx-pimgs-7,
+  .wx-pimgs-8,
+  .wx-pimgs-9 {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+  }
+  .wx-pinned-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .wx-ptxt {
+    margin: 0;
+    font-size: 0.625rem;
+    color: var(--content-meta);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-all;
+  }
+  @media (max-width: 480px) {
+    .wx-pinned-preview {
+      min-width: 3.5rem;
+      max-width: 6rem;
+      padding: 0.375rem;
+    }
+    .wx-ptxt {
+      font-size: 0.5625rem;
+      -webkit-line-clamp: 3;
+    }
+  }
+
+  /* ============================================
+   * JS 动态插入的说说卡片样式
+   * 需要 is:global 因为卡片 DOM 由 JS 动态创建
+   * ============================================ */
+  #moments-feed .moment-card {
+    position: relative;
+    background: var(--card-bg);
+    border-radius: var(--radius-large);
+    padding: 1rem 1rem 1rem 1rem;
+    overflow: hidden;
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  }
+  :root.dark #moments-feed .moment-card { border-color: #3f3f46; }
+  #moments-feed .moment-card:hover {
+    border-color: var(--primary);
+    /* box-shadow: 0 4px 24px rgb(245, 0, 0); */
+    transform: translateY(-2px);
+  }
+  :root.dark #moments-feed .moment-card:hover {
+    border-color: #fff;
+    box-shadow: 0 4px 24px rgba(255,255,255,0.08);
+  }
+
+  #moments-feed .card-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.75rem; }
+  #moments-feed .card-avatar { flex-shrink: 0; }
+  #moments-feed .avatar-img {
+    width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--primary); box-sizing: border-box;
+  }
+  #moments-feed .card-user-info { flex: 1; min-width: 0; }
+  #moments-feed .user-row { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.125rem; }
+  #moments-feed .pinned-badge {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.125rem 0.5rem; background: var(--btn-regular-bg);
+    color: var(--btn-content); border-radius: var(--radius);
+    font-size: 0.75rem; font-weight: 600;
+  }
+  #moments-feed .pinned-icon { width: 14px; height: 14px; }
+  #moments-feed .user-name { font-size: 0.9375rem; font-weight: 600; color: var(--primary); }
+  #moments-feed .meta-row { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: var(--content-meta); }
+  #moments-feed .meta-dot { opacity: 0.5; }
+  #moments-feed .location {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.125rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #moments-feed .location-icon { font-size: 0.875rem; flex-shrink: 0; width: 14px; height: 14px; }
+
+  #moments-feed .card-content { margin-bottom: 0.75rem; }
+  #moments-feed .moment-markdown { word-break: break-word; }
+  #moments-feed .moment-markdown p { margin-bottom: 0.375rem; }
+  #moments-feed .moment-markdown p:last-child { margin-bottom: 0; }
+  #moments-feed .moment-markdown img { border-radius: var(--radius); margin-top: 0.5rem; max-width: 100%; }
+  #moments-feed .moment-markdown a { color: var(--primary); text-decoration: underline; }
+
+  #moments-feed .card-images { display: grid; gap: 0.375rem; margin-bottom: 0.75rem; }
+  #moments-feed .image-cols-1 { grid-template-columns: 100px; }
+  #moments-feed .image-cols-2 { grid-template-columns: repeat(2, 100px); }
+  #moments-feed .image-cols-3 { grid-template-columns: repeat(3, 90px); }
+  #moments-feed .image-item {
+    position: relative; border-radius: var(--radius); overflow: hidden;
+    cursor: pointer;  aspect-ratio: 1;
+  }
+  #moments-feed .image-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+  #moments-feed .image-item:hover .image-img { transform: scale(1.03); }
+  #moments-feed .hidden-image { display: none !important; }
+  #moments-feed .has-more .image-img { filter: brightness(0.6); }
+  #moments-feed .more-overlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  }
+  #moments-feed .more-text { font-size: 1.5rem; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+
+  #moments-feed .card-tags {
+    display: flex; flex-wrap: wrap; gap: 0.375rem;
+    padding-top: 0.625rem; border-top: 1px solid var(--border);
+  }
+  #moments-feed .tag-item {
+    padding: 0.25rem 0.625rem; background: transparent;
+    border: 1px solid var(--primary); border-radius: 9999px;
+    font-size: 0.75rem; color: var(--primary);
+    transition: all 0.2s ease;
+  }
+  #moments-feed .tag-item:hover {
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+  }
+
+  /* 移动端 */
+  @media (max-width: 480px) {
+    #moments-feed .moment-card {
+      padding: 0.875rem 0.875rem 0.875rem 1.75rem;
+    }
+    #moments-feed .avatar-img { width: 2.25rem; height: 2.25rem; }
+    #moments-feed .user-name { font-size: 0.875rem; }
+    #moments-feed .meta-row { font-size: 0.6875rem; }
+    #moments-feed .location { max-width: 80px; }
+    #moments-feed .card-images { gap: 0.25rem; }
+    #moments-feed .more-text { font-size: 1.25rem; }
+  }
+</style>

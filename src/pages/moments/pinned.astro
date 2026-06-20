@@ -1,0 +1,337 @@
+---
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import Comment from "@/components/comment/index.astro";
+import MomentCard from "@/components/moments/MomentCard.astro";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+
+const moments = await getCollection("moments");
+const pinnedMoments = moments
+	.filter((m) => m.data.pinned)
+	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+---
+
+<MainGridLayout title="置顶说说" description="我置顶的说说合集">
+  <!-- 页面头部 -->
+  <div class="pinned-page-header">
+    <div class="pinned-header-row">
+      <a href="/moments/" class="back-btn">
+        <Icon name="material-symbols:arrow-back-rounded" class="back-icon" />
+        <span>返回说说</span>
+      </a>
+      <div class="pinned-page-title">
+        <Icon name="material-symbols:push-pin" class="pinned-title-icon" />
+        <p style="var(--color-neutral-400)">置顶说说</p>
+        <span class="pinned-count">{pinnedMoments.length} 条</span>
+      </div>
+    </div>
+    <div style="color: #fff; text-align: center;">—— ✦ 精选置顶 ✦ ——</div>
+  </div>
+
+  <!-- 置顶说说列表 -->
+  <div class="pinned-feed" id="pinned-feed">
+    {pinnedMoments.length > 0 ? (
+      pinnedMoments.map((moment) => (
+        <div class="moment-item-wrapper">
+          <MomentCard moment={moment} />
+        </div>
+      ))
+    ) : (
+      <div class="empty-state">
+        <div class="empty-icon">
+          <Icon name="material-symbols:push-pin" />
+        </div>
+        <p class="empty-title">还没有置顶任何说说</p>
+        <p class="empty-desc">在说说的 frontmatter 中添加 pinned: true 即可置顶</p>
+        <a href="/moments/" class="empty-link">
+          <Icon name="material-symbols:arrow-back-rounded" />
+          <span>去看看说说</span>
+        </a>
+      </div>
+    )}
+  </div>
+
+  <!-- 评论区 -->
+  <div id="moments-comments">
+    <Comment customPath="/moments/pinned/" />
+  </div>
+
+  <!-- 外部朋友圈数据获取配置 -->
+  {externalMomentsConfig.enable && externalMomentsConfig.gistId && (
+    <script id="moments-config" is:inline data-swup-ignore-script
+      data-gist={externalMomentsConfig.gistId}
+      data-file={externalMomentsConfig.fileName}
+      data-author={externalMomentsConfig.defaultAuthor}
+      data-avatar={externalMomentsConfig.defaultAvatar}>
+    </script>
+  )}
+</MainGridLayout>
+
+<!-- 引入外部朋友圈数据获取脚本 -->
+<script>
+  import "@/data/moments.ts";
+</script>
+
+<style>
+  /* 页面头部 */
+  .pinned-page-header {
+    padding: 1rem 1rem ;
+    background-image: url(https://t.alcy.cc/pc?v=46971125);
+    background-size: cover;
+    background-position: center;
+    border-radius: 1rem;
+  }
+
+  .pinned-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    background: #ffffff26;
+    backdrop-filter: blur(6px);
+    color: #fff;
+    border-radius: var(--radius-large);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border);
+  }
+
+  .back-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .back-icon {
+    font-size: 1rem;
+  }
+
+  .pinned-page-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    padding: 0.375rem 0.75rem;
+    background: #ffffff26;
+    backdrop-filter: blur(6px);
+    color: #fff;
+    border-radius: 18px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border);
+  }
+
+  .pinned-title-icon {
+    font-size: 1rem;
+    color: #fff;
+    transform: rotate(-45deg);
+  }
+
+  .pinned-page-title h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0;
+  }
+
+  .pinned-count {
+    font-size: 0.8125rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-large);
+  }
+
+  .pinned-page-desc {
+    font-size: 0.875rem;
+    color: var(--content-meta);
+    margin: 0;
+  }
+
+  /* 说说列表 */
+  .pinned-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1rem 0 2rem;
+  }
+
+  .moment-item-wrapper {
+    position: relative;
+  }
+
+  .moment-item-wrapper + .moment-item-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -0.75rem;
+    left: 1rem;
+    right: 1rem;
+    height: 1px;
+    background: var(--border);
+    opacity: 0.7;
+  }
+
+  /* 空状态 */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+  }
+
+  .empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--btn-regular-bg);
+    border-radius: 50%;
+    color: var(--content-meta);
+    font-size: 2rem;
+    transform: rotate(-45deg);
+  }
+
+  .empty-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--content-meta);
+    margin-bottom: 0.375rem;
+  }
+
+  .empty-desc {
+    font-size: 0.875rem;
+    color: var(--content-meta);
+    margin-bottom: 1rem;
+  }
+
+  .empty-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    color: #fff;
+    border-radius: var(--radius-large);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .empty-link:hover {
+    opacity: 0.85;
+  }
+
+  /* 响应式 */
+  @media (max-width: 480px) {
+    .pinned-page-title h1 {
+      font-size: 1.25rem;
+    }
+
+    .pinned-feed {
+      gap: 1.25rem;
+      padding: 0.75rem 0 1.5rem;
+    }
+
+    .moment-item-wrapper + .moment-item-wrapper::before {
+      top: -0.625rem;
+      left: 0.75rem;
+      right: 0.75rem;
+    }
+  }
+</style>
+
+<style is:global>
+  /* JS 动态创建的外部置顶卡片样式 */
+  #pinned-feed .moment-card {
+    position: relative;
+    background: var(--card-bg);
+    border-radius: var(--radius-large);
+    padding: 1.25rem 1.25rem 1.25rem 2.25rem;
+    overflow: hidden;
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  }
+  :root.dark #pinned-feed .moment-card { border-color: #3f3f46; }
+  #pinned-feed .moment-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  :root.dark #pinned-feed .moment-card:hover {
+    border-color: #fff;
+    box-shadow: 0 4px 24px rgba(255,255,255,0.08);
+  }
+
+  #pinned-feed .card-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.75rem; }
+  #pinned-feed .card-avatar { flex-shrink: 0; }
+  #pinned-feed .avatar-img {
+    width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--primary); box-sizing: border-box;
+  }
+  #pinned-feed .card-user-info { flex: 1; min-width: 0; }
+  #pinned-feed .user-row { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.125rem; }
+  #pinned-feed .pinned-badge {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.125rem 0.5rem; 
+    color: var(--btn-content); border-radius: var(--radius);
+    font-size: 0.75rem; font-weight: 600;
+  }
+  #pinned-feed .pinned-icon { width: 14px; height: 14px; }
+  #pinned-feed .user-name { font-size: 0.9375rem; font-weight: 600; color: var(--primary); }
+  #pinned-feed .meta-row { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: var(--content-meta); }
+  #pinned-feed .meta-dot { opacity: 0.5; }
+  #pinned-feed .location {
+    display: inline-flex; align-items: center; gap: 0.125rem;
+    max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #pinned-feed .location-icon { font-size: 0.875rem; flex-shrink: 0; width: 14px; height: 14px; }
+  #pinned-feed .card-content { margin-bottom: 0.75rem; }
+  #pinned-feed .moment-markdown { word-break: break-word; }
+  #pinned-feed .moment-markdown p { margin-bottom: 0.375rem; }
+  #pinned-feed .moment-markdown p:last-child { margin-bottom: 0; }
+  #pinned-feed .moment-markdown img { border-radius: var(--radius); margin: 0.5rem 0; max-width: 100%; }
+  #pinned-feed .moment-markdown a { color: var(--primary); text-decoration: underline; }
+  #pinned-feed .card-images { display: grid; gap: 0.375rem; margin-bottom: 0.75rem; }
+  #pinned-feed .image-cols-1 { grid-template-columns: 100px; }
+  #pinned-feed .image-cols-2 { grid-template-columns: repeat(2, 100px); }
+  #pinned-feed .image-cols-3 { grid-template-columns: repeat(3, 90px); }
+  #pinned-feed .image-item {
+    position: relative; border-radius: var(--radius); overflow: hidden;
+    cursor: pointer; background: var(--btn-regular-bg); aspect-ratio: 1;
+  }
+  #pinned-feed .image-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+  #pinned-feed .image-item:hover .image-img { transform: scale(1.03); }
+  #pinned-feed .card-tags {
+    display: flex; flex-wrap: wrap; gap: 0.375rem;
+    padding-top: 0.625rem; border-top: 1px solid var(--border);
+  }
+  #pinned-feed .tag-item {
+    padding: 0.25rem 0.625rem; background: transparent;
+    border: 1px solid var(--primary); border-radius: 9999px;
+    font-size: 0.75rem; color: var(--primary);
+    transition: all 0.2s ease;
+  }
+  #pinned-feed .tag-item:hover {
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+  }
+  @media (max-width: 480px) {
+    #pinned-feed .moment-card { padding: 0.875rem 0.875rem 0.875rem 1.75rem; }
+    #pinned-feed .avatar-img { width: 2.25rem; height: 2.25rem; }
+    #pinned-feed .user-name { font-size: 0.875rem; }
+    #pinned-feed .meta-row { font-size: 0.6875rem; }
+    #pinned-feed .location { max-width: 80px; }
+    #pinned-feed .card-images { gap: 0.25rem; }
+  }
+</style>
