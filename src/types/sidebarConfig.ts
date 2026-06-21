@@ -14,8 +14,8 @@ export type WidgetComponentType =
 	| "relationship"
 	| "quoteOfTheDay"
 	| "umamiStats"
-	| "weather";
-
+	| "weather"
+	| "timeGreeting";
 export type WidgetComponentConfig = {
 	type: WidgetComponentType; // 组件类型
 	enable: boolean; // 是否启用该组件

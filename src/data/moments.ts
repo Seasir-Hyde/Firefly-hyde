@@ -3,23 +3,30 @@
  * 从 GitHub Gist 加载朋友圈数据并动态插入页面
  */
 
-// 从页面脚本标签获取配置
-const configScript = document.getElementById("moments-config");
-if (!configScript) {
-	console.warn("[外部说说] 未找到配置脚本 #moments-config");
-}
-
-const gistId = configScript?.getAttribute("data-gist") || "";
-const fileName = configScript?.getAttribute("data-file") || "";
-const defaultAuthor = configScript?.getAttribute("data-author") || "";
-const defaultAvatar = configScript?.getAttribute("data-avatar") || "";
-
-if (!gistId || !fileName) {
-	console.warn("[外部说说] 配置不完整，跳过加载");
-}
-
 const cacheKey = "__externalMomentsCache";
 const MARKER = "data-ext-inserted";
+
+// ========== 配置获取函数 ==========
+
+function getConfig() {
+	const configScript = document.getElementById("moments-config");
+	if (!configScript) {
+		console.warn("[外部说说] 未找到配置脚本 #moments-config");
+		return null;
+	}
+
+	const gistId = configScript.getAttribute("data-gist") || "";
+	const fileName = configScript.getAttribute("data-file") || "";
+	const defaultAuthor = configScript.getAttribute("data-author") || "";
+	const defaultAvatar = configScript.getAttribute("data-avatar") || "";
+
+	if (!gistId || !fileName) {
+		console.warn("[外部说说] 配置不完整，跳过加载");
+		return null;
+	}
+
+	return { gistId, fileName, defaultAuthor, defaultAvatar };
+}
 
 // ========== 工具函数 ==========
 
@@ -89,6 +96,10 @@ function createCard(m: {
 	location?: string;
 	pinned?: boolean;
 }): HTMLElement {
+	const config = getConfig();
+	const defaultAuthor = config?.defaultAuthor || "";
+	const defaultAvatar = config?.defaultAvatar || "";
+
 	const author = m.author || defaultAuthor;
 	const avatar = m.avatar || defaultAvatar;
 	const date = new Date(m.published);
@@ -391,6 +402,9 @@ function fetchMoments(): void {
 	if (!feed) return;
 	if (hasExternalMoments()) return;
 
+	const config = getConfig();
+	if (!config) return;
+
 	// 使用缓存（5分钟有效期）
 	const cache = (window as unknown as Record<string, MomentsCache>)[cacheKey];
 	if (cache && cache.time > Date.now() - 300000) {
@@ -406,13 +420,13 @@ function fetchMoments(): void {
 	};
 	if (token) headers["Authorization"] = "Bearer " + token;
 
-	fetch("https://api.github.com/gists/" + gistId, { headers })
+	fetch("https://api.github.com/gists/" + config.gistId, { headers })
 		.then((r) => {
 			if (!r.ok) throw new Error("HTTP " + r.status);
 			return r.json();
 		})
 		.then((gist) => {
-			const file = gist.files[fileName];
+			const file = gist.files[config.fileName];
 			if (!file) return;
 			const moments = JSON.parse(file.content || "[]") as ExternalMoment[];
 			if (!moments.length) return;
@@ -433,6 +447,9 @@ function fetchPinned(): void {
 	if (!feed) return;
 	if (hasExternalPinned()) return;
 
+	const config = getConfig();
+	if (!config) return;
+
 	// 使用缓存
 	const cache = (window as unknown as Record<string, MomentsCache>)[cacheKey];
 	if (cache && cache.time > Date.now() - 300000) {
@@ -446,13 +463,13 @@ function fetchPinned(): void {
 	};
 	if (token) headers["Authorization"] = "Bearer " + token;
 
-	fetch("https://api.github.com/gists/" + gistId, { headers })
+	fetch("https://api.github.com/gists/" + config.gistId, { headers })
 		.then((r) => {
 			if (!r.ok) throw new Error("HTTP " + r.status);
 			return r.json();
 		})
 		.then((gist) => {
-			const file = gist.files[fileName];
+			const file = gist.files[config.fileName];
 			if (!file) return;
 			const moments = JSON.parse(file.content || "[]") as ExternalMoment[];
 			if (!moments.length) return;
@@ -469,16 +486,37 @@ function fetchPinned(): void {
 
 // ========== 初始化 ==========
 
-// 首次页面加载
-if (document.getElementById("moments-feed")) {
-	fetchMoments();
-}
-if (document.getElementById("pinned-feed")) {
-	fetchPinned();
+// 确保 DOM 加载完成后再执行
+function initMoments() {
+	if (document.getElementById("moments-feed")) {
+		fetchMoments();
+	}
+	if (document.getElementById("pinned-feed")) {
+		fetchPinned();
+	}
 }
 
-// Swup 页面切换后重新加载
+// 首次页面加载
+if (document.readyState === "loading") {
+	document.addEventListener("DOMContentLoaded", initMoments);
+} else {
+	// DOM 已经加载完成
+	initMoments();
+}
+
+// Swup 页面切换后重新加载（监听两种事件名称）
 document.addEventListener("swup:content:replace", () => {
+	setTimeout(() => {
+		if (document.getElementById("moments-feed") && !hasExternalMoments()) {
+			fetchMoments();
+		}
+		if (document.getElementById("pinned-feed") && !hasExternalPinned()) {
+			fetchPinned();
+		}
+	}, 50);
+});
+
+document.addEventListener("swup:contentReplaced", () => {
 	setTimeout(() => {
 		if (document.getElementById("moments-feed") && !hasExternalMoments()) {
 			fetchMoments();

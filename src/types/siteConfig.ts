@@ -88,7 +88,7 @@ export type SiteConfig = {
 		diary: boolean; // 日记页面开关
 		projects: boolean; // 项目页面开关
 		timeline: boolean; // 时间线页面开关
-		skills: boolean; // 技能页面开关
+		skills: boolean; // 技能页面开关	
 	};
 
 	// 日记页面配置
