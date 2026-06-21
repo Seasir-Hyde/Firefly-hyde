@@ -1330,7 +1330,9 @@ export function setFullscreenCarouselEnabled(enabled: boolean): void {
 	}
 }
 
-export function applyFullscreenCarouselEnabledToDocument(enabled: boolean): void {
+export function applyFullscreenCarouselEnabledToDocument(
+	enabled: boolean,
+): void {
 	if (typeof document === "undefined") {
 		return;
 	}

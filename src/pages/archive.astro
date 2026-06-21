@@ -9,10 +9,14 @@ import { getArchiveList } from "@/utils/content-utils";
 const archiveList = await getArchiveList();
 
 // 计算各类型数量
-const postsCount = archiveList.filter(item => item.type === "post").length;
-const momentsCount = archiveList.filter(item => item.type === "moment").length;
-const bangumiCount = archiveList.filter(item => item.type === "bangumi").length;
-const lifeCount = archiveList.filter(item => item.type === "life").length;
+const postsCount = archiveList.filter((item) => item.type === "post").length;
+const momentsCount = archiveList.filter(
+	(item) => item.type === "moment",
+).length;
+const bangumiCount = archiveList.filter(
+	(item) => item.type === "bangumi",
+).length;
+const lifeCount = archiveList.filter((item) => item.type === "life").length;
 const totalCount = postsCount + momentsCount + bangumiCount + lifeCount;
 ---
 

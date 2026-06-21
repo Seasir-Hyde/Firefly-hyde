@@ -14,7 +14,8 @@ export const externalMomentsConfig = {
 
 	// 默认作者信息
 	defaultAuthor: "Hyde",
-	defaultAvatar: "https://i.postimg.cc/7YLVJqnp/wei-xin-tu-pian-2026-05-07-020150-883.jpg",
+	defaultAvatar:
+		"https://i.postimg.cc/7YLVJqnp/wei-xin-tu-pian-2026-05-07-020150-883.jpg",
 
 	// 后台登录密码的 SHA-256 哈希（明文密码不再存入代码）
 	// 生成方式：echo -n "你的密码" | hyde189755

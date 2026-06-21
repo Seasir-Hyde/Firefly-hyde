@@ -94,9 +94,8 @@ export type SiteConfig = {
 	// 日记页面配置
 	diary: {
 		// 默认头像
-		defaultAvatar:
-			"https://i.postimg.cc/7YLVJqnp/wei-xin-tu-pian-2026-05-07-020150-883.jpg",
-	},
+		defaultAvatar: "https://i.postimg.cc/7YLVJqnp/wei-xin-tu-pian-2026-05-07-020150-883.jpg";
+	};
 	// 说说页面封面配置（微信朋友圈风格）
 	momentsCover?: {
 		enable: boolean;
@@ -168,12 +167,6 @@ export type SiteConfig = {
 		}[];
 	};
 
-	devtoolsWarning: {
-        enable: boolean; // 是否启用
-        message?: string; // 提示信息内容，留空为默认
-        time?: number; // 提示信息显示时间，单位秒
-    };
-	
 	// 图片优化配置
 	imageOptimization?: {
 		/**

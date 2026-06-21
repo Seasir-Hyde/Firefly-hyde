@@ -12,7 +12,8 @@ const coverConfig = siteConfig.momentsCover;
 if (!coverConfig?.enable) return null;
 
 // 优先使用 externalMomentsConfig 的默认作者信息
-const avatar = externalMomentsConfig.defaultAvatar || profileConfig.avatar || "/avatar.png";
+const avatar =
+	externalMomentsConfig.defaultAvatar || profileConfig.avatar || "/avatar.png";
 const name = externalMomentsConfig.defaultAuthor || profileConfig.name || "";
 const bio = Array.isArray(profileConfig.bio)
 	? profileConfig.bio[1] || profileConfig.bio[0] || ""

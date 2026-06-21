@@ -30,7 +30,10 @@ if (footerConfig.enable) {
 		// 移除HTML注释
 		customFooterHtml = customFooterHtml.replace(/<!--[\s\S]*?-->/g, "").trim();
 		// 替换版本号占位符
-		customFooterHtml = customFooterHtml.replace(/__THEME_VERSION__/g, themeVersion);
+		customFooterHtml = customFooterHtml.replace(
+			/__THEME_VERSION__/g,
+			themeVersion,
+		);
 	} catch (error) {
 		console.warn("FooterConfig.html文件读取失败:", error.message);
 	}

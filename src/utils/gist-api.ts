@@ -31,7 +31,7 @@ export interface NotebookData {
 export async function getGistContent(
 	gistId: string,
 	fileName: string,
-	token?: string
+	token?: string,
 ): Promise<string | null> {
 	const headers: HeadersInit = {};
 	if (token) {
@@ -39,7 +39,9 @@ export async function getGistContent(
 	}
 
 	try {
-		const response = await fetch(`${GITHUB_API_BASE}/gists/${gistId}`, { headers });
+		const response = await fetch(`${GITHUB_API_BASE}/gists/${gistId}`, {
+			headers,
+		});
 		if (!response.ok) {
 			return null;
 		}
@@ -51,9 +53,14 @@ export async function getGistContent(
 	}
 }
 
-export async function getGistContentRaw(gistId: string, fileName: string): Promise<string | null> {
+export async function getGistContentRaw(
+	gistId: string,
+	fileName: string,
+): Promise<string | null> {
 	try {
-		const response = await fetch(`https://gist.githubusercontent.com/raw/${gistId}/${fileName}`);
+		const response = await fetch(
+			`https://gist.githubusercontent.com/raw/${gistId}/${fileName}`,
+		);
 		if (!response.ok) {
 			return null;
 		}
@@ -67,10 +74,10 @@ export async function updateGist(
 	gistId: string,
 	fileName: string,
 	content: string,
-	token: string
+	token: string,
 ): Promise<boolean> {
 	const headers: HeadersInit = {
-		"Authorization": `token ${token}`,
+		Authorization: `token ${token}`,
 		"Content-Type": "application/json",
 	};
 
@@ -98,10 +105,10 @@ export async function createGist(
 	fileName: string,
 	content: string,
 	token: string,
-	isPublic: boolean = false
+	isPublic = false,
 ): Promise<string | null> {
 	const headers: HeadersInit = {
-		"Authorization": `token ${token}`,
+		Authorization: `token ${token}`,
 		"Content-Type": "application/json",
 	};
 
@@ -130,9 +137,12 @@ export async function createGist(
 	}
 }
 
-export async function deleteGist(gistId: string, token: string): Promise<boolean> {
+export async function deleteGist(
+	gistId: string,
+	token: string,
+): Promise<boolean> {
 	const headers: HeadersInit = {
-		"Authorization": `token ${token}`,
+		Authorization: `token ${token}`,
 	};
 
 	try {
@@ -146,7 +156,10 @@ export async function deleteGist(gistId: string, token: string): Promise<boolean
 	}
 }
 
-export async function getMomentsFromGist(gistId: string, fileName: string): Promise<ExternalMoment[]> {
+export async function getMomentsFromGist(
+	gistId: string,
+	fileName: string,
+): Promise<ExternalMoment[]> {
 	const content = await getGistContentRaw(gistId, fileName);
 	if (!content) {
 		return [];
@@ -163,13 +176,15 @@ export async function updateMomentsInGist(
 	gistId: string,
 	fileName: string,
 	moments: ExternalMoment[],
-	token: string
+	token: string,
 ): Promise<boolean> {
 	const content = JSON.stringify(moments, null, 2);
 	return updateGist(gistId, fileName, content, token);
 }
 
-export async function getNotebookFromGist(gistId: string): Promise<NotebookData | null> {
+export async function getNotebookFromGist(
+	gistId: string,
+): Promise<NotebookData | null> {
 	const content = await getGistContentRaw(gistId, "notebooks-entries.json");
 	if (!content) {
 		return null;
@@ -185,7 +200,7 @@ export async function getNotebookFromGist(gistId: string): Promise<NotebookData 
 export async function updateNotebookInGist(
 	gistId: string,
 	data: NotebookData,
-	token: string
+	token: string,
 ): Promise<boolean> {
 	const content = JSON.stringify(data, null, 2);
 	return updateGist(gistId, "notebooks-entries.json", content, token);
@@ -193,7 +208,7 @@ export async function updateNotebookInGist(
 
 export async function createNotebookGist(
 	name: string,
-	token: string
+	token: string,
 ): Promise<string | null> {
 	const data: NotebookData = {
 		entries: [],
@@ -206,13 +221,13 @@ export async function createNotebookGist(
 	return createGist("notebooks-entries.json", content, token, false);
 }
 
-export function generateId(prefix: string = "ext"): string {
+export function generateId(prefix = "ext"): string {
 	return `${prefix}-${Date.now()}`;
 }
 
 export async function validateGitHubToken(token: string): Promise<boolean> {
 	const headers: HeadersInit = {
-		"Authorization": `token ${token}`,
+		Authorization: `token ${token}`,
 	};
 
 	try {

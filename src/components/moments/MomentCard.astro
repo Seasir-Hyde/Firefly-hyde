@@ -3,9 +3,9 @@ import type { CollectionEntry } from "astro:content";
 import { render } from "astro:content";
 import { Icon } from "astro-icon/components";
 import Markdown from "@/components/common/Markdown.astro";
+import { externalMomentsConfig } from "@/config/externalMomentsConfig";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { getTagUrl } from "@/utils/url-utils";
-import { externalMomentsConfig } from "@/config/externalMomentsConfig";
 
 interface Props {
 	moment: CollectionEntry<"moments">;

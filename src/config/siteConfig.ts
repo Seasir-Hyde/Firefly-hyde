@@ -19,7 +19,27 @@ export const siteConfig: SiteConfig = {
 		"Hyde 是一个记录折腾博客搭建教程、分享教程、随笔感悟，技术探索与生活记录，都在这里。",
 
 	// 站点关键词
-	keywords: ["Hyde", "个人博客主题", "Astro", "ACGN", "博客", "技术博客", "静态博客","现代化博客","内容创作者","开源主题","番组追踪","技术分享","生活点滴","建站记录","技术折腾","个人博客","日常随笔","生活相册","折腾日记"],
+	keywords: [
+		"Hyde",
+		"个人博客主题",
+		"Astro",
+		"ACGN",
+		"博客",
+		"技术博客",
+		"静态博客",
+		"现代化博客",
+		"内容创作者",
+		"开源主题",
+		"番组追踪",
+		"技术分享",
+		"生活点滴",
+		"建站记录",
+		"技术折腾",
+		"个人博客",
+		"日常随笔",
+		"生活相册",
+		"折腾日记",
+	],
 
 	// 主题色
 	themeColor: {
@@ -223,26 +243,18 @@ export const siteConfig: SiteConfig = {
 	lang: SITE_LANG,
 
 	// 音乐配置
-  music: {
-    // 歌单配置
-    playlists: [
-      { id: "17924204831", name: "纯音乐", server: "netease" },
-      { id: "17933567326", name: "我的喜欢", server: "netease" },
-      { id: "zhoujielun", name: "周杰伦", server: "netease", type: "custom" },
-      { id: "17964946766", name: "陶喆", server: "netease" },
-      { id: "17957187425", name: "方大同", server: "netease" },
-      { id: "17956985703", name: "G.E.M.邓紫棋", server: "netease" },
-      { id: "17957136689", name: "林俊杰", server: "netease" },
-      { id: "17957661244", name: "孙燕姿", server: "netease" },
-      { id: "17966019560", name: "告五人", server: "netease" },
-    ],
-  },
-
-  // 启用开发者工具提示信息
-  devtoolsWarning: {
-    enable: true, // 是否启用
-    message:
-      "请按本站规定合法使用开发者工具", // 提示信息内容，留空为默认
-    time: 5, // 提示信息显示时间，单位秒
-  },
+	music: {
+		// 歌单配置
+		playlists: [
+			{ id: "17924204831", name: "纯音乐", server: "netease" },
+			{ id: "17933567326", name: "我的喜欢", server: "netease" },
+			{ id: "zhoujielun", name: "周杰伦", server: "netease", type: "custom" },
+			{ id: "17964946766", name: "陶喆", server: "netease" },
+			{ id: "17957187425", name: "方大同", server: "netease" },
+			{ id: "17956985703", name: "G.E.M.邓紫棋", server: "netease" },
+			{ id: "17957136689", name: "林俊杰", server: "netease" },
+			{ id: "17957661244", name: "孙燕姿", server: "netease" },
+			{ id: "17966019560", name: "告五人", server: "netease" },
+		],
+	},
 };

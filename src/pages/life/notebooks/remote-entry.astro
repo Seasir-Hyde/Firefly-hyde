@@ -1,7 +1,7 @@
 ---
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { Icon } from "astro-icon/components";
 import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
 export async function getStaticPaths() {
 	return [{ params: { notebook: "daily", id: "entry" } }];

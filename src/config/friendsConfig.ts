@@ -100,8 +100,7 @@ export const friendsConfig: FriendLink[] = [
 		title: "Yubendan",
 		desc: "内心充盈者，独行也如众。",
 		siteurl: "https://yubendan.com/",
-		imgurl:
-			"https://yubendan.com/_astro/avatar.DVGZ46-Q_1TAarN.webp",
+		imgurl: "https://yubendan.com/_astro/avatar.DVGZ46-Q_1TAarN.webp",
 		tags: ["Astro"],
 		weight: 8,
 		enabled: true,
@@ -110,10 +109,11 @@ export const friendsConfig: FriendLink[] = [
 		title: "versus0",
 		desc: "技术+算法blog。",
 		siteurl: "https://blog.542000.xyz",
-		imgurl: "https://img.542000.xyz/file/friend_avatar/1778931720838_f167cb95af9d881f4378b92b3e181d89_4647054993754934443.jpg",
+		imgurl:
+			"https://img.542000.xyz/file/friend_avatar/1778931720838_f167cb95af9d881f4378b92b3e181d89_4647054993754934443.jpg",
 		tags: ["Astro"],
 		weight: 8,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "ZhiJing's Blog",
@@ -122,7 +122,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://iwexe.top/avatar.svg",
 		tags: ["Astro"],
 		weight: 8,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "十三",
@@ -131,7 +131,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://img.nw177.cn/blog/100.assets/avatar.webp",
 		tags: ["Astro"],
 		weight: 8,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "星遐蝶梦",
@@ -140,7 +140,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://blog.casto.top/_astro/avatar.BmbZMO2d_Z1ed0Se.webp",
 		tags: ["Astro"],
 		weight: 8,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "团子和蛋糕",
@@ -149,7 +149,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://re.tsh520.cn/zl/tx.webp",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "年华",
@@ -158,7 +158,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://q1.qlogo.cn/g?b=qq&nk=1323860289&s=640",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "THW's Blog",
@@ -167,7 +167,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://image.tianhw.top/avatar.webp",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "番茄主理人",
@@ -176,7 +176,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://q1.qlogo.cn/g?b=qq&nk=20447289&s=640",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "晓正杨博客",
@@ -185,7 +185,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://images.sy.fj.kg/logo.96adlmmyni.webp",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "小王的博客",
@@ -194,16 +194,17 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://www.huhaha.vip/acatar.webp",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "Sigrika-善良耙耙柑🍊",
 		desc: "记录我的二次元之旅",
 		siteurl: "https://qwq.sigrika.cc/",
-		imgurl: "https://weavatar.com/avatar/bc0dba25ea5949e8290d012e081ceec669aa7784c7ad765173473c80cbaee404",
+		imgurl:
+			"https://weavatar.com/avatar/bc0dba25ea5949e8290d012e081ceec669aa7784c7ad765173473c80cbaee404",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "Nachcekoの小窝",
@@ -212,7 +213,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://avatars.githubusercontent.com/u/172878250?v=4",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "Saimen Blog",
@@ -221,7 +222,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://blog.z2m.store/_astro/xgg.rSbGMho9_Z1Y5OOT.webp",
 		tags: ["Blog"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "新锐博客",
@@ -230,7 +231,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://blog.xrbk.cn/favicon.png",
 		tags: ["Blog"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "Eysnter",
@@ -239,7 +240,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://img.eysnter.cn/file/posts/icon/1780993886377_0122.webp",
 		tags: ["Astro"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "小生",
@@ -248,7 +249,7 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://t.alcy.cc/tx",
 		tags: ["Blog"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "mccsjs",
@@ -257,16 +258,34 @@ export const friendsConfig: FriendLink[] = [
 		imgurl: "https://blog.seln.cn/img/ico.jpg",
 		tags: ["Blog"],
 		weight: 0,
-		enabled: true
+		enabled: true,
 	},
 	{
 		title: "橘智",
-		desc: "开始思考和分享的地方",
-		siteurl: "https://juzhiart.com/home",
-		imgurl: "https://juzhiart.com/_nuxt/logo.B5tOjnXr.svg",
+		desc: "共享博客&深度思考",
+		siteurl: "https://juzhiart.com",
+		imgurl: "https://dataer-1257252871.cos.ap-shanghai.myqcloud.com/virtualUserIcon/logo.png",
 		tags: ["Blog"],
 		weight: 0,
-		enabled: true
+		enabled: true,
+	},
+	{
+		title: "顾拾柒",
+		desc: "分享、实践、学习",
+		siteurl: "https://blog.olinl.com",
+		imgurl: "https://q2.qlogo.cn/headimg_dl?dst_uin=9892214&spec=0",
+		tags: ["Blog"],
+		weight: 0,
+		enabled: true,
+	},
+	{
+		title: "萌酷网",
+		desc: "专属个人随笔博客，记录日常琐事、职场工作点滴、喜怒哀乐心情感悟，用文字留存平凡生活里的温柔与酷感习",
+		siteurl: "https://www.moekuu.com",
+		imgurl: "https://www.moekuu.com/favicon.png",
+		tags: ["Blog"],
+		weight: 0,
+		enabled: true,
 	},
 ];
 

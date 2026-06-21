@@ -252,7 +252,7 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 				},
 			},
 		},
-				{
+		{
 			// 组件类型：时间进度组件
 			type: "schedule",
 			// 是否启用该组件

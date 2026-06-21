@@ -60,7 +60,7 @@ const ziyuanCollection = defineCollection({
 				z.object({
 					text: z.string(),
 					author: z.string(),
-				})
+				}),
 			),
 			content: z.undefined().optional(),
 			closable: z.undefined().optional(),
@@ -93,5 +93,5 @@ export const collections = {
 	posts: postsCollection,
 	spec: specCollection,
 	ziyuan: ziyuanCollection,
-	moments: momentsCollection,  // 朋友圈集合
+	moments: momentsCollection, // 朋友圈集合
 };

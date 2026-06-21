@@ -1,16 +1,20 @@
 <!-- 单个分类详情页 -->
 ---
-import type { GetStaticPaths } from "astro";
 import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
-import { Icon } from "astro-icon/components";
-import PostCard from "@/components/layout/PostCard.astro";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
-import { getCategoryList } from "@/utils/content-utils";
-import { getTagUrl, getCategoryPageUrl, getPostUrlBySlug } from "@/utils/url-utils";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import type { GetStaticPaths } from "astro";
+import { Icon } from "astro-icon/components";
+import PostCard from "@/components/layout/PostCard.astro";
 import { siteConfig } from "@/config";
+import { getCategoryList } from "@/utils/content-utils";
+import {
+	getCategoryPageUrl,
+	getPostUrlBySlug,
+	getTagUrl,
+} from "@/utils/url-utils";
 
 type PostEntry = CollectionEntry<"posts">;
 
@@ -23,9 +27,9 @@ interface Props {
 
 export const getStaticPaths = (async () => {
 	const categories = await getCategoryList();
-	const allPosts = await getCollection("posts", ({ data }) => {
+	const allPosts = (await getCollection("posts", ({ data }) => {
 		return import.meta.env.PROD ? data.draft !== true : true;
-	}) as PostEntry[];
+	})) as PostEntry[];
 
 	const paths: any[] = [];
 
@@ -34,7 +38,7 @@ export const getStaticPaths = (async () => {
 		const categoryPosts = allPosts.filter((post) => {
 			const postCategory = post.data.category?.trim() || "";
 			const uncategorized = i18n(I18nKey.uncategorized).toLowerCase();
-			
+
 			if (!category.name || category.name.toLowerCase() === uncategorized) {
 				// 未分类：没有分类或分类为空/未分类
 				return !postCategory || postCategory.toLowerCase() === uncategorized;
@@ -46,7 +50,10 @@ export const getStaticPaths = (async () => {
 		categoryPosts.sort((a, b) => {
 			if (a.data.pinned && !b.data.pinned) return -1;
 			if (!a.data.pinned && b.data.pinned) return 1;
-			return new Date(b.data.published).getTime() - new Date(a.data.published).getTime();
+			return (
+				new Date(b.data.published).getTime() -
+				new Date(a.data.published).getTime()
+			);
 		});
 
 		// 收集该分类下所有标签

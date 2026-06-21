@@ -90,18 +90,6 @@ const subtitle = i18n(I18nKey.diarySubtitle);
 				}
 
 				<div id="diary-list" class="space-y-4">
-					{
-						moments.map((moment, index) => (
-							<MomentCard
-								moment={moment}
-								index={index}
-								minutesAgo={minutesAgo}
-								hoursAgo={hoursAgo}
-								daysAgo={daysAgo}
-							/>
-						))
-					}
-				</div>
 
 				<div id="no-results" class="hidden text-center py-16">
 					<Icon

@@ -2,9 +2,10 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { getCategoryUrl, getPostUrlBySlug } from "@utils/url-utils";
-import { getDiaryList } from "@/data/diary";
 import { siteConfig } from "@/config/siteConfig";
+import { getDiaryList } from "@/data/diary";
 import type { UserSubjectCollection } from "@/types/bangumi";
+
 async function getRawSortedPosts() {
 	const allBlogPosts = await getCollection("posts", ({ data }) => {
 		return import.meta.env.PROD ? data.draft !== true : true;
@@ -81,7 +82,9 @@ export async function getTagList(): Promise<Tag[]> {
 
 	// 从远程说说获取标签
 	try {
-		const { externalMomentsConfig } = await import("@/config/externalMomentsConfig");
+		const { externalMomentsConfig } = await import(
+			"@/config/externalMomentsConfig"
+		);
 		if (externalMomentsConfig.enable && externalMomentsConfig.gistId) {
 			// 使用 raw URL 直接获取，不需要认证（更可靠的 URL 格式）
 			const rawUrl = `https://gist.githubusercontent.com/raw/${externalMomentsConfig.gistId}/${externalMomentsConfig.fileName}`;
@@ -127,7 +130,7 @@ async function fetchBangumiArchiveData(): Promise<ArchiveItem[]> {
 
 	const username = bangumiConfig.userId;
 	const apiUrl = bangumiConfig.apiUrl || "https://api.bangumi.one";
-	
+
 	// 检查是否已配置用户ID
 	if (!username || username === "you-user-id" || username.trim() === "") {
 		console.log("[Archive] Bangumi 用户ID未配置，跳过获取");
@@ -142,7 +145,8 @@ async function fetchBangumiArchiveData(): Promise<ArchiveItem[]> {
 		game: { name: i18n(I18nKey.bangumiCategoryGame), subjectType: 4 },
 	};
 
-	const subjectBaseUrl = bangumiConfig.subjectBaseUrl || "https://bangumi.one/subject/";
+	const subjectBaseUrl =
+		bangumiConfig.subjectBaseUrl || "https://bangumi.one/subject/";
 	const bangumiItems: ArchiveItem[] = [];
 
 	for (const [key, info] of Object.entries(categoryMap)) {
@@ -156,7 +160,9 @@ async function fetchBangumiArchiveData(): Promise<ArchiveItem[]> {
 			});
 
 			if (!response.ok) {
-				console.warn(`[Archive] 获取 Bangumi ${info.name} 数据失败: ${response.status}`);
+				console.warn(
+					`[Archive] 获取 Bangumi ${info.name} 数据失败: ${response.status}`,
+				);
 				continue;
 			}
 
@@ -170,7 +176,9 @@ async function fetchBangumiArchiveData(): Promise<ArchiveItem[]> {
 					link: `${subjectBaseUrl}${item.subject.id}`,
 					data: {
 						title: item.subject.name,
-						published: item.subject.date ? new Date(item.subject.date) : new Date(),
+						published: item.subject.date
+							? new Date(item.subject.date)
+							: new Date(),
 						tags: item.subject.tags?.map((t) => t.name) || [],
 						category: info.name,
 					},
@@ -224,24 +232,26 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 
 	// 从 moments collection 读取数据
 	const momentsCollection = await getCollection("moments");
-	const momentsFromCollection: ArchiveItem[] = momentsCollection.map((moment) => {
-		let title = moment.id || "";
-		title = title.replace(/[#*`]/g, "").trim();
-		if (title.length > 50) title = `${title.substring(0, 50)}...`;
-		if (!title) title = i18n(I18nKey.moments) || "日常动态";
+	const momentsFromCollection: ArchiveItem[] = momentsCollection.map(
+		(moment) => {
+			let title = moment.id || "";
+			title = title.replace(/[#*`]/g, "").trim();
+			if (title.length > 50) title = `${title.substring(0, 50)}...`;
+			if (!title) title = i18n(I18nKey.moments) || "日常动态";
 
-		return {
-			id: `moment-${moment.id}`,
-			type: "moment",
-			link: "/moments/",
-			data: {
-				title: title,
-				published: new Date(moment.data.published),
-				tags: moment.data.tags || [],
-				category: null,
-			},
-		};
-	});
+			return {
+				id: `moment-${moment.id}`,
+				type: "moment",
+				link: "/moments/",
+				data: {
+					title: title,
+					published: new Date(moment.data.published),
+					tags: moment.data.tags || [],
+					category: null,
+				},
+			};
+		},
+	);
 
 	// 获取 Bangumi 数据
 	const bangumiItems: ArchiveItem[] = await fetchBangumiArchiveData();
@@ -250,13 +260,15 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 	// 获取远程说说数据
 	let externalMomentsItems: ArchiveItem[] = [];
 	try {
-		const { externalMomentsConfig } = await import("@/config/externalMomentsConfig");
+		const { externalMomentsConfig } = await import(
+			"@/config/externalMomentsConfig"
+		);
 		if (externalMomentsConfig.enable && externalMomentsConfig.gistId) {
 			// 使用 raw URL 直接获取，不需要认证（更可靠的 URL 格式）
 			const rawUrl = `https://gist.githubusercontent.com/raw/${externalMomentsConfig.gistId}/${externalMomentsConfig.fileName}`;
 			const response = await fetch(rawUrl);
 			if (response.ok) {
-				const moments = await response.json() as Array<{
+				const moments = (await response.json()) as Array<{
 					id: string;
 					content: string;
 					published: string;
@@ -287,7 +299,14 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 		console.warn("[Archive] 获取远程说说数据失败:", e);
 	}
 
-	return [...postItems, ...momentItems, ...momentsFromCollection, ...externalMomentsItems, ...bangumiItems, ...lifeItems].sort((a, b) => {
+	return [
+		...postItems,
+		...momentItems,
+		...momentsFromCollection,
+		...externalMomentsItems,
+		...bangumiItems,
+		...lifeItems,
+	].sort((a, b) => {
 		const timeA = a.data.published.getTime();
 		const timeB = b.data.published.getTime();
 		return timeB - timeA;

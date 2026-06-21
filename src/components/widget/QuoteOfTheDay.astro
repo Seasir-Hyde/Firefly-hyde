@@ -1,6 +1,6 @@
 ---
-import WidgetLayout from "@/components/common/WidgetLayout.astro";
 import { getCollection } from "astro:content";
+import WidgetLayout from "@/components/common/WidgetLayout.astro";
 
 // 从 content/ziyuan/quote.md 读取名言数据
 const ziyuanEntries = await getCollection("ziyuan");
@@ -18,7 +18,9 @@ const { class: className, style } = Astro.props;
 // 使用日期作为随机种子，确保同一天显示相同的名言
 const today = new Date();
 const dateStr = today.toISOString().split("T")[0];
-const seed = dateStr.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+const seed = dateStr
+	.split("")
+	.reduce((acc, char) => acc + char.charCodeAt(0), 0);
 const randomIndex = seed % quotes.length;
 const quote = quotes[randomIndex] || { text: "暂无名言", author: "" };
 ---

@@ -14,35 +14,44 @@
 
 /** 单首歌曲的数据结构 */
 interface MusicItem {
-    url: string;      // 音频文件 URL
-    cover: string;    // 封面图片 URL
-    title: string;    // 歌曲名
-    artist: string;   // 歌手名
-    duration?: string; // 时长（可选，格式如 "3:45"）
+	url: string; // 音频文件 URL
+	cover: string; // 封面图片 URL
+	title: string; // 歌曲名
+	artist: string; // 歌手名
+	duration?: string; // 时长（可选，格式如 "3:45"）
 }
 
 /** 歌单条目数据结构 */
 interface PlaylistEntry {
-    id: string;       // 歌单唯一标识
-    name: string;     // 歌单名称
-    server?: string;  // 服务器标识（可选）
+	id: string; // 歌单唯一标识
+	name: string; // 歌单名称
+	server?: string; // 服务器标识（可选）
 }
 
 /** 组件 Props 定义 */
 interface Props {
-    src?: string;                                   // 单曲音频 URL（可选）
-    cover?: string;                                 // 单曲封面（可选）
-    title?: string;                                 // 单曲标题（可选）
-    artist?: string;                                // 单曲歌手（可选）
-    list?: MusicItem[];                             // 歌曲列表
-    playlists?: PlaylistEntry[];                    // 歌单列表（左侧显示的歌单分类）
-    playlistCounts?: Record<string, number>;        // 每个歌单的歌曲数量
-    playlistSongs?: Record<string, MusicItem[]>;    // 每个歌单对应的歌曲数据（构建时生成）
+	src?: string; // 单曲音频 URL（可选）
+	cover?: string; // 单曲封面（可选）
+	title?: string; // 单曲标题（可选）
+	artist?: string; // 单曲歌手（可选）
+	list?: MusicItem[]; // 歌曲列表
+	playlists?: PlaylistEntry[]; // 歌单列表（左侧显示的歌单分类）
+	playlistCounts?: Record<string, number>; // 每个歌单的歌曲数量
+	playlistSongs?: Record<string, MusicItem[]>; // 每个歌单对应的歌曲数据（构建时生成）
 }
 
 // ========== 数据准备 ==========
 
-const { src, cover, title, artist, list, playlists, playlistCounts = {}, playlistSongs = {} } = Astro.props;
+const {
+	src,
+	cover,
+	title,
+	artist,
+	list,
+	playlists,
+	playlistCounts = {},
+	playlistSongs = {},
+} = Astro.props;
 
 // 当前播放歌曲信息：优先使用 props 传入的值，否则取列表第一首
 const currentSrc = src || (list && list[0] ? list[0].url : "");
@@ -65,7 +74,6 @@ const initialBatch = list ? list.slice(0, BATCH_SIZE) : [];
 const hasMore = totalCount > BATCH_SIZE;
 
 import { Icon } from "astro-icon/components";
-
 ---
 
 <!-- ========== 播放器主容器 ========== -->

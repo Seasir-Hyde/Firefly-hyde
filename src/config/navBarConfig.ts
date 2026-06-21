@@ -47,7 +47,7 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 留言板
 			LinkPresets.Guestbook,
-	
+
 			// 日记
 			LinkPresets.Diary,
 		],

@@ -11,11 +11,11 @@ export const fontConfig: FontConfig = {
 
 	// 各区域独立字体设置（填写下方 fonts 中的字体 ID，留空则使用全局 selected 字体）
 	// 横幅标题字体
-	bannerTitleFont: "zen-maru-gothic",
+	bannerTitleFont: "Chikushi-A-maru",
 	// 横幅副标题字体
-	bannerSubtitleFont: "inter",
+	bannerSubtitleFont: "Chikushi-A-maru",
 	// 导航栏标题字体
-	navbarTitleFont: "",
+	navbarTitleFont: "Chikushi-A-maru",
 
 	// 字体列表
 	// 推荐使用可靠的 CDN 服务商提供的字体链接，它天然做了按需分片加载，且性能较好

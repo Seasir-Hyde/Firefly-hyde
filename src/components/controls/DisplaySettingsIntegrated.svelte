@@ -8,6 +8,7 @@ import {
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import {
+	applyPostCoverImageEnabledToDocument,
 	getDefaultBannerCarouselEnabled,
 	getDefaultBannerTitleEnabled,
 	getDefaultFullscreenCarouselEnabled,
@@ -43,7 +44,6 @@ import {
 	setSakuraEnabled,
 	setWallpaperMode,
 	setWavesEnabled,
-	applyPostCoverImageEnabledToDocument,
 } from "@utils/setting-utils";
 import { onMount } from "svelte";
 import Icon from "@/components/common/Icon.svelte";
@@ -128,7 +128,8 @@ const isFullscreenCarouselSwitchable =
 // 是否允许用户切换樱花特效
 const isSakuraSwitchable = sakuraConfig?.switchable ?? false;
 // 是否允许用户切换文章封面图
-const isPostCoverImageSwitchable = siteConfig.postListLayout.allowCoverSwitch ?? true;
+const isPostCoverImageSwitchable =
+	siteConfig.postListLayout.allowCoverSwitch ?? true;
 // 是否有任何横幅设置可显示（后续添加新设置时在此处添加条件）
 const hasBannerSettings =
 	isWavesSwitchable ||
@@ -429,20 +430,20 @@ onMount(() => {
 	bannerTitleEnabled = getStoredBannerTitleEnabled();
 
 	// 从localStorage读取横幅轮播状态
-		bannerCarouselEnabled = getStoredBannerCarouselEnabled();
+	bannerCarouselEnabled = getStoredBannerCarouselEnabled();
 
-		// 从localStorage读取全屏轮播状态
-		fullscreenCarouselEnabled = getStoredFullscreenCarouselEnabled();
+	// 从localStorage读取全屏轮播状态
+	fullscreenCarouselEnabled = getStoredFullscreenCarouselEnabled();
 
-		// 从localStorage读取樱花特效状态
+	// 从localStorage读取樱花特效状态
 	sakuraEnabled = getStoredSakuraEnabled();
 
 	// 从localStorage读取文章封面图状态
-		postCoverImageEnabled = getStoredPostCoverImageEnabled();
-		// 将状态应用到文档
-		applyPostCoverImageEnabledToDocument(postCoverImageEnabled);
+	postCoverImageEnabled = getStoredPostCoverImageEnabled();
+	// 将状态应用到文档
+	applyPostCoverImageEnabledToDocument(postCoverImageEnabled);
 
-		// 从localStorage读取全屏透明设置状态
+	// 从localStorage读取全屏透明设置状态
 	overlayOpacity = getStoredOverlayOpacity();
 	overlayBlur = getStoredOverlayBlur();
 	overlayCardOpacity = getStoredOverlayCardOpacity();

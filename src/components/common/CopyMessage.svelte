@@ -1,42 +1,42 @@
 <!-- 复制内容提示组件 -->
 <script lang="ts">
-	import { onMount } from "svelte";
+import { onMount } from "svelte";
 
-	const SHOW_DURATION = 3000;
-	let isVisible = $state(false);
-	let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+const SHOW_DURATION = 3000;
+let isVisible = $state(false);
+let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	const showCopyMessage = () => {
+const showCopyMessage = () => {
+	if (hideTimeout) {
+		clearTimeout(hideTimeout);
+		hideTimeout = null;
+	}
+
+	isVisible = false;
+	setTimeout(() => {
+		isVisible = true;
+		hideTimeout = setTimeout(() => {
+			isVisible = false;
+		}, SHOW_DURATION);
+	}, 10);
+};
+
+const handleCopy = () => {
+	const selection = window.getSelection();
+	if (selection?.toString().trim()) {
+		showCopyMessage();
+	}
+};
+
+onMount(() => {
+	document.addEventListener("copy", handleCopy);
+	return () => {
+		document.removeEventListener("copy", handleCopy);
 		if (hideTimeout) {
 			clearTimeout(hideTimeout);
-			hideTimeout = null;
-		}
-
-		isVisible = false;
-		setTimeout(() => {
-			isVisible = true;
-			hideTimeout = setTimeout(() => {
-				isVisible = false;
-			}, SHOW_DURATION);
-		}, 10);
-	};
-
-	const handleCopy = () => {
-		const selection = window.getSelection();
-		if (selection?.toString().trim()) {
-			showCopyMessage();
 		}
 	};
-
-	onMount(() => {
-		document.addEventListener("copy", handleCopy);
-		return () => {
-			document.removeEventListener("copy", handleCopy);
-			if (hideTimeout) {
-				clearTimeout(hideTimeout);
-			}
-		};
-	});
+});
 </script>
 
 <div class="copy-message" class:show={isVisible}>

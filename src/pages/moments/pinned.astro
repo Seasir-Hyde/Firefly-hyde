@@ -3,8 +3,8 @@ import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import Comment from "@/components/comment/index.astro";
 import MomentCard from "@/components/moments/MomentCard.astro";
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
 const moments = await getCollection("moments");
 const pinnedMoments = moments
