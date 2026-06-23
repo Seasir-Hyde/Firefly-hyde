@@ -13,7 +13,7 @@
     {
       "name": "default",
       "pageBundle": true,
-      "previewPath": "'blog'",
+      "previewPath": "'posts'",
       "filePrefix": null,
       "clearEmpty": true,
       "fields": [
