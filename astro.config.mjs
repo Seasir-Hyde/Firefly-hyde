@@ -88,10 +88,6 @@ export default defineConfig({
 	image: {
 		// 全局响应式布局
 		layout: "constrained",
-		// 启用 AVIF 和 WebP 格式支持
-		formats: ["avif", "webp"],
-		// 设置合理的图像质量
-		quality: 80,
 	},
 
 	integrations: [
@@ -297,13 +293,6 @@ export default defineConfig({
 		resolve: {
 			alias: {
 				"@rehype-callouts-theme": `rehype-callouts/theme/${siteConfig.post.rehypeCallouts.theme}`,
-				"@": "./src",
-				"@components": "./src/components",
-				"@assets": "./src/assets",
-				"@constants": "./src/constants",
-				"@utils": "./src/utils",
-				"@i18n": "./src/i18n",
-				"@layouts": "./src/layouts",
 			},
 		},
 		build: {
@@ -317,7 +306,7 @@ export default defineConfig({
 			},
 			rollupOptions: {
 				onwarn(warning, warn) {
-					// 暂时抑制动态导入警告
+					// temporarily suppress this warning
 					if (
 						warning.message.includes("is dynamically imported by") &&
 						warning.message.includes("but also statically imported by")
@@ -330,18 +319,7 @@ export default defineConfig({
 			// CSS 优化
 			cssCodeSplit: true,
 			cssMinify: "esbuild",
-			// 将小于 4KB 的资源内联到 HTML 中
 			assetsInlineLimit: 4096,
-			// 生成 sourcemap（生产环境禁用以减小体积）
-			sourcemap: false,
-			// 提高 chunk 大小警告阈值到 600KB
-			chunkSizeWarningLimit: 1500,
-		},
-		// 性能优化配置
-		optimizeDeps: {
-			// 强制预构建依赖
-			include: ["@fancyapps/ui", "katex", "marked"],
 		},
 	},
 });
-

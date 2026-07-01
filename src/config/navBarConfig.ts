@@ -59,14 +59,14 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		url: "#",
 		icon: "material-symbols:person",
 		children: [
+			// 番组计划
+			LinkPresets.Bangumi,
+			
 			// 友链
 			LinkPresets.Friends,
 
 			// 追番
 			LinkPresets.Anime,
-
-			// 番组计划
-			LinkPresets.Bangumi,
 
 			// 设备
 			LinkPresets.Devices,

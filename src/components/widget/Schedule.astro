@@ -1,51 +1,45 @@
-<!-- 时间进度组件 -->
 ---
 import WidgetLayout from "@/components/common/WidgetLayout.astro";
 
 interface Props {
-	class?: string;
-	style?: string;
+  class?: string;
+  style?: string;
 }
 
 const { class: className, style } = Astro.props;
 ---
 
 <WidgetLayout id="schedule-widget" class={className} style={style}>
-  <div class="schedule-container" data-schedule-id="schedule-${Math.random().toString(36).substr(2, 9)}">
-    <!-- 进度区域 -->
+  <div class="schedule-container">
     <div class="progress-section space-y-4">
-      <!-- 本年进度 -->
       <div class="progress-item flex items-center gap-3">
         <span class="text-[14px] font-semibold text-(--primary) shrink-0 w-[60px] year-progress">--%</span>
         <div class="flex-1 min-w-0">
-          <span class="text-sm text-neutral-700 dark:text-neutral-300 year-days-left">本年还剩 -- 天</span>
+          <span class="text-sm text-neutral-700 dark:text-neutral-300 year-days-left">&#26412;&#24180;&#36824;&#21097; -- &#22825;</span>
           <progress max="365" class="schedule-progress-bar pBar_year" value="0"></progress>
         </div>
       </div>
 
-      <!-- 本月进度 -->
       <div class="progress-item flex items-center gap-3">
         <span class="text-[14px] font-semibold text-(--primary) shrink-0 w-[60px] month-progress">--%</span>
         <div class="flex-1 min-w-0">
-          <span class="text-sm text-neutral-700 dark:text-neutral-300 month-days-left">本月还剩 -- 天</span>
+          <span class="text-sm text-neutral-700 dark:text-neutral-300 month-days-left">&#26412;&#26376;&#36824;&#21097; -- &#22825;</span>
           <progress max="31" class="schedule-progress-bar pBar_month" value="0"></progress>
         </div>
       </div>
 
-      <!-- 本周进度 -->
       <div class="progress-item flex items-center gap-3">
         <span class="text-[14px] font-semibold text-(--primary) shrink-0 w-[60px] week-progress">--%</span>
         <div class="flex-1 min-w-0">
-          <span class="text-sm text-neutral-700 dark:text-neutral-300 week-days-left">本周还剩 -- 天</span>
+          <span class="text-sm text-neutral-700 dark:text-neutral-300 week-days-left">&#26412;&#21608;&#36824;&#21097; -- &#22825;</span>
           <progress max="7" class="schedule-progress-bar pBar_week" value="0"></progress>
         </div>
       </div>
     </div>
 
-    <!-- 节假日倒计时区域 -->
     <div class="holiday-section mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
       <div class="text-center">
-        <p class="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-0 nearest-holiday-full">距离 --</p>
+        <p class="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-0 nearest-holiday-full">&#36317;&#31163; --</p>
         <p class="text-4xl font-bold text-(--primary) mb-2 nearest-holiday-days">--</p>
         <p class="text-xs text-neutral-500 dark:text-neutral-400 nearest-holiday-date">--</p>
       </div>
@@ -54,217 +48,124 @@ const { class: className, style } = Astro.props;
 </WidgetLayout>
 
 <script is:inline>
-(function () {
-  // 春节日期数据（1900-2100年）
-  const springFestivalData = [
-    [2,19],[2,8],[1,28],[2,16],[2,5],[1,25],[2,13],[2,2],[1,22],[2,10],
-    [1,30],[2,18],[2,7],[1,26],[2,14],[2,3],[1,23],[2,11],[1,31],[2,19],
-    [2,8],[1,28],[2,16],[2,5],[1,24],[2,12],[2,1],[1,21],[2,9],[1,28],
-    [2,16],[2,5],[1,24],[2,12],[2,1],[1,21],[2,9],[1,29],[2,17],[2,6],
-    [1,26],[2,14],[2,2],[1,22],[2,10],[1,29],[2,17],[2,6],[1,26],[2,13],
-    [2,2],[1,22],[2,10],[1,30],[2,17],[2,6],[1,25],[2,13],[2,1],[1,21],
-    [2,8],[1,28],[2,15],[2,5],[1,24],[2,12],[1,31],[2,18],[2,7],[1,27],
-    [2,15],[2,3],[1,23],[2,11],[1,31],[2,18],[2,6],[1,26],[2,14],[2,3],
-    [1,23],[2,10],[1,29],[2,16],[2,5],[1,24],[2,12],[2,1],[1,22],[2,9],
-    [1,28],[2,15],[2,4],[1,23],[2,10],[1,30],[2,17],[2,6],[1,26],[2,14],
-    [2,2],[1,22],[2,10],[1,29],[2,17],[2,5],[1,24],[2,12],[1,31],[2,18],
-    [2,7],[1,26],[2,14],[2,3],[1,23],[2,10],[1,31],[2,18],[2,7],[1,26],
-    [2,12],[2,1],[1,22],[2,10],[1,29],[2,17],[2,17],[1,24],[2,12],[2,1],
-    [1,22],[2,10],[1,29],[2,17],[2,6],[1,26],[2,14],[2,3],[1,23],[2,10],
-    [1,30],[2,17],[2,6],[1,26],[2,13],[2,2],[1,22],[2,10],[1,29],[2,17],
-    [2,5],[1,25],[2,13],[2,1],[1,21],[2,9],[1,28],[2,16],[2,5],[1,24],
-    [2,12],[2,1],[1,21],[2,9],[1,28],[2,15],[2,4],[1,24],[2,11],[1,31],
-    [2,18],[2,7],[1,27],[2,15],[2,3],[1,23],[2,10],[1,30],[2,17],[2,6],
-    [1,25],[2,13],[2,2],[1,22],[2,10],[1,29],[2,17],[2,5],[1,25],[2,13],
-    [2,1],[1,21],[2,9],[1,29],[2,17],[2,6],[1,26],[2,14],[2,3],[1,23],
-    [2,11],[1,30],[2,18],[2,7],[1,27],[2,15],[2,4],[1,24],[2,12],[2,1],
-    [1,21],[2,9],[1,28],[2,16],[2,5],[1,24],[2,12],[2,1],[1,21],[2,9]
-  ];
-
-  const getSpringFestivalDate = (lunarYear) => {
-    const index = lunarYear - 1900;
-    if (index >= 0 && index < springFestivalData.length) {
-      const [month, day] = springFestivalData[index];
-      return new Date(lunarYear, month - 1, day);
-    }
-    return new Date(lunarYear, 1, 1);
-  };
-
-  const getDragonBoatDate = (year) => {
-    // 端午节是农历五月初五，使用精确的公历日期映射
-    const dragonBoatMap = {
-      2020: [6, 25], 2021: [6, 14], 2022: [6, 3], 2023: [6, 22], 2024: [6, 10],
-      2025: [5, 31], 2026: [6, 19], 2027: [6, 8], 2028: [5, 28], 2029: [6, 16],
-      2030: [6, 5], 2031: [5, 25], 2032: [6, 12], 2033: [6, 1], 2034: [6, 20]
-    };
-    if (dragonBoatMap[year]) {
-      const [month, day] = dragonBoatMap[year];
-      return new Date(year, month - 1, day);
-    }
-    // 默认回退到农历五月初五的近似日期
-    return new Date(year, 4, 22);
-  };
-
-  const getHolidays = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    
-    return [
-      { name: '元旦', date: new Date(year, 0, 1) },
-      { name: '春节', date: getSpringFestivalDate(year) },
-      { name: '清明', date: new Date(year, 3, 4) },
-      { name: '劳动节', date: new Date(year, 4, 1) },
-      { name: '端午', date: getDragonBoatDate(year) },
-      { name: '中秋', date: new Date(year, 8, 15) },
-      { name: '国庆', date: new Date(year, 9, 1) },
-      { name: '元旦', date: new Date(year + 1, 0, 1) }
+  (function () {
+    const holidays = [
+      { name: "\u5143\u65e6", month: 0, day: 1 },
+      { name: "\u6e05\u660e", month: 3, day: 4 },
+      { name: "\u52b3\u52a8\u8282", month: 4, day: 1 },
+      { name: "\u7aef\u5348", month: 5, day: 19 },
+      { name: "\u4e2d\u79cb", month: 8, day: 25 },
+      { name: "\u56fd\u5e86", month: 9, day: 1 },
     ];
-  };
 
-  const calculateProgress = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
-    const weekDay = now.getDay();
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
 
-    // 本年进度
-    const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-    const daysInYear = isLeapYear ? 366 : 365;
-    const startOfYear = new Date(year, 0, 0);
-    const yearPassedDays = Math.floor((now - startOfYear) / 86400000);
-    const yearDaysLeft = daysInYear - yearPassedDays;
-    const yearProgress = ((yearPassedDays / daysInYear) * 100).toFixed(1);
-
-    // 本月进度
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const monthPassedDays = day;
-    const monthDaysLeft = daysInMonth - day;
-    const monthProgress = ((monthPassedDays / daysInMonth) * 100).toFixed(1);
-
-    // 本周进度
-    const weekPassedDays = weekDay === 0 ? 7 : weekDay;
-    const weekDaysLeft = 7 - weekPassedDays;
-    const weekProgress = ((weekPassedDays / 7) * 100).toFixed(1);
-
-    // 最近节假日
-    const holidays = getHolidays();
-    let nearestHoliday = { name: '元旦', days: '--', date: '--' };
-    
-    for (const holiday of holidays) {
-      const diffTime = holiday.date - now;
-      if (diffTime >= 0) {
-        const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const year = holiday.date.getFullYear();
-        const month = String(holiday.date.getMonth() + 1).padStart(2, '0');
-        const day = String(holiday.date.getDate()).padStart(2, '0');
-        nearestHoliday = {
+    const getNearestHoliday = (now) => {
+      const year = now.getFullYear();
+      const dates = holidays
+        .map((holiday) => ({
           name: holiday.name,
-          days: days === 0 ? '今天' : days,
-          date: `${year}-${month}-${day}`
-        };
-        break;
-      }
+          date: new Date(year, holiday.month, holiday.day),
+        }))
+        .concat({ name: "\u5143\u65e6", date: new Date(year + 1, 0, 1) })
+        .filter((holiday) => holiday.date >= now)
+        .sort((a, b) => a.date - b.date);
+
+      const nearest = dates[0];
+      const days = Math.ceil((nearest.date - now) / 86400000);
+      return {
+        name: nearest.name,
+        days: days === 0 ? "\u4eca\u5929" : String(days),
+        date: formatDate(nearest.date),
+      };
+    };
+
+    const setText = (container, selector, value) => {
+      const element = container.querySelector(selector);
+      if (element) element.textContent = value;
+    };
+
+    const updateSchedule = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const day = now.getDate();
+      const weekDay = now.getDay() || 7;
+
+      const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+      const daysInYear = isLeapYear ? 366 : 365;
+      const startOfYear = new Date(year, 0, 0);
+      const yearPassedDays = Math.floor((now - startOfYear) / 86400000);
+      const yearDaysLeft = daysInYear - yearPassedDays;
+
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const monthDaysLeft = daysInMonth - day;
+      const weekDaysLeft = 7 - weekDay;
+      const nearestHoliday = getNearestHoliday(now);
+
+      document.querySelectorAll(".schedule-container").forEach((container) => {
+        const yearProgress = ((yearPassedDays / daysInYear) * 100).toFixed(1);
+        const monthProgress = ((day / daysInMonth) * 100).toFixed(1);
+        const weekProgress = ((weekDay / 7) * 100).toFixed(1);
+
+        const pBarYear = container.querySelector(".pBar_year");
+        const pBarMonth = container.querySelector(".pBar_month");
+        const pBarWeek = container.querySelector(".pBar_week");
+
+        if (pBarYear) {
+          pBarYear.max = daysInYear;
+          pBarYear.value = yearPassedDays;
+        }
+        if (pBarMonth) {
+          pBarMonth.max = daysInMonth;
+          pBarMonth.value = day;
+        }
+        if (pBarWeek) pBarWeek.value = weekDay;
+
+        setText(container, ".year-progress", `${yearProgress}%`);
+        setText(container, ".month-progress", `${monthProgress}%`);
+        setText(container, ".week-progress", `${weekProgress}%`);
+        setText(container, ".year-days-left", `\u672c\u5e74\u8fd8\u5269 ${yearDaysLeft} \u5929`);
+        setText(container, ".month-days-left", `\u672c\u6708\u8fd8\u5269 ${monthDaysLeft} \u5929`);
+        setText(container, ".week-days-left", `\u672c\u5468\u8fd8\u5269 ${weekDaysLeft} \u5929`);
+        setText(container, ".nearest-holiday-full", `\u8ddd\u79bb${nearestHoliday.name}`);
+        setText(container, ".nearest-holiday-days", nearestHoliday.days);
+        setText(container, ".nearest-holiday-date", nearestHoliday.date);
+      });
+    };
+
+    const initSchedule = () => {
+      updateSchedule();
+      const now = new Date();
+      const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      setTimeout(() => {
+        updateSchedule();
+        setInterval(updateSchedule, 86400000);
+      }, nextDay - now);
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initSchedule, { once: true });
+    } else {
+      initSchedule();
     }
 
-    // 更新所有 Schedule 组件实例
-    const containers = document.querySelectorAll('.schedule-container');
-    containers.forEach(container => {
-      // 更新进度条
-      const pBarYear = container.querySelector('.pBar_year');
-      const pBarMonth = container.querySelector('.pBar_month');
-      const pBarWeek = container.querySelector('.pBar_week');
-      
-      if (pBarYear) pBarYear.value = yearPassedDays;
-      if (pBarMonth) pBarMonth.value = monthPassedDays;
-      if (pBarWeek) pBarWeek.value = weekPassedDays;
-      
-      // 更新进度百分比显示
-      const yearProgressEl = container.querySelector('.year-progress');
-      const monthProgressEl = container.querySelector('.month-progress');
-      const weekProgressEl = container.querySelector('.week-progress');
-      
-      const yearDaysLeftEl = container.querySelector('.year-days-left');
-      const monthDaysLeftEl = container.querySelector('.month-days-left');
-      const weekDaysLeftEl = container.querySelector('.week-days-left');
-
-      if (yearProgressEl) yearProgressEl.textContent = yearProgress + '%';
-      if (monthProgressEl) monthProgressEl.textContent = monthProgress + '%';
-      if (weekProgressEl) weekProgressEl.textContent = weekProgress + '%';
-      
-      if (yearDaysLeftEl) yearDaysLeftEl.textContent = `本年还剩 ${yearDaysLeft} 天`;
-      if (monthDaysLeftEl) monthDaysLeftEl.textContent = `本月还剩 ${monthDaysLeft} 天`;
-      if (weekDaysLeftEl) weekDaysLeftEl.textContent = `本周还剩 ${weekDaysLeft} 天`;
-      
-      const holidayFull = container.querySelector('.nearest-holiday-full');
-      const holidayDays = container.querySelector('.nearest-holiday-days');
-      const holidayDate = container.querySelector('.nearest-holiday-date');
-      
-      if (holidayFull) holidayFull.textContent = `距离${nearestHoliday.name}节`;
-      if (holidayDays) holidayDays.textContent = nearestHoliday.days;
-      if (holidayDate) holidayDate.textContent = nearestHoliday.date;
-    });
-  };
-
-  // 轮询检查DOM元素是否存在
-  const waitForElement = (callback, maxAttempts = 50, interval = 100) => {
-    let attempts = 0;
-    const check = () => {
-      // 检查关键DOM元素是否存在（使用类选择器）
-      if (document.querySelector('.schedule-container')) {
-        callback();
-      } else if (attempts < maxAttempts) {
-        attempts++;
-        setTimeout(check, interval);
-      }
-    };
-    check();
-  };
-
-  // 初始化
-  const init = () => {
-    calculateProgress();
-
-    // 每天更新
-    const now = new Date();
-    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
-    dayTimer = setTimeout(function updateDaily() {
-      calculateProgress();
-      const nextDay = new Date();
-      nextDay.setDate(nextDay.getDate() + 1);
-      nextDay.setHours(0, 0, 0, 0);
-      dayTimer = setTimeout(updateDaily, nextDay - new Date());
-    }, tomorrow - now);
-  };
-
-  // 使用轮询等待DOM元素就绪
-  waitForElement(init);
-
-  // 清理
-  const cleanup = () => {
-    clearTimeout(dayTimer);
-  };
-
-  if (window) {
-    window.addEventListener('pagehide', cleanup);
-  }
-})();
+    document.addEventListener("astro:page-load", updateSchedule);
+  })();
 </script>
 
 <style>
-  .schedule-container {
-    padding: 0;
-  }
-
-  .progress-section {
-    padding: 0;
-  }
-
+  .schedule-container,
+  .progress-section,
   .progress-item {
     padding: 0;
   }
 
-  /* 进度条样式 */
   .schedule-progress-bar {
     -webkit-appearance: none;
     appearance: none;
@@ -292,11 +193,7 @@ const { class: className, style } = Astro.props;
     border-radius: 5px;
   }
 
-  /* 暗色主题 */
-  .dark .schedule-progress-bar {
-    background-color: #374151;
-  }
-
+  .dark .schedule-progress-bar,
   .dark .schedule-progress-bar::-webkit-progress-bar {
     background-color: #374151;
   }

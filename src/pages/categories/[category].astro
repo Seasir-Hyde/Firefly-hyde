@@ -1,4 +1,3 @@
-<!-- 单个分类详情页 -->
 ---
 import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
@@ -34,19 +33,16 @@ export const getStaticPaths = (async () => {
 	const paths: any[] = [];
 
 	for (const category of categories) {
-		// 过滤该分类下的文章
 		const categoryPosts = allPosts.filter((post) => {
 			const postCategory = post.data.category?.trim() || "";
 			const uncategorized = i18n(I18nKey.uncategorized).toLowerCase();
 
 			if (!category.name || category.name.toLowerCase() === uncategorized) {
-				// 未分类：没有分类或分类为空/未分类
 				return !postCategory || postCategory.toLowerCase() === uncategorized;
 			}
 			return postCategory === category.name;
 		});
 
-		// 按日期排序
 		categoryPosts.sort((a, b) => {
 			if (a.data.pinned && !b.data.pinned) return -1;
 			if (!a.data.pinned && b.data.pinned) return 1;
@@ -56,7 +52,6 @@ export const getStaticPaths = (async () => {
 			);
 		});
 
-		// 收集该分类下所有标签
 		const tagCountMap: Record<string, number> = {};
 		categoryPosts.forEach((post) => {
 			(post.data.tags || []).forEach((tag: string) => {
