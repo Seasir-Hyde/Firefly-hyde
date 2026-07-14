@@ -1,0 +1,12 @@
+# 每行一个图片 URL，支持 jpg/png/webp/avif/gif后缀
+# # 号开头的行为注释，空行会被忽略
+# 示例：
+https://img.seasir.top/1780253021974
+https://img.seasir.top/1780254628137
+https://img.seasir.top/1780254627364
+https://img.seasir.top/1780254626794
+https://img.seasir.top/1780254626147
+https://img.seasir.top/1780255150913
+https://img.seasir.top/1780255162676
+https://img.seasir.top/1780323729050
+https://img.seasir.top/1780323740794
