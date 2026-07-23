@@ -65,6 +65,7 @@ export const siteConfig: SiteConfig = {
 	},
 
 	// Favicon 配置
+	// 如果启用了OpenGraph图片功能，数组中需要包含png格式的favicon图标
 	favicon: [
 		{
 			// 图标文件路径
@@ -130,6 +131,7 @@ export const siteConfig: SiteConfig = {
 		timeline: true,
 		skills: true,
 		anime: true,
+		dynamic: true,
 	},
 	// 日记页面配置
 	diary: {
@@ -143,8 +145,6 @@ export const siteConfig: SiteConfig = {
 		enable: true,
 		image:
 			"https://ph.0824.uk/file/博客横屏封面/1780635498430_mmexport1774845895097.jpg",
-		// 追番页面开关
-		anime: true,
 	},
 
 	// 分类导航栏开关，在首页和归档页顶部显示分类快捷导航
@@ -160,6 +160,7 @@ export const siteConfig: SiteConfig = {
 		allowSwitch: true,
 		allowCoverSwitch: true,
 		showCover: true,
+		// 文章简介显示行数，设为 0 则不截断
 		descriptionLines: 2,
 		// 文章卡片底部统计和发布日期是否显示图标
 		showStatsIcons: true,
@@ -237,6 +238,10 @@ export const siteConfig: SiteConfig = {
 		// 可选值: "anime" | "book" | "music" | "game" | "real" (暂不支持"real"类型)
 		// 未列出的类型将按默认顺序排在后面
 		categoryOrder: ["anime", "book", "music", "game"],
+		// 控制各分类的启用状态（true/false），未指定的分类默认启用
+		// categories: {
+		// 	game: false, // 禁用游戏分类显示
+		// },
 	},
 
 	// 追番配置（Bilibili + TMDB）

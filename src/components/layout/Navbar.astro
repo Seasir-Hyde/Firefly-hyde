@@ -7,7 +7,12 @@ import DisplaySettings from "@/components/controls/DisplaySettingsIntegrated.sve
 import LightDarkSwitch from "@/components/controls/LightDarkSwitch.svelte";
 import Search from "@/components/controls/Search.svelte";
 import MusicPlayer from "@/components/features/MusicPlayer.astro";
-import { backgroundWallpaper, navBarConfig, siteConfig } from "@/config";
+import {
+	backgroundWallpaper,
+	displaySettingsConfig,
+	navBarConfig,
+	siteConfig,
+} from "@/config";
 import { musicPlayerConfig } from "@/config/musicConfig";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
@@ -50,9 +55,9 @@ const isNavbarMenuCentered = navbarMenuAlign === "center";
 const isHomePageCheck = isHomePage(Astro.url.pathname);
 
 // 检查是否有任何显示设置可用
-const showThemeColor = !siteConfig.themeColor.fixed;
-const isWallpaperSwitchable = backgroundWallpaper.switchable ?? true;
-const allowLayoutSwitch = siteConfig.postListLayout.allowSwitch;
+const showThemeColor = displaySettingsConfig.themeColorSwitchable;
+const isWallpaperSwitchable = displaySettingsConfig.wallpaperModeSwitchable;
+const allowLayoutSwitch = displaySettingsConfig.layoutSwitchable;
 const hasDisplaySettings =
 	showThemeColor || isWallpaperSwitchable || allowLayoutSwitch;
 

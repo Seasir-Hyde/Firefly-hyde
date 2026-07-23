@@ -16,6 +16,7 @@ import CategoryBar from "@/components/layout/CategoryBar.astro";
 
 import {
 	backgroundWallpaper,
+	displaySettingsConfig,
 	live2dWidgetConfig,
 	sidebarLayoutConfig,
 	siteConfig,
@@ -82,11 +83,11 @@ const isBannerMode = backgroundWallpaper.mode === "banner";
 const isFullscreenMode = backgroundWallpaper.mode === "fullscreen";
 const isOverlayMode = backgroundWallpaper.mode === "overlay";
 const isBackgroundEnabled = backgroundWallpaper.mode !== "none";
-const isWallpaperSwitchable = backgroundWallpaper.switchable ?? true;
+const isWallpaperSwitchable = displaySettingsConfig.wallpaperModeSwitchable;
 
 // 检查是否启用水波纹动画效果
 const wavesConfig = backgroundWallpaper.common?.waves?.enable;
-const wavesSwitchable = backgroundWallpaper.common?.waves?.switchable ?? false;
+const wavesSwitchable = displaySettingsConfig.wavesSwitchable;
 // 处理分设备控制的水波纹动画
 const wavesEnabledOnDesktop =
 	typeof wavesConfig === "object" ? wavesConfig.desktop : wavesConfig;
@@ -98,8 +99,7 @@ const shouldRenderWaves =
 
 // 渐变过渡配置
 const gradientConfig = backgroundWallpaper.common?.gradient?.enable;
-const gradientSwitchable =
-	backgroundWallpaper.common?.gradient?.switchable ?? false;
+const gradientSwitchable = displaySettingsConfig.gradientSwitchable;
 const gradientEnabledOnDesktop =
 	typeof gradientConfig === "object"
 		? gradientConfig.desktop
@@ -268,8 +268,7 @@ const configQuality = getImageQuality();
 const mobileQuality = Math.round(configQuality * 0.9);
 const bannerCarouselEnabledDefault =
 	backgroundWallpaper.common?.carousel?.enable ?? false;
-const bannerCarouselSwitchable =
-	backgroundWallpaper.common?.carousel?.switchable ?? false;
+const bannerCarouselSwitchable = displaySettingsConfig.bannerCarouselSwitchable;
 const bannerCarouselInterval = Math.max(
 	backgroundWallpaper.common?.carousel?.interval ?? 5000,
 	3000,

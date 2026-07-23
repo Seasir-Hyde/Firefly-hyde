@@ -37,61 +37,15 @@ const specCollection = defineCollection({
 	schema: z.object({}),
 });
 
-const ziyuanCollection = defineCollection({
-	loader: glob({ pattern: "**/*.md", base: "./src/content/ziyuan" }),
-	schema: z.union([
-		z.object({
-			title: z.string(),
-			content: z.string(),
-			closable: z.boolean().optional().default(true),
-			link: z
-				.object({
-					enable: z.boolean().optional().default(true),
-					text: z.string(),
-					url: z.string(),
-					external: z.boolean().optional().default(false),
-				})
-				.optional(),
-			quotes: z.undefined().optional(),
-		}),
-		z.object({
-			title: z.string(),
-			quotes: z.array(
-				z.object({
-					text: z.string(),
-					author: z.string(),
-				}),
-			),
-			content: z.undefined().optional(),
-			closable: z.undefined().optional(),
-			link: z.undefined().optional(),
-		}),
-	]),
-});
-
-// 朋友圈集合
-const momentsCollection = defineCollection({
-	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/moments" }),
-	schema: ({ image }) =>
-		z.object({
-			author: z.string().optional().default(""),
-			avatar: z.string().optional().default(""),
-			pinned: z.boolean().optional().default(false),
-			published: z.date(),
-			images: z
-				.array(image().or(z.string()))
-				.or(z.string())
-				.optional()
-				.default([]),
-			tags: z.array(z.string()).optional().default([]),
-			location: z.string().optional().default(""),
-			device: z.string().optional().default(""),
-		}),
+const dynamicCollection = defineCollection({
+	loader: glob({ pattern: "**/*.md", base: "./src/content/dynamic" }),
+	schema: z.object({
+		published: z.date(),
+	}),
 });
 
 export const collections = {
+	dynamic: dynamicCollection,
 	posts: postsCollection,
 	spec: specCollection,
-	ziyuan: ziyuanCollection,
-	moments: momentsCollection, // 朋友圈集合
 };

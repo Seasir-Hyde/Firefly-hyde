@@ -22,6 +22,8 @@ export type MusicPlayerConfig = {
 	// 设置为 true：侧边栏播放器完全同步 /music 页面的播放列表
 	// 设置为 false：侧边栏使用独立的本地/Meting 配置（默认）
 	syncWithGlobalPlayer?: boolean;
+	// 是否在侧边栏显示音乐播放器组件
+	showInSidebar?: boolean;
 
 	// Meting API 配置
 	meting?: {

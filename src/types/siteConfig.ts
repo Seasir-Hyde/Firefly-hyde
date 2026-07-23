@@ -36,7 +36,7 @@ export type SiteConfig = {
 
 	themeColor: {
 		hue: number;
-		fixed: boolean;
+		fixed?: boolean; // 是否对访问者隐藏主题色选择器
 		defaultMode?: LIGHT_DARK_MODE; // 默认模式：浅色、深色或跟随系统
 	};
 
@@ -90,6 +90,7 @@ export type SiteConfig = {
 		timeline: boolean;
 		skills: boolean;
 		anime: boolean;
+		dynamic?: boolean;
 	};
 
 	// 日记页面配置
@@ -101,7 +102,6 @@ export type SiteConfig = {
 	momentsCover?: {
 		enable: boolean;
 		image?: string;
-		anime: boolean; // 追番页面开关
 	};
 
 	// 分类导航栏开关
@@ -169,6 +169,14 @@ export type SiteConfig = {
 		apiUrl?: string; // Bangumi API 地址
 		subjectBaseUrl?: string; // 条目详情页地址
 		categoryOrder?: ("anime" | "game" | "book" | "music" | "real")[]; // 条目类型排序顺序
+		// 各分类的显示启用状态，未设置时默认启用
+		categories?: {
+			book?: boolean;
+			anime?: boolean;
+			music?: boolean;
+			game?: boolean;
+			real?: boolean;
+		};
 	};
 
 	// 追番配置（Bilibili + TMDB）
