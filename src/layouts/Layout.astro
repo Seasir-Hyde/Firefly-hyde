@@ -11,7 +11,6 @@ import SakuraEffect from "@components/features/SakuraEffect.astro";
 import ScrollProgressBar from "@components/features/ScrollProgressBar.astro";
 import TitleChange from "@components/features/TitleChange.astro"; //网页标题切换组件
 import ConfigCarrier from "@components/layout/ConfigCarrier.astro";
-import GlobalAudio from "@components/widgets/GlobalAudio.astro";
 
 import {
 	analyticsConfig,
@@ -573,7 +572,6 @@ const siteLang = lang.replace("_", "-");
     <div id="progress-bar"></div>
     <ScrollProgressBar />
     <TitleChange />
-    <GlobalAudio />
 
     {/* 卡片样式：根据 localStorage 覆盖默认配置 */}
     <script is:inline define:vars={{

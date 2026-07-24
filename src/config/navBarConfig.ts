@@ -11,10 +11,10 @@ import {
 // ============================================================================
 const getDynamicNavBarConfig = (): NavBarConfig => {
 	// 基础导航栏链接
-	const links: NavBarLink[] = [
-		// 主页
-		LinkPresets.Home,
-	];
+	const links: NavBarLink[] = [];
+
+	// 主页
+	links.push(LinkPresets.Home);
 
 	// 文章及其子菜单
 	links.push({
@@ -30,29 +30,6 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 标签
 			LinkPresets.Tags,
-		],
-	});
-
-	// 动态及其子菜单
-	links.push({
-		name: "动态",
-		url: "#",
-		icon: "material-symbols:bolt-outline",
-		children: [
-			// 朋友圈
-			LinkPresets.Moments,
-
-			// 相册
-			LinkPresets.Gallery,
-
-			// 留言板
-			LinkPresets.Guestbook,
-
-			// 日记
-			LinkPresets.Diary,
-
-			// 动态
-			LinkPresets.Dynamic,
 		],
 	});
 
@@ -76,11 +53,14 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		url: "#",
 		icon: "material-symbols:person",
 		children: [
-			// 番组计划
-			LinkPresets.Bangumi,
-			
-			// 友链
-			LinkPresets.Friends,
+			// 朋友圈 
+			LinkPresets.Moments, 
+
+			// 动态
+			LinkPresets.Dynamic,
+
+			// 相册
+			LinkPresets.Gallery,
 
 			// 追番
 			LinkPresets.Anime,
@@ -90,6 +70,9 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 音乐
 			LinkPresets.Music,
+
+			// 日记
+			LinkPresets.Diary,
 		],
 	});
 
@@ -300,6 +283,7 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		name: "音乐",
 		url: "/music/",
 		icon: "material-symbols:music-note-rounded",
+		pageKey: "music",
 	},
 	Moments: {
 		name: "朋友圈",

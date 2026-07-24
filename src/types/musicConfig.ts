@@ -1,3 +1,51 @@
+// 音乐可视化配置
+export type MusicVisualizerConfig = {
+	// 振幅倍数
+	amplitude?: number;
+	// 频谱平滑系数 (0-1)
+	smoothing?: number;
+	// FFT 大小 (32-32768, 必须是 2 的幂)
+	fftSize?: number;
+	// 地形网格密度
+	gridSize?: number;
+	// 自动旋转速度 (弧度/秒)
+	rotationSpeed?: number;
+	// 页面背景色（按明暗主题）
+	background?: {
+		dark?: string;
+		light?: string;
+	};
+	// 主题基础色
+	theme?: {
+		base1?: string;
+		base2?: string;
+	};
+	// 频段高度配置
+	height?: {
+		idle?: number;
+		subBass?: number;
+		bass?: number;
+		lowMid?: number;
+		mid?: number;
+		highMid?: number;
+		energy?: number;
+		ripple?: number;
+		rippleAccent?: number;
+	};
+	// 相机配置
+	camera?: {
+		position?: {
+			x?: number;
+			y?: number;
+			z?: number;
+		};
+	};
+	// 是否自动旋转
+	autoRotate?: boolean;
+	// 自动旋转速度
+	autoRotateSpeed?: number;
+};
+
 // 音乐播放器配置
 export type MusicPlayerConfig = {
 	// 使用方式：'meting' 或 'local'

@@ -1,0 +1,84 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { siteConfig } from "@/config/siteConfig";
+import MusicVisualizer from "@/components/features/music-visualizer/MusicVisualizer.svelte";
+import "../../styles/pages/music-visualizer.css";
+
+// 检查 music 页面开关
+if (!siteConfig.pages.music) {
+	return new Response(null, { status: 404 });
+}
+
+const pageTitle = "音乐";
+---
+
+<Layout title={pageTitle}>
+	<style is:global>
+		/* 音乐页面全屏沉浸式布局 - 隐藏所有博客元素 */
+		html.music-fullscreen,
+		html.music-fullscreen body {
+			margin: 0 !important;
+			padding: 0 !important;
+			overflow: hidden !important;
+			height: 100% !important;
+			width: 100% !important;
+			background: #0a0e1a !important;
+		}
+		html.music-fullscreen {
+			color-scheme: dark;
+		}
+		html.music-fullscreen #wallpaper-wrapper,
+		html.music-fullscreen #top-row,
+		html.music-fullscreen #main-grid,
+		html.music-fullscreen #progress-bar,
+		html.music-fullscreen .top-gradient-highlight,
+		html.music-fullscreen #sidebar-sticky,
+		html.music-fullscreen #left-sidebar-sticky,
+		html.music-fullscreen #right-sidebar-sticky,
+		html.music-fullscreen footer,
+		html.music-fullscreen .footer,
+		html.music-fullscreen #live2d-widget,
+		html.music-fullscreen .sakura-container,
+		html.music-fullscreen #back-to-top-btn,
+		html.music-fullscreen #toc-wrapper,
+		html.music-fullscreen .swup-progress-bar,
+		html.music-fullscreen iframe {
+			display: none !important;
+		}
+		html.music-fullscreen .w-full.z-30.pointer-events-none {
+			position: fixed !important;
+			inset: 0 !important;
+			top: 0 !important;
+			transform: none !important;
+			margin-top: 0 !important;
+			z-index: 1 !important;
+		}
+		html.music-fullscreen #swup-container {
+			position: fixed !important;
+			inset: 0 !important;
+		}
+
+	</style>
+	<script is:inline>
+		document.documentElement.classList.add('music-fullscreen');
+		// 音乐页锁定深色模式
+		document.documentElement.classList.add('dark');
+		localStorage.setItem('theme', 'dark');
+		// 阻止主题切换
+		function blockThemeSwitch() {
+			document.documentElement.classList.add('dark');
+		}
+		// 监听 localStorage 变化（其他标签页可能切换主题）
+		window.addEventListener('storage', blockThemeSwitch);
+		// 用 MutationObserver 防止其他脚本移除 dark 类
+		const themeObserver = new MutationObserver(function(mutations) {
+			mutations.forEach(function(m) {
+				if (m.attributeName === 'class' && !document.documentElement.classList.contains('dark')) {
+					document.documentElement.classList.add('dark');
+				}
+			});
+		});
+		themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+	</script>
+	<MusicVisualizer client:only="svelte" />
+</Layout>

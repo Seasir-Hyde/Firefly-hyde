@@ -2,6 +2,7 @@
 import { onMount, tick } from "svelte";
 import ClientPagination from "@/components/common/ClientPagination.svelte";
 import { formatTimezoneOffset } from "@/utils/date-utils";
+import { fetchMemos } from "@/utils/memos-adapter";
 import { registerDynamicGallery } from "./dynamic-gallery";
 import { registerDynamicInlineComments } from "./dynamic-inline-comments";
 
@@ -17,7 +18,14 @@ type DynamicData = {
 	html: string;
 	images: DynamicImage[];
 	searchText: string;
+	pinned?: boolean;
 };
+
+interface MemosConfig {
+	enable: boolean;
+	apiUrl: string;
+	parent?: string;
+}
 
 interface Props {
 	source: string;
@@ -28,6 +36,7 @@ interface Props {
 	loadingText: string;
 	allYearsText: string;
 	timezone: string;
+	memos?: MemosConfig;
 }
 
 const {
@@ -39,6 +48,7 @@ const {
 	loadingText,
 	allYearsText,
 	timezone,
+	memos,
 }: Props = $props();
 
 let entries = $state<DynamicData[]>([]);
@@ -147,8 +157,8 @@ function createItem(entry: DynamicData) {
 	if (time) {
 		const date = new Date(entry.published);
 		time.dateTime = date.toISOString();
-		// 第三方 API 使用浏览器本地时区，不做额外时区转换
-		if (source.startsWith("http")) {
+		// 第三方 API 和 Memos 使用浏览器本地时区，不做额外时区转换
+		if (source.startsWith("http") || memos?.enable) {
 			time.textContent = date.toLocaleDateString("zh-CN", {
 				year: "numeric",
 				month: "2-digit",
@@ -187,6 +197,16 @@ function createItem(entry: DynamicData) {
 		}
 		const gallery = root.querySelector<HTMLElement>("dynamic-gallery");
 		if (gallery) gallery.dataset.sourceId = content.id;
+	}
+
+	// 置顶标识
+	const pinned = root.querySelector<HTMLElement>("[data-dynamic-pinned]");
+	if (pinned) {
+		if (entry.pinned) {
+			pinned.removeAttribute("hidden");
+		} else {
+			pinned.setAttribute("hidden", "");
+		}
 	}
 
 	const comments = root.querySelector<HTMLElement>("dynamic-inline-comments");
@@ -250,9 +270,16 @@ onMount(() => {
 
 	const load = async () => {
 		try {
-			const response = await fetch(source);
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-			entries = (await response.json()) as DynamicData[];
+			if (memos?.enable) {
+				entries = await fetchMemos(memos.apiUrl, { parent: memos.parent });
+			} else {
+				const response = await fetch(source);
+				if (!response.ok) throw new Error(`HTTP ${response.status}`);
+				entries = (await response.json()) as DynamicData[];
+			}
+			// 更新页面计数
+			const countEl = document.querySelector("[data-dynamic-page-count]");
+			if (countEl) countEl.textContent = String(entries.length);
 			populateYears();
 			currentPage = pageFromUrl();
 			applyFilters(false);

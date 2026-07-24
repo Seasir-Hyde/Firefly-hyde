@@ -91,6 +91,7 @@ export type SiteConfig = {
 		skills: boolean;
 		anime: boolean;
 		dynamic?: boolean;
+		music: boolean;
 	};
 
 	// 日记页面配置

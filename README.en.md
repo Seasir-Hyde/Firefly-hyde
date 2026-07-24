@@ -226,15 +226,18 @@ Moment files are stored in `src/content/dynamic/`, with one Markdown file per mo
 pnpm new-d The weather is lovely today
 ```
 
-`pnpm new-dynamic <content>` is the equivalent full command. 
+`pnpm new-dynamic <content>` is the equivalent full command.
 
 ```yaml
 ---
 published: 2026-07-15 16:15:29
+pinned: true  # Pin article
 ---
 
 Moment content supports Markdown.
 ```
+
+Also supports [Memos](https://www.usememos.com/) as a data source. Configure the `memos` option in `src/config/dynamicConfig.ts` to fetch Memos moments in real-time, with pinned sync and image attachment support. See [Moments documentation](https://firefly.cuteleaf.cn/en/guide/dynamic/).
 
 ## 📖 Markdown Extensions
 

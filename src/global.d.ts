@@ -64,6 +64,9 @@ declare global {
 			seekToTime: (time: number) => void;
 			playTrackByIndex: (index: number) => void;
 			loadTrack: (index: number, autoPlay: boolean) => void;
+			switchPlaylist: (newId: string) => Promise<void>;
+			resetPlaylist: () => Promise<void>;
+			getDefaultPlaylistId: () => string;
 		};
 		/** 樱花特效管理器,Worker 模式与主线程回退模式均实现该接口 */
 		sakuraManager?: SakuraManagerLike;

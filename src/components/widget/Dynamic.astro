@@ -22,6 +22,7 @@ const limit = Math.max(1, Math.floor(configuredLimit));
 const apiUrl = dynamicConfig.apiUrl?.startsWith("http")
 	? dynamicConfig.apiUrl
 	: url(dynamicConfig.apiUrl || "/api/dynamic.json");
+const memos = dynamicConfig.memos;
 ---
 
 {
@@ -33,7 +34,7 @@ const apiUrl = dynamicConfig.apiUrl?.startsWith("http")
 			class={className}
 			style={style}
 		>
-			<DynamicSidebar client:load apiUrl={apiUrl} limit={limit} />
+			<DynamicSidebar client:load apiUrl={apiUrl} limit={limit} {memos} />
 			<a
 				class="btn-plain mt-2 flex items-center justify-center gap-1 rounded-lg p-1.5
 					text-sm text-(--primary)"

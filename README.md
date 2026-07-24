@@ -237,10 +237,13 @@ pnpm new-d 今天心情不错，出去吃了一顿火锅
 ```yaml
 ---
 published: 2026-07-15 16:15:29
+pinned: true  # 置顶
 ---
 
 动态内容可以使用 Markdown 语法。
 ```
+
+也支持对接 [Memos](https://www.usememos.com/) 作为数据源，在 `src/config/dynamicConfig.ts` 中配置 `memos` 选项即可实时获取 Memos 动态，支持置顶同步和图片附件展示。详见[动态文档](https://firefly.cuteleaf.cn/guide/dynamic/)。
 
 ## 🧩 Markdown 扩展语法
 

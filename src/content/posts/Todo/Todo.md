@@ -29,3 +29,7 @@ descriptionSource: ai
 ## 优化
 
 - [x] 右侧滚动条优化，和[teek](https://teek.seasir.top/)保持一致
+
+## 其他
+
+获取歌单网址：https://163.hyc.moe/

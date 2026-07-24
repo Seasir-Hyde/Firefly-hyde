@@ -132,6 +132,8 @@ export const siteConfig: SiteConfig = {
 		skills: true,
 		anime: true,
 		dynamic: true,
+		// 音乐可视化页面开关
+		music: true,
 	},
 	// 日记页面配置
 	diary: {

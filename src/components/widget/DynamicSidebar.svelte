@@ -7,6 +7,8 @@ import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { onMount } from "svelte";
 import { formatDynamicDate } from "@/utils/date-utils";
+import { fetchWithDedup } from "@/utils/fetch-dedup";
+import { fetchMemos } from "@/utils/memos-adapter";
 import { url } from "@/utils/url-utils";
 
 interface DynamicEntry {
@@ -15,46 +17,37 @@ interface DynamicEntry {
 	html: string;
 	images?: Array<{ alt: string; src: string; title?: string }>;
 	searchText?: string;
+	pinned?: boolean;
+}
+
+interface MemosConfig {
+	enable: boolean;
+	apiUrl: string;
+	parent?: string;
 }
 
 interface Props {
 	apiUrl: string;
 	limit: number;
+	memos?: MemosConfig;
 }
 
-let { apiUrl, limit }: Props = $props();
+let { apiUrl, limit, memos }: Props = $props();
 
 let entries: DynamicEntry[] = $state([]);
 let totalCount = $state(0);
 let loading = $state(true);
 let error = $state(false);
 
-const CACHE_TTL = 5 * 60 * 1000; // 5分钟缓存
-
 onMount(async () => {
 	try {
-		const cacheKey = `dynamic-cache:${apiUrl}`;
-		const cached = sessionStorage.getItem(cacheKey);
-		if (cached) {
-			const { data, time } = JSON.parse(cached) as {
-				data: DynamicEntry[];
-				time: number;
-			};
-			if (Date.now() - time < CACHE_TTL) {
-				totalCount = data.length;
-				entries = data.slice(0, limit);
-				loading = false;
-				updateCountBadge();
-				return;
-			}
+		let data: DynamicEntry[];
+		if (memos?.enable) {
+			data = await fetchMemos(memos.apiUrl, { parent: memos.parent });
+		} else {
+			data = await fetchWithDedup(apiUrl);
 		}
-		const response = await fetch(apiUrl);
-		if (!response.ok) throw new Error("Failed to fetch");
-		const data = (await response.json()) as DynamicEntry[];
-		sessionStorage.setItem(
-			cacheKey,
-			JSON.stringify({ data, time: Date.now() }),
-		);
+
 		totalCount = data.length;
 		entries = data.slice(0, limit);
 		updateCountBadge();
@@ -81,9 +74,9 @@ function getPlainText(html: string): string {
 
 // 格式化日期
 // 本地 API 使用 formatDynamicDate（带时区转换）
-// 第三方 API 使用浏览器本地时区，不做额外转换
+// 第三方 API 和 Memos 使用浏览器本地时区，不做额外转换
 function formatDate(timestamp: number): string {
-	if (apiUrl.startsWith("http")) {
+	if (apiUrl.startsWith("http") || memos?.enable) {
 		return new Date(timestamp).toLocaleDateString("zh-CN", {
 			year: "numeric",
 			month: "2-digit",
@@ -128,6 +121,12 @@ function formatDate(timestamp: number): string {
 						<time datetime={new Date(entry.published).toISOString()}>
 							{formatDate(entry.published)}
 						</time>
+						{#if entry.pinned}
+							<span class="ml-auto inline-flex items-center gap-0.5 text-[10px] px-1 py-0.5 rounded bg-(--primary)/10 text-(--primary) font-medium">
+								<svg class="size-3" fill="currentColor" viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2z"/></svg>
+								{i18n(I18nKey.pinned)}
+							</span>
+						{/if}
 					</div>
 					<p class="m-0 line-clamp-3 text-sm leading-[1.35rem]">
 						{text}

@@ -55,7 +55,12 @@ export function registerDynamicGallery(): void {
 						String(index + 1),
 					),
 				);
-				button.addEventListener("click", () => this.open(index));
+				// 只有一张图时，点击直接打开大图查看
+				if (this.images.length === 1) {
+					button.addEventListener("click", () => this.openLightbox(0));
+				} else {
+					button.addEventListener("click", () => this.open(index));
+				}
 				const container =
 					element.closest<HTMLElement>("center") ??
 					element.closest<HTMLElement>("figure") ??
@@ -151,6 +156,18 @@ export function registerDynamicGallery(): void {
 			if (!grid || !viewer) return;
 			grid.hidden = false;
 			viewer.hidden = true;
+		}
+
+		private openLightbox(index: number) {
+			const Fancybox = FancyboxModule.Fancybox;
+			Fancybox.show(
+				this.images.map((image) => ({
+					src: image.src,
+					type: "image",
+					caption: image.alt,
+				})),
+				{ startIndex: index },
+			);
 		}
 
 		private select(index: number) {

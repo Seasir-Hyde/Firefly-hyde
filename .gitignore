@@ -29,7 +29,6 @@ yarn.lock
 # ide
 .idea
 *.iml
-.claude
 
 # docs
 Firefly-docs/
@@ -37,5 +36,8 @@ Firefly-docs/
 cache/
 package/
 .obsidian/
-.edgeone/
-scripts/fill-descriptions.ts
+
+# vibe coding
+.codex*
+.claude
+.mimocode

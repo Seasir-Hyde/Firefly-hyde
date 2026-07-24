@@ -29,6 +29,7 @@ export async function GET() {
 				html: rendered.code,
 				images,
 				searchText: dynamicSearchText(entry),
+				pinned: entry.data.pinned || false,
 			};
 		}),
 	);
