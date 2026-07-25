@@ -485,7 +485,6 @@ export const ja: Translation = {
 	[Key.skillsDistribution]: "スキル分布",
 	[Key.skillsByLevel]: "レベル別",
 	[Key.skillsByCategory]: "カテゴリー別",
-	[Key.noData]: "データなし",
 
 	// タイムラインページ
 	[Key.timeline]: "タイムライン",
@@ -507,6 +506,46 @@ export const ja: Translation = {
 	[Key.timelineAchievements]: "実績",
 	[Key.timelineStartDate]: "開始日",
 	[Key.timelineDuration]: "期間",
+
+	// 足跡ページ
+	[Key.places]: "足跡",
+	[Key.placesTitle]: "行った場所",
+	[Key.placesSubtitle]: "足跡マップと旅の記録",
+	[Key.placesStatLocations]: "地点",
+	[Key.placesStatVisits]: "訪問回数",
+	[Key.placesStatThisYear]: "今年の旅行",
+	[Key.placesMap]: "行った場所",
+	[Key.placesList]: "地点リスト",
+	[Key.placesNoData]: "まだ地点の記録がありません",
+	[Key.placesNoDataHint]:
+		"src/content/places/ に md ファイルを新規作成してください",
+	[Key.placesUnknownProvince]: "不明な省",
+	[Key.placesVisitLabel]: "訪問",
+	[Key.placesTimes]: "回",
+	[Key.placesMapCredit]: "地図提供: 高徳地図(Amap)",
+	[Key.placesMapLoadFailed]:
+		"地図の読み込みに失敗しました。高徳キーを確認してください。",
+	[Key.placesNotVisited]: "未訪問",
+	[Key.placesUnmarked]: "未マーク",
+	[Key.placesMorePrefix]: "...ほか",
+	[Key.placesMoreSuffix]: "件",
+	[Key.placesLatestTrip]: "最近の旅行",
+	[Key.placesVisitedProvinces]: "訪問済みの省",
+	[Key.placesMapHint]: "ドラッグとスクロールで地図を操作できます",
+	[Key.placesFilterAll]: "すべて",
+	[Key.placesFilterAllFootprints]: "すべての足跡",
+	[Key.placesSourceTimeline]: "タイムライン",
+	[Key.placesMapOwnerLocation]: "ブログ管理者の位置",
+	[Key.placesMapVisitorLocation]: "訪問者の位置",
+	[Key.placesAreaHighlight]: "エリアハイライト",
+	[Key.placesClusterDisplay]: "クラスタ表示",
+	[Key.placesNeedAmapKey]:
+		"siteConfig.placesMap で高徳の amapKey と amapSecurityJsCode を設定してください",
+	[Key.placesStatLocationsUnit]: "地点",
+	[Key.placesStatVisitsUnit]: "回",
+	[Key.placesStatThisYearUnit]: "件",
+	[Key.placesRefresh]: "表示を更新",
+	[Key.placesFullscreen]: "全画面",
 
 	// パスワード保護
 	[Key.passwordProtected]: "パスワード保護",

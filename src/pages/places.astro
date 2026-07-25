@@ -1,0 +1,1947 @@
+---
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import { siteConfig } from "@/config";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import {
+  formatPlaceDateRange,
+  getPlaceCategories,
+  getPlaceYears,
+  getYearKeys,
+  placeToClient,
+  placesFromContent,
+  type PlaceRecord,
+} from "@/utils/places-utils";
+
+if (!siteConfig.pages.places) {
+  return Astro.redirect("/404/");
+}
+
+const now = new Date();
+const currentYear = now.getFullYear();
+
+const placeEntries = await getCollection("places");
+const allPlaces: PlaceRecord[] = placesFromContent(
+  placeEntries.map((e) => e.data),
+);
+
+const sortedPlaces = [...allPlaces].sort(
+  (a, b) => b.date.getTime() - a.date.getTime(),
+);
+
+const placeYears = getPlaceYears(allPlaces);
+const placeCategories = getPlaceCategories(allPlaces);
+
+const sum = (arr: number[]) => arr.reduce((acc, num) => acc + num, 0);
+const totalVisitCount = sum(sortedPlaces.map((p) => p.visitCount || 1));
+const thisYearVisitCount = sortedPlaces.filter((p) => {
+  const y = p.date.getFullYear();
+  const endY = p.endDate?.getFullYear() ?? y;
+  return y <= currentYear && endY >= currentYear;
+}).length;
+const uniqueLocationCount = new Set(
+  sortedPlaces.map((p) => `${p.province}|${p.city || p.province}`),
+).size;
+const uniqueProvinceCount = new Set(
+  sortedPlaces.map((p) => p.province).filter(Boolean),
+).size;
+const latestPlace = sortedPlaces[0];
+
+const clientSortedPlaces = sortedPlaces.map((p, i) => placeToClient(p, i));
+
+const displayTitle = i18n(I18nKey.placesTitle);
+const displaySubtitle = i18n(I18nKey.placesSubtitle);
+const ownerLocation = siteConfig.placesMap?.ownerLocation ?? null;
+const amapKey = siteConfig.placesMap?.amapKey?.trim() || "";
+const amapSecurityJsCode =
+  siteConfig.placesMap?.amapSecurityJsCode?.trim() || "";
+
+const placesI18n = {
+  mapLoadFailed: i18n(I18nKey.placesMapLoadFailed),
+  needAmapKey: i18n(I18nKey.placesNeedAmapKey),
+  filterAll: i18n(I18nKey.placesFilterAllFootprints),
+  areaHighlight: i18n(I18nKey.placesAreaHighlight),
+  clusterDisplay: i18n(I18nKey.placesClusterDisplay),
+  ownerLocation: i18n(I18nKey.placesMapOwnerLocation),
+  visitLabel: i18n(I18nKey.placesVisitLabel),
+  times: i18n(I18nKey.placesTimes),
+};
+---
+
+<MainGridLayout title={displayTitle} description={displaySubtitle}>
+  <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
+    <div class="card-base z-10 px-4 py-6 md:px-9 relative w-full overflow-hidden">
+
+      <div class="places-hero mb-8">
+        <div class="places-hero-glow" aria-hidden="true"></div>
+        <div class="relative z-1 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div class="flex items-start gap-4">
+            <div class="places-hero-icon">
+              <Icon name="material-symbols:explore" is:inline class="text-[1.6rem]" />
+            </div>
+            <div>
+              <h1 data-pagefind-meta="title" data-pagefind-weight="10" class="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">{displayTitle}</h1>
+              <p class="text-sm md:text-base text-neutral-600 dark:text-neutral-400 mt-1 max-w-xl">{displaySubtitle}</p>
+            </div>
+          </div>
+          {uniqueProvinceCount > 0 && (
+            <div class="places-hero-badge">
+              <Icon name="material-symbols:flag" is:inline class="text-base" />
+              <span>{i18n(I18nKey.placesVisitedProvinces)} <strong>{uniqueProvinceCount}</strong></span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div class="places-stats mb-8">
+        <div class="places-stat-card">
+          <div class="places-stat-value">{uniqueLocationCount}</div>
+          <div class="places-stat-label">{i18n(I18nKey.placesStatLocationsUnit)}</div>
+        </div>
+        <div class="places-stat-card">
+          <div class="places-stat-value">{totalVisitCount}</div>
+          <div class="places-stat-label">{i18n(I18nKey.placesStatVisitsUnit)}</div>
+        </div>
+        <div class="places-stat-card">
+          <div class="places-stat-value">{thisYearVisitCount}</div>
+          <div class="places-stat-label">{i18n(I18nKey.placesStatThisYearUnit)}</div>
+        </div>
+      </div>
+
+      {latestPlace && (
+        <article class="places-latest mb-8">
+          <div class="places-latest-label">
+            <Icon name="material-symbols:near-me" is:inline class="text-sm" />
+            {i18n(I18nKey.placesLatestTrip)}
+          </div>
+          <div class="places-latest-body">
+            <h3 class="places-latest-title">
+              {latestPlace.province}{latestPlace.city ? ` · ${latestPlace.city}` : ""}
+            </h3>
+            {latestPlace.experience && (
+              <p class="places-latest-exp">{latestPlace.experience}</p>
+            )}
+            <div class="places-latest-meta">
+              <time datetime={latestPlace.date.toISOString().slice(0, 10)}>
+                {formatPlaceDateRange(latestPlace)}
+              </time>
+              <span class="place-source-tag">{latestPlace.category}</span>
+            </div>
+          </div>
+        </article>
+      )}
+
+      <div class="mb-8">
+        <h2 class="places-section-title">{i18n(I18nKey.placesMap)}</h2>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-4">{displaySubtitle}</p>
+
+        <div class="places-map-shell">
+          <div class="places-map-frame">
+            <div class="places-map-filters" id="places-map-filters" role="tablist">
+              <button type="button" class="places-filter-chip is-active" data-filter="all">
+                {i18n(I18nKey.placesFilterAllFootprints)}
+              </button>
+              {placeYears.map((year) => (
+                <button type="button" class="places-filter-chip" data-filter={`year:${year}`}>
+                  {year}
+                </button>
+              ))}
+              {placeCategories.map((cat) => (
+                <button type="button" class="places-filter-chip" data-filter={`cat:${cat}`}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div id="places-amap" class="places-amap-canvas"></div>
+            <div class="places-map-loading" id="places-map-loading">
+              <Icon name="material-symbols:map" is:inline class="text-3xl opacity-40 animate-pulse" />
+            </div>
+            <div class="places-map-controls" id="places-map-controls">
+              <button type="button" class="places-map-ctrl" id="places-ctrl-fullscreen" title={i18n(I18nKey.placesFullscreen)} aria-label={i18n(I18nKey.placesFullscreen)}>
+                <Icon name="material-symbols:fullscreen" is:inline class="text-[1.15rem]" />
+              </button>
+              <button type="button" class="places-map-ctrl" id="places-ctrl-refresh" title={i18n(I18nKey.placesRefresh)} aria-label={i18n(I18nKey.placesRefresh)}>
+                <Icon name="material-symbols:refresh" is:inline class="text-[1.15rem]" />
+              </button>
+              <button type="button" class="places-map-ctrl" id="places-ctrl-zoom-in" title="+" aria-label="zoom in">
+                <Icon name="material-symbols:add" is:inline class="text-[1.15rem]" />
+              </button>
+              <button type="button" class="places-map-ctrl" id="places-ctrl-zoom-out" title="−" aria-label="zoom out">
+                <Icon name="material-symbols:remove" is:inline class="text-[1.15rem]" />
+              </button>
+            </div>
+            <div class="places-map-toggles">
+              <label class="places-toggle">
+                <span>{i18n(I18nKey.placesAreaHighlight)}</span>
+                <input type="checkbox" id="places-toggle-area" checked />
+              </label>
+              <label class="places-toggle places-toggle--cluster">
+                <span>{i18n(I18nKey.placesClusterDisplay)}</span>
+                <input type="checkbox" id="places-toggle-cluster" checked />
+              </label>
+            </div>
+          </div>
+        </div>
+        <p class="mt-3 text-xs text-neutral-400 dark:text-neutral-500 text-center">{i18n(I18nKey.placesMapCredit)}</p>
+      </div>
+
+      <div>
+        <h2 class="places-section-title">{i18n(I18nKey.placesList)}</h2>
+        {sortedPlaces.length === 0 ? (
+          <div class="places-empty">
+            <p class="text-neutral-500 dark:text-neutral-400">{i18n(I18nKey.placesNoData)}</p>
+            <p class="text-sm text-neutral-400 dark:text-neutral-500 mt-2">{i18n(I18nKey.placesNoDataHint)}</p>
+          </div>
+        ) : (
+          <div class="places-grid" id="places-list">
+            {sortedPlaces.map((place, index) => (
+              <article
+                class="place-card"
+                style={`--stagger: ${index * 0.04}s`}
+                data-years={getYearKeys(place).join(",")}
+                data-category={place.category}
+              >
+                <div class="place-card-pin">
+                  <Icon name="material-symbols:location-on" is:inline class="text-lg" />
+                </div>
+                <div class="place-card-content">
+                  <div class="place-card-top">
+                    <h3 class="place-name">
+                      {place.province || i18n(I18nKey.placesUnknownProvince)}
+                      {place.city ? ` · ${place.city}` : ""}
+                    </h3>
+                    <span class="place-source-tag">{place.category}</span>
+                  </div>
+                  {place.experience && <p class="place-exp">{place.experience}</p>}
+                  <time class="place-date" datetime={place.date.toISOString().slice(0, 10)}>
+                    {formatPlaceDateRange(place)}
+                  </time>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+
+<script
+  slot="head"
+  is:inline
+  define:vars={{
+    clientSortedPlaces,
+    placesI18n,
+    ownerLocation,
+    amapKey,
+    amapSecurityJsCode,
+  }}
+>
+(function () {
+  var map = null;
+  var cluster = null;
+  var markers = [];
+  var ownerMarker = null;
+  var infoWindow = null;
+  var areaPolygons = [];
+  var areaEnabled = true;
+  var clusterEnabled = true;
+  var activeFilter = "all";
+  var loadingEl = document.getElementById("places-map-loading");
+  var uiBound = false;
+  var initToken = 0;
+  var amapLoadPromise = null;
+
+  function hideLoading() {
+    if (loadingEl) loadingEl.classList.add("is-hidden");
+  }
+
+  function escapeHtml(str) {
+    return String(str == null ? "" : str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function showMessage(text) {
+    hideLoading();
+    var el = document.getElementById("places-amap");
+    if (!el) return;
+    el.innerHTML =
+      '<div class="places-amap-fallback">' +
+      String(text || placesI18n.mapLoadFailed) +
+      "</div>";
+  }
+
+  function matchesFilter(place) {
+    if (activeFilter === "all") return true;
+    if (activeFilter.indexOf("year:") === 0) {
+      var y = Number(activeFilter.slice(5));
+      return (place.years || []).indexOf(y) >= 0;
+    }
+    if (activeFilter.indexOf("cat:") === 0) {
+      return place.category === activeFilter.slice(4);
+    }
+    return true;
+  }
+
+  function filteredPlaces() {
+    return clientSortedPlaces.filter(function (p) {
+      return matchesFilter(p) && p.lng != null && p.lat != null;
+    });
+  }
+
+  function syncListFilter() {
+    var cards = document.querySelectorAll("#places-list .place-card");
+    cards.forEach(function (card) {
+      var years = (card.getAttribute("data-years") || "")
+        .split(",")
+        .filter(Boolean)
+        .map(Number);
+      var cat = card.getAttribute("data-category") || "";
+      var show = true;
+      if (activeFilter.indexOf("year:") === 0) {
+        show = years.indexOf(Number(activeFilter.slice(5))) >= 0;
+      } else if (activeFilter.indexOf("cat:") === 0) {
+        show = cat === activeFilter.slice(4);
+      }
+      card.classList.toggle("is-hidden", !show);
+    });
+  }
+
+  function clearMarkers() {
+    if (infoWindow) {
+      infoWindow.close();
+      setPlacesPopupOpen(false);
+    }
+    if (cluster) {
+      cluster.setMap(null);
+      cluster = null;
+    }
+    markers.forEach(function (m) {
+      m.setMap(null);
+    });
+    markers = [];
+    if (ownerMarker) {
+      ownerMarker.setMap(null);
+      ownerMarker = null;
+    }
+  }
+
+  function clearAreas() {
+    areaPolygons.forEach(function (p) {
+      map && map.remove(p);
+    });
+    areaPolygons = [];
+  }
+
+  function buildPopupHtml(place) {
+    var title =
+      escapeHtml(place.province || "") +
+      (place.city ? " · " + escapeHtml(place.city) : "");
+    var dateText =
+      escapeHtml(place.date) +
+      (place.endDate ? " — " + escapeHtml(place.endDate) : "");
+    var tags = [];
+    if (place.category) tags.push(place.category);
+    (place.years || []).forEach(function (y) {
+      tags.push(String(y));
+    });
+    if (place.visitCount > 1) {
+      tags.push(
+        (placesI18n.visitLabel || "到访") +
+          " " +
+          place.visitCount +
+          (placesI18n.times || "次"),
+      );
+    }
+    var tagsHtml = tags
+      .map(function (t) {
+        return '<span class="places-popup-tag">' + escapeHtml(t) + "</span>";
+      })
+      .join("");
+
+    var images = (place.images || []).filter(Boolean);
+    var galleryHtml = "";
+    if (images.length) {
+      var imgs = images
+        .map(function (src, i) {
+          return (
+            '<img class="places-gallery-img' +
+            (i === 0 ? " is-active" : "") +
+            '" src="' +
+            escapeHtml(src) +
+            '" alt="" loading="lazy" data-idx="' +
+            i +
+            '" />'
+          );
+        })
+        .join("");
+      var navHtml =
+        images.length > 1
+          ? '<button type="button" class="places-gallery-nav places-gallery-prev" aria-label="prev">‹</button>' +
+            '<button type="button" class="places-gallery-nav places-gallery-next" aria-label="next">›</button>' +
+            '<div class="places-gallery-dots">' +
+            images
+              .map(function (_, i) {
+                return (
+                  '<span class="places-gallery-dot' +
+                  (i === 0 ? " is-active" : "") +
+                  '" data-idx="' +
+                  i +
+                  '"></span>'
+                );
+              })
+              .join("") +
+            "</div>"
+          : "";
+      galleryHtml =
+        '<div class="places-gallery" data-total="' +
+        images.length +
+        '" data-index="0">' +
+        navHtml +
+        '<div class="places-gallery-viewport">' +
+        imgs +
+        "</div></div>";
+    }
+
+    var linkHtml = place.link
+      ? '<a class="places-popup-link" href="' +
+        escapeHtml(place.link) +
+        '" target="_blank" rel="noopener noreferrer">游记</a>'
+      : "";
+
+    return (
+      '<div class="places-popup">' +
+      '<div class="places-popup-head">' +
+      "<strong>" +
+      title +
+      "</strong>" +
+      '<button type="button" class="places-popup-close" aria-label="close">×</button>' +
+      "</div>" +
+      '<div class="places-popup-date">' +
+      dateText +
+      "</div>" +
+      (tagsHtml
+        ? '<div class="places-popup-tags">' + tagsHtml + "</div>"
+        : "") +
+      (place.experience
+        ? '<p class="places-popup-exp">' +
+          escapeHtml(place.experience) +
+          "</p>"
+        : "") +
+      linkHtml +
+      galleryHtml +
+      "</div>"
+    );
+  }
+
+  function setPlacesPopupOpen(open) {
+    var frame = document.querySelector(".places-map-frame");
+    if (!frame) return;
+    frame.classList.toggle("is-popup-open", !!open);
+  }
+
+  function openPlacePopup(AMap, place, position) {
+    if (!map || !place) return;
+    var pos = position;
+    if (pos && typeof pos.getLng === "function") {
+      pos = [pos.getLng(), pos.getLat()];
+    } else if (pos && typeof pos.lng === "number") {
+      pos = [pos.lng, pos.lat];
+    }
+    if (!pos || pos.length < 2) return;
+
+    // 点击具体点位：自动放大到街道级再弹窗
+    var cur = map.getZoom() || 5;
+    var targetZoom = Math.max(cur, 16);
+    if (cur < 16) {
+      map.setZoomAndCenter(targetZoom, pos);
+    } else {
+      map.setCenter(pos);
+    }
+
+    if (!infoWindow) {
+      infoWindow = new AMap.InfoWindow({
+        isCustom: true,
+        autoMove: true,
+        // 弹窗在点位下方展开，避免顶到筛选条
+        offset: new AMap.Pixel(0, 14),
+      });
+      infoWindow.on("close", function () {
+        setPlacesPopupOpen(false);
+      });
+    }
+    infoWindow.setContent(buildPopupHtml(place));
+    setPlacesPopupOpen(true);
+    // 等缩放动画稍后再开弹窗，避免位置跳动
+    setTimeout(function () {
+      if (!map) return;
+      infoWindow.open(map, pos);
+      // 再向下轻移一点视野，给顶部筛选留空
+      try {
+        map.panBy(0, 40);
+      } catch (err) {}
+    }, cur < 16 ? 280 : 0);
+  }
+
+  function pinColor(place) {
+    if (place.category === "学校") return "#ff7a1a";
+    if (place.category === "工作") return "#2bb8ff";
+    return "#12d6a8";
+  }
+
+  function buildPinHtml(place) {
+    var color = pinColor(place);
+    var count = place.visitCount || 1;
+    var title = escapeHtml(place.experience || place.city || place.province);
+    if (count > 1) {
+      return (
+        '<div class="places-pin places-pin--count" style="--pin:' +
+        color +
+        '" title="' +
+        title +
+        '"><span>' +
+        count +
+        "</span></div>"
+      );
+    }
+    return (
+      '<div class="places-pin" style="--pin:' +
+      color +
+      '" title="' +
+      title +
+      '"></div>'
+    );
+  }
+
+  function pinOffset(AMap, place) {
+    var count = (place && place.visitCount) || 1;
+    return count > 1 ? new AMap.Pixel(-16, -16) : new AMap.Pixel(-12, -12);
+  }
+
+  function readLngLat(item) {
+    if (!item) return null;
+    if (item.lnglat) {
+      if (Array.isArray(item.lnglat) && item.lnglat.length >= 2) {
+        var a0 = Number(item.lnglat[0]);
+        var a1 = Number(item.lnglat[1]);
+        if (isFinite(a0) && isFinite(a1)) return [a0, a1];
+      }
+      if (item.lnglat.lng != null && item.lnglat.lat != null) {
+        var b0 = Number(item.lnglat.lng);
+        var b1 = Number(item.lnglat.lat);
+        if (isFinite(b0) && isFinite(b1)) return [b0, b1];
+      }
+      if (typeof item.lnglat.getLng === "function") {
+        return [item.lnglat.getLng(), item.lnglat.getLat()];
+      }
+    }
+    if (typeof item.getPosition === "function") {
+      var p = item.getPosition();
+      if (p) return [p.getLng(), p.getLat()];
+    }
+    return null;
+  }
+
+  /** 点击聚合点：只框住「当前这一簇」的点并继续放大拆分 */
+  var lastClusterZoomAt = 0;
+
+  /** 桌面 click + 移动端 touchend（自定义 content 时手机常吃不到 click） */
+  function bindMarkerActivate(el, handler) {
+    if (!el || typeof handler !== "function") return;
+    var touching = false;
+    var moved = false;
+    var startX = 0;
+    var startY = 0;
+    var MOVE_PX = 12;
+
+    el.addEventListener("click", function (ev) {
+      // touchend 已处理过则忽略合成 click，避免双触发
+      if (touching) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      handler();
+    });
+
+    el.addEventListener(
+      "touchstart",
+      function (ev) {
+        touching = true;
+        moved = false;
+        var t = ev.touches && ev.touches[0];
+        if (!t) return;
+        startX = t.clientX;
+        startY = t.clientY;
+      },
+      { passive: true },
+    );
+
+    el.addEventListener(
+      "touchmove",
+      function (ev) {
+        var t = ev.touches && ev.touches[0];
+        if (!t) return;
+        if (
+          Math.abs(t.clientX - startX) > MOVE_PX ||
+          Math.abs(t.clientY - startY) > MOVE_PX
+        ) {
+          moved = true;
+        }
+      },
+      { passive: true },
+    );
+
+    el.addEventListener(
+      "touchend",
+      function (ev) {
+        if (moved) {
+          touching = false;
+          return;
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+        handler();
+        // 短暂锁住，吃掉随后的合成 click
+        window.setTimeout(function () {
+          touching = false;
+        }, 350);
+      },
+      { passive: false },
+    );
+
+    el.addEventListener(
+      "touchcancel",
+      function () {
+        touching = false;
+        moved = false;
+      },
+      { passive: true },
+    );
+  }
+
+  function zoomToCluster(AMap, event) {
+    if (!map) return;
+    var now = Date.now();
+    if (now - lastClusterZoomAt < 200) return;
+    lastClusterZoomAt = now;
+
+    try {
+      var data = (event && event.clusterData) || [];
+      var coordMap = {};
+
+      function addCoord(lng, lat) {
+        lng = Number(lng);
+        lat = Number(lat);
+        if (!isFinite(lng) || !isFinite(lat)) return;
+        var key = lng.toFixed(5) + "," + lat.toFixed(5);
+        coordMap[key] = [lng, lat];
+      }
+
+      function centerFromEvent() {
+        if (!event || !event.lnglat) return null;
+        if (Array.isArray(event.lnglat)) {
+          return [Number(event.lnglat[0]), Number(event.lnglat[1])];
+        }
+        if (typeof event.lnglat.getLng === "function") {
+          return [event.lnglat.getLng(), event.lnglat.getLat()];
+        }
+        if (event.lnglat.lng != null && event.lnglat.lat != null) {
+          return [Number(event.lnglat.lng), Number(event.lnglat.lat)];
+        }
+        return null;
+      }
+
+      // 只用当前簇里的点，不要再补同城（否则 8 会把已拆开的灞河又算进去，无法继续拆）
+      data.forEach(function (item) {
+        var ll = readLngLat(item);
+        if (ll) {
+          addCoord(ll[0], ll[1]);
+          return;
+        }
+        // 兜底：从 place 上取
+        if (item && item.place && item.place.lng != null && item.place.lat != null) {
+          addCoord(item.place.lng, item.place.lat);
+        }
+      });
+
+      var coords = [];
+      for (var key in coordMap) {
+        if (Object.prototype.hasOwnProperty.call(coordMap, key)) {
+          coords.push(coordMap[key]);
+        }
+      }
+
+      var center = centerFromEvent();
+      var curZoom = map.getZoom() || 5;
+
+      if (!coords.length && center) {
+        map.setZoomAndCenter(Math.min(curZoom + 3, 18), center);
+        return;
+      }
+      if (!coords.length) return;
+
+      if (coords.length === 1) {
+        var one = data[0];
+        var place = (one && one.place) || null;
+        if (place) openPlacePopup(AMap, place, coords[0]);
+        else map.setZoomAndCenter(Math.max(curZoom, 16), coords[0]);
+        return;
+      }
+
+      var minLng = Infinity;
+      var maxLng = -Infinity;
+      var minLat = Infinity;
+      var maxLat = -Infinity;
+      coords.forEach(function (c) {
+        minLng = Math.min(minLng, c[0]);
+        maxLng = Math.max(maxLng, c[0]);
+        minLat = Math.min(minLat, c[1]);
+        maxLat = Math.max(maxLat, c[1]);
+      });
+      var mid = [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
+      var span = Math.max(maxLng - minLng, maxLat - minLat, 0.008);
+      var spanZoom = 6;
+      if (span < 0.015) spanZoom = 15;
+      else if (span < 0.03) spanZoom = 14;
+      else if (span < 0.06) spanZoom = 13;
+      else if (span < 0.12) spanZoom = 12;
+      else if (span < 0.3) spanZoom = 11;
+      else if (span < 0.8) spanZoom = 10;
+      else if (span < 2) spanZoom = 8;
+      else if (span < 5) spanZoom = 7;
+
+      // 每次点击至少 +2 级，保证 9→8+1 之后再点 8 还能继续拆开
+      var zoom = Math.max(spanZoom, curZoom + 2);
+      zoom = Math.min(zoom, 18);
+      map.setZoomAndCenter(zoom, mid);
+    } catch (err) {
+      console.error("[places-amap] zoomToCluster failed", err);
+      try {
+        var fb = null;
+        if (event && event.lnglat) {
+          if (typeof event.lnglat.getLng === "function") {
+            fb = [event.lnglat.getLng(), event.lnglat.getLat()];
+          } else if (Array.isArray(event.lnglat)) {
+            fb = event.lnglat;
+          }
+        }
+        if (fb) {
+          map.setZoomAndCenter(Math.min((map.getZoom() || 5) + 3, 18), fb);
+        }
+      } catch (err2) {
+        console.error("[places-amap] zoom fallback failed", err2);
+      }
+    }
+  }
+
+  function clusterDisplayCount(context) {
+    // 以官方 count（聚合内点数）为准；再与 weight 求和取较大值
+    var count = Number(context.count) || 0;
+    var weightSum = 0;
+    var list = context.clusterData || [];
+    list.forEach(function (item) {
+      if (!item) {
+        weightSum += 1;
+        return;
+      }
+      if (item.place && typeof item.place.visitCount === "number") {
+        weightSum += item.place.visitCount || 1;
+      } else if (typeof item.weight === "number") {
+        weightSum += item.weight;
+      } else {
+        weightSum += 1;
+      }
+    });
+    return Math.max(count, weightSum, 1);
+  }
+
+  function buildMarkers(AMap) {
+    clearMarkers();
+    var places = filteredPlaces();
+    var points = places.map(function (place) {
+      return {
+        lnglat: [place.lng, place.lat],
+        weight: place.visitCount || 1,
+        place: place,
+      };
+    });
+
+    if (ownerLocation && ownerLocation.lng && ownerLocation.lat) {
+      ownerMarker = new AMap.Marker({
+        position: [ownerLocation.lng, ownerLocation.lat],
+        title: ownerLocation.label || placesI18n.ownerLocation,
+        content:
+          '<div class="places-owner-dot" title="' +
+          escapeHtml(ownerLocation.label || placesI18n.ownerLocation) +
+          '"></div>',
+        offset: new AMap.Pixel(-8, -8),
+        zIndex: 120,
+      });
+      map.add(ownerMarker);
+    }
+
+    if (!points.length) return;
+
+    if (clusterEnabled && AMap.MarkerCluster) {
+      cluster = new AMap.MarkerCluster(map, points, {
+        gridSize: 80,
+        maxZoom: 19,
+        averageCenter: true,
+        renderClusterMarker: function (context) {
+          var displayCount = clusterDisplayCount(context);
+          var el = document.createElement("div");
+          el.className = "places-cluster";
+          el.title = displayCount + (placesI18n.times || "次");
+          el.innerHTML =
+            '<span class="places-cluster-count">' + displayCount + "</span>";
+          // DOM 激活：桌面用 click，手机用 touchend（自定义 content 时 marker click 不可靠）
+          bindMarkerActivate(el, function () {
+            zoomToCluster(AMap, {
+              clusterData: context.clusterData,
+              lnglat: context.marker.getPosition(),
+            });
+          });
+          context.marker.setContent(el);
+          context.marker.setOffset(new AMap.Pixel(-22, -22));
+          context.marker.setClickable(true);
+          context.marker.off("click");
+          context.marker.on("click", function () {
+            zoomToCluster(AMap, {
+              clusterData: context.clusterData,
+              lnglat: context.marker.getPosition(),
+            });
+          });
+        },
+        renderMarker: function (context) {
+          var item = (context.data && context.data[0]) || {};
+          var place = item.place || {};
+          var pinEl = buildPinHtml(place);
+          // buildPinHtml 返回 HTMLElement 或字符串
+          if (typeof pinEl === "string") {
+            var wrap = document.createElement("div");
+            wrap.innerHTML = pinEl;
+            pinEl = wrap.firstElementChild || wrap;
+          }
+          if (pinEl && pinEl.nodeType === 1) {
+            bindMarkerActivate(pinEl, function () {
+              openPlacePopup(AMap, place, context.marker.getPosition());
+            });
+          }
+          context.marker.setContent(pinEl);
+          context.marker.setOffset(pinOffset(AMap, place));
+          context.marker.setExtData(place);
+          context.marker.setClickable(true);
+          context.marker.off("click");
+          context.marker.on("click", function () {
+            openPlacePopup(AMap, place, context.marker.getPosition());
+          });
+        },
+      });
+
+      cluster.on("click", function (event) {
+        var data = event.clusterData || [];
+        if (data.length > 1) {
+          zoomToCluster(AMap, event);
+        } else if (data.length === 1 && data[0] && data[0].place) {
+          var ll = readLngLat(data[0]) || event.lnglat;
+          openPlacePopup(AMap, data[0].place, ll);
+        }
+      });
+    } else {
+      markers = places.map(function (place) {
+        var marker = new AMap.Marker({
+          position: [place.lng, place.lat],
+          title: place.experience || place.city || place.province,
+          content: buildPinHtml(place),
+          offset: pinOffset(AMap, place),
+          extData: place,
+        });
+        marker.on("click", function () {
+          openPlacePopup(AMap, place, marker.getPosition());
+        });
+        return marker;
+      });
+      map.add(markers);
+    }
+
+    var fitTargets = markers.slice();
+    if (!fitTargets.length && cluster) {
+      fitTargets = points.map(function (p) {
+        return new AMap.Marker({ position: p.lnglat, visible: false });
+      });
+      map.add(fitTargets);
+      map.setFitView(
+        ownerMarker ? fitTargets.concat([ownerMarker]) : fitTargets,
+        false,
+        [60, 60, 60, 60],
+      );
+      map.remove(fitTargets);
+      return;
+    }
+
+    if (fitTargets.length || ownerMarker) {
+      map.setFitView(
+        ownerMarker
+          ? (fitTargets.length ? fitTargets : []).concat([ownerMarker])
+          : fitTargets,
+        false,
+        [60, 60, 60, 60],
+      );
+    }
+  }
+
+  /** 从当前筛选结果提取要高亮的市/区（不去整省） */
+  function visitedCityTargets() {
+    var seen = {};
+    var list = [];
+    filteredPlaces().forEach(function (p) {
+      var city = (p.city || "").trim();
+      var province = (p.province || "").trim();
+      var name = "";
+      var level = "city";
+
+      if (city) {
+        if (/[区县旗]$/.test(city)) {
+          name = city;
+          level = "district";
+        } else if (/市$/.test(city)) {
+          name = city;
+        } else if (
+          /^(北京|天津|上海|重庆)$/.test(city) ||
+          city === province
+        ) {
+          name = city + "市";
+        } else {
+          name = city + "市";
+        }
+      } else if (/^(北京|天津|上海|重庆)/.test(province)) {
+        // 仅有省份且为直辖市时，高亮整市
+        name = province.replace(/市$/, "") + "市";
+      } else {
+        // 普通省且无城市信息：跳过，避免点亮整省
+        return;
+      }
+
+      if (!name || seen[name]) return;
+      seen[name] = true;
+      list.push({ name: name, level: level });
+    });
+    return list;
+  }
+
+  function drawAreas(AMap) {
+    clearAreas();
+    if (!areaEnabled) return;
+    var targets = visitedCityTargets();
+    if (!targets.length) return;
+
+    AMap.plugin(["AMap.DistrictSearch"], function () {
+      targets.forEach(function (target) {
+        var search = new AMap.DistrictSearch({
+          level: target.level,
+          extensions: "all",
+          subdistrict: 0,
+        });
+        search.search(target.name, function (status, result) {
+          if (
+            status !== "complete" ||
+            !result.districtList ||
+            !result.districtList[0]
+          ) {
+            return;
+          }
+          var bounds = result.districtList[0].boundaries || [];
+          bounds.forEach(function (ring) {
+            var polygon = new AMap.Polygon({
+              path: ring,
+              strokeWeight: 1.5,
+              strokeColor: "#38bdf8",
+              fillColor: "#38bdf8",
+              fillOpacity: 0.22,
+              bubble: true,
+            });
+            map.add(polygon);
+            areaPolygons.push(polygon);
+          });
+        });
+      });
+    });
+  }
+
+  function refreshMap(AMap) {
+    buildMarkers(AMap);
+    drawAreas(AMap);
+  }
+
+  function setGalleryIndex(gallery, nextIndex) {
+    var total = Number(gallery.getAttribute("data-total") || 0);
+    if (!total) return;
+    var index = ((nextIndex % total) + total) % total;
+    gallery.setAttribute("data-index", String(index));
+    gallery.querySelectorAll(".places-gallery-img").forEach(function (img, i) {
+      img.classList.toggle("is-active", i === index);
+    });
+    gallery.querySelectorAll(".places-gallery-dot").forEach(function (dot, i) {
+      dot.classList.toggle("is-active", i === index);
+    });
+  }
+
+  function bindUi(AMap) {
+    if (uiBound) return;
+    uiBound = true;
+    var filterBar = document.getElementById("places-map-filters");
+    if (filterBar) {
+      filterBar.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-filter]");
+        if (!btn) return;
+        activeFilter = btn.getAttribute("data-filter") || "all";
+        filterBar.querySelectorAll(".places-filter-chip").forEach(function (el) {
+          el.classList.toggle("is-active", el === btn);
+        });
+        syncListFilter();
+        refreshMap(AMap);
+      });
+    }
+
+    var areaToggle = document.getElementById("places-toggle-area");
+    if (areaToggle) {
+      areaToggle.addEventListener("change", function () {
+        areaEnabled = !!areaToggle.checked;
+        if (areaEnabled) drawAreas(AMap);
+        else clearAreas();
+      });
+    }
+
+    var clusterToggle = document.getElementById("places-toggle-cluster");
+    if (clusterToggle) {
+      clusterToggle.addEventListener("change", function () {
+        clusterEnabled = !!clusterToggle.checked;
+        buildMarkers(AMap);
+      });
+    }
+
+    // 弹窗关闭 / 图片轮播（InfoWindow 内容动态插入）
+    document.addEventListener("click", function (e) {
+      var closeBtn = e.target.closest(".places-popup-close");
+      if (closeBtn && infoWindow) {
+        infoWindow.close();
+        setPlacesPopupOpen(false);
+        return;
+      }
+
+      var gallery = e.target.closest(".places-gallery");
+      if (!gallery) return;
+      var idx = Number(gallery.getAttribute("data-index") || 0);
+      if (e.target.closest(".places-gallery-prev")) {
+        e.preventDefault();
+        e.stopPropagation();
+        setGalleryIndex(gallery, idx - 1);
+        return;
+      }
+      if (e.target.closest(".places-gallery-next")) {
+        e.preventDefault();
+        e.stopPropagation();
+        setGalleryIndex(gallery, idx + 1);
+        return;
+      }
+      var dot = e.target.closest(".places-gallery-dot");
+      if (dot) {
+        e.preventDefault();
+        e.stopPropagation();
+        setGalleryIndex(gallery, Number(dot.getAttribute("data-idx") || 0));
+      }
+    });
+
+    var refreshBtn = document.getElementById("places-ctrl-refresh");
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", function () {
+        if (infoWindow) {
+          infoWindow.close();
+          setPlacesPopupOpen(false);
+        }
+        activeFilter = "all";
+        if (filterBar) {
+          filterBar.querySelectorAll(".places-filter-chip").forEach(function (el) {
+            el.classList.toggle(
+              "is-active",
+              el.getAttribute("data-filter") === "all",
+            );
+          });
+        }
+        syncListFilter();
+        refreshMap(AMap);
+        refreshBtn.classList.add("is-spinning");
+        window.setTimeout(function () {
+          refreshBtn.classList.remove("is-spinning");
+        }, 600);
+      });
+    }
+
+    var zoomInBtn = document.getElementById("places-ctrl-zoom-in");
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener("click", function () {
+        if (map) map.zoomIn();
+      });
+    }
+
+    var zoomOutBtn = document.getElementById("places-ctrl-zoom-out");
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener("click", function () {
+        if (map) map.zoomOut();
+      });
+    }
+
+    var fsBtn = document.getElementById("places-ctrl-fullscreen");
+    var mapFrame = document.querySelector(".places-map-frame");
+    if (fsBtn && mapFrame) {
+      fsBtn.addEventListener("click", function () {
+        var active = !!(
+          document.fullscreenElement === mapFrame ||
+          document.webkitFullscreenElement === mapFrame
+        );
+        if (active) {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        } else if (mapFrame.requestFullscreen) {
+          mapFrame.requestFullscreen();
+        } else if (mapFrame.webkitRequestFullscreen) {
+          mapFrame.webkitRequestFullscreen();
+        }
+      });
+      var onFsChange = function () {
+        if (map) window.setTimeout(function () { map.resize(); }, 80);
+      };
+      document.addEventListener("fullscreenchange", onFsChange);
+      document.addEventListener("webkitfullscreenchange", onFsChange);
+    }
+  }
+
+  function destroyMap() {
+    try {
+      clearMarkers();
+      clearAreas();
+    } catch (e) {}
+    if (map) {
+      try {
+        map.destroy();
+      } catch (e2) {}
+      map = null;
+    }
+    uiBound = false;
+  }
+
+  function scheduleMapResize() {
+    if (!map) return;
+    [0, 80, 200, 450, 900].forEach(function (ms) {
+      window.setTimeout(function () {
+        if (!map) return;
+        try {
+          map.resize();
+        } catch (e) {}
+      }, ms);
+    });
+  }
+
+  function resetAmapLoadCache() {
+    amapLoadPromise = null;
+    window.__placesAmapPromise = null;
+  }
+
+  function loadAmap() {
+    if (window.AMap) return Promise.resolve(window.AMap);
+    if (amapLoadPromise) return amapLoadPromise;
+    if (window.__placesAmapPromise) {
+      amapLoadPromise = window.__placesAmapPromise;
+      return amapLoadPromise;
+    }
+
+    amapLoadPromise = new Promise(function (resolve, reject) {
+      if (!amapKey) {
+        reject(new Error("NO_KEY"));
+        return;
+      }
+      if (amapSecurityJsCode) {
+        window._AMapSecurityConfig = { securityJsCode: amapSecurityJsCode };
+      }
+
+      function doLoad() {
+        if (!window.AMapLoader) {
+          reject(new Error("NO_LOADER"));
+          return;
+        }
+        window.AMapLoader.load({
+          key: amapKey,
+          version: "2.0",
+          plugins: ["AMap.MarkerCluster", "AMap.DistrictSearch", "AMap.Scale"],
+        })
+          .then(function (AMap) {
+            resolve(AMap);
+          })
+          .catch(reject);
+      }
+
+      if (window.AMapLoader) {
+        doLoad();
+        return;
+      }
+
+      var existing = document.querySelector(
+        'script[data-places-amap-loader="1"]',
+      );
+      if (existing) {
+        existing.addEventListener("load", doLoad);
+        existing.addEventListener("error", function () {
+          reject(new Error("SCRIPT"));
+        });
+        return;
+      }
+
+      var script = document.createElement("script");
+      script.src = "https://webapi.amap.com/loader.js";
+      script.setAttribute("data-places-amap-loader", "1");
+      script.onload = doLoad;
+      script.onerror = function () {
+        reject(new Error("SCRIPT"));
+      };
+      document.head.appendChild(script);
+    }).catch(function (err) {
+      resetAmapLoadCache();
+      throw err;
+    });
+
+    window.__placesAmapPromise = amapLoadPromise;
+    return amapLoadPromise;
+  }
+
+  function init() {
+    var container = document.getElementById("places-amap");
+    if (!container) return;
+
+    loadingEl = document.getElementById("places-map-loading");
+    if (loadingEl) loadingEl.classList.remove("is-hidden");
+
+    var token = ++initToken;
+
+    // 已有可用实例：只补 resize（Swup/Loader 后尺寸常为 0）
+    if (map && container.querySelector("canvas, .amap-layers")) {
+      hideLoading();
+      scheduleMapResize();
+      return;
+    }
+
+    destroyMap();
+
+    loadAmap()
+      .then(function (AMap) {
+        if (token !== initToken) return;
+        var el = document.getElementById("places-amap");
+        if (!el) return;
+
+        map = new AMap.Map("places-amap", {
+          viewMode: "2D",
+          zoom: 5,
+          center: [108.94, 34.34],
+          mapStyle: "amap://styles/whitesmoke",
+        });
+        map.on("complete", function () {
+          scheduleMapResize();
+        });
+        map.addControl(new AMap.Scale());
+        hideLoading();
+        bindUi(AMap);
+        refreshMap(AMap);
+        scheduleMapResize();
+        if (window.ResizeObserver && el) {
+          var resizeObserver = new ResizeObserver(function () {
+            if (!map) return;
+            var rect = el.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              try {
+                map.resize();
+              } catch (e) {}
+            }
+          });
+          resizeObserver.observe(el);
+        }
+      })
+      .catch(function (err) {
+        if (token !== initToken) return;
+        if (err && err.message === "NO_KEY") {
+          showMessage(placesI18n.needAmapKey);
+        } else {
+          showMessage(placesI18n.mapLoadFailed);
+          console.error("[places-amap]", err);
+        }
+      });
+  }
+
+  var bootTimer = null;
+
+  function isLoaderVisible() {
+    var loader = document.getElementById("page-loader");
+    return !!(
+      loader &&
+      !loader.hidden &&
+      !loader.classList.contains("page-loader--hidden")
+    );
+  }
+
+  function waitUntilLayoutReady() {
+    return new Promise(function (resolve) {
+      var settled = false;
+      function finish() {
+        if (settled) return;
+        settled = true;
+        var el = document.getElementById("places-amap");
+        if (!el) {
+          resolve(false);
+          return;
+        }
+        var tries = 0;
+        function waitSize() {
+          var rect = el.getBoundingClientRect();
+          if ((rect.width > 48 && rect.height > 48) || tries >= 72) {
+            window.requestAnimationFrame(function () {
+              window.setTimeout(function () {
+                resolve(true);
+              }, 60);
+            });
+            return;
+          }
+          tries += 1;
+          window.requestAnimationFrame(waitSize);
+        }
+        waitSize();
+      }
+
+      if (
+        !isLoaderVisible() &&
+        !document.documentElement.classList.contains("is-page-loading")
+      ) {
+        finish();
+        return;
+      }
+
+      document.addEventListener("firefly:page-loader-hidden", finish, {
+        once: true,
+      });
+      window.setTimeout(finish, 3200);
+    });
+  }
+
+  function scheduleBoot(delay) {
+    window.clearTimeout(bootTimer);
+    bootTimer = window.setTimeout(function () {
+      if (!document.getElementById("places-amap")) return;
+      void waitUntilLayoutReady().then(function (ok) {
+        if (!ok || !document.getElementById("places-amap")) return;
+        init();
+      });
+    }, typeof delay === "number" ? delay : 48);
+  }
+
+  function onPlacesPageEnter(fromSwup) {
+    if (!document.getElementById("places-amap")) return;
+    if (fromSwup) {
+      destroyMap();
+      resetAmapLoadCache();
+    }
+    scheduleBoot(fromSwup ? 100 : 48);
+  }
+
+  function onPlacesPageReady() {
+    if (!document.getElementById("places-amap")) return;
+    var canvas = document
+      .getElementById("places-amap")
+      .querySelector("canvas, .amap-layers");
+    if (map && canvas) {
+      hideLoading();
+      scheduleMapResize();
+      return;
+    }
+    scheduleBoot(48);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      onPlacesPageEnter(false);
+    });
+  } else {
+    window.requestAnimationFrame(function () {
+      onPlacesPageEnter(false);
+    });
+  }
+
+  document.addEventListener("swup:contentReplaced", function () {
+    onPlacesPageEnter(true);
+  });
+  document.addEventListener("swup:content:replace", function () {
+    onPlacesPageEnter(true);
+  });
+  document.addEventListener("swup:page:view", onPlacesPageReady);
+  document.addEventListener("astro:page-load", onPlacesPageReady);
+  document.addEventListener("firefly:page-loader-hidden", onPlacesPageReady);
+
+  if (window.swup && window.swup.hooks) {
+    window.swup.hooks.on("content:replace", function () {
+      onPlacesPageEnter(true);
+    });
+    window.swup.hooks.on("page:view", onPlacesPageReady);
+  } else {
+    document.addEventListener(
+      "swup:enable",
+      function () {
+        if (!window.swup || !window.swup.hooks) return;
+        window.swup.hooks.on("content:replace", function () {
+          onPlacesPageEnter(true);
+        });
+        window.swup.hooks.on("page:view", onPlacesPageReady);
+      },
+      { once: true },
+    );
+  }
+})();
+</script>
+</MainGridLayout>
+
+<style>
+  .places-hero {
+    position: relative;
+    padding: 1.25rem 0 0.25rem;
+  }
+  .places-hero-glow {
+    position: absolute;
+    inset: -20% auto auto -10%;
+    width: 18rem;
+    height: 18rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--primary) 18%, transparent);
+    filter: blur(40px);
+    pointer-events: none;
+  }
+  .places-hero-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 1rem;
+    display: grid;
+    place-items: center;
+    color: var(--primary);
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+  }
+  .places-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--primary) 10%, var(--card-bg));
+    color: var(--primary);
+    font-size: 0.875rem;
+  }
+  .places-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .places-stat-card {
+    border-radius: 1rem;
+    padding: 1rem 1.1rem;
+    background: color-mix(in oklch, var(--primary) 6%, var(--card-bg));
+    border: 1px solid var(--line-divider);
+  }
+  .places-stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--primary);
+  }
+  .places-stat-label {
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--deep-text);
+    opacity: 0.75;
+  }
+  .places-latest {
+    border-radius: 1rem;
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--line-divider);
+    background: var(--card-bg);
+  }
+  .places-latest-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+  .places-latest-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .places-latest-exp {
+    margin-top: 0.35rem;
+    color: var(--deep-text);
+    opacity: 0.85;
+  }
+  .places-latest-meta {
+    margin-top: 0.65rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+  .places-section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  .places-map-shell {
+    position: relative;
+  }
+  .places-map-filters {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 56px;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    pointer-events: none;
+  }
+  .places-filter-chip {
+    pointer-events: auto;
+    border: 1px solid var(--line-divider);
+    background: color-mix(in oklch, var(--card-bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--deep-text);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.15s ease;
+    box-shadow: 0 4px 14px color-mix(in oklch, black 8%, transparent);
+  }
+  .places-filter-chip:hover {
+    border-color: color-mix(in oklch, var(--primary) 40%, var(--line-divider));
+  }
+  .places-filter-chip.is-active {
+    background: color-mix(in oklch, var(--primary) 14%, var(--card-bg));
+    border-color: color-mix(in oklch, var(--primary) 45%, var(--line-divider));
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .places-map-frame {
+    position: relative;
+    border-radius: 1.1rem;
+    overflow: hidden;
+    border: 1px solid var(--line-divider);
+    min-height: 420px;
+    background: color-mix(in oklch, var(--primary) 4%, var(--card-bg));
+  }
+  .places-amap-canvas {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: min(62vh, 560px);
+    min-height: 420px;
+  }
+  .places-map-frame.is-popup-open .places-map-filters,
+  .places-map-frame.is-popup-open .places-map-toggles,
+  .places-map-frame.is-popup-open .places-map-controls {
+    z-index: 0;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .places-map-frame.is-popup-open .places-amap-canvas {
+    z-index: 4;
+  }
+  .places-map-loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .places-map-loading.is-hidden {
+    display: none;
+  }
+  .places-map-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .places-map-ctrl {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line-divider);
+    border-radius: 8px;
+    background: color-mix(in oklch, var(--card-bg) 94%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--deep-text);
+    box-shadow: 0 4px 14px color-mix(in oklch, black 10%, transparent);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease, color 0.15s ease;
+  }
+  .places-map-ctrl:hover {
+    background: color-mix(in oklch, var(--primary) 10%, var(--card-bg));
+    color: var(--primary);
+  }
+  .places-map-ctrl:active {
+    transform: scale(0.96);
+  }
+  .places-map-ctrl.is-spinning svg {
+    animation: places-ctrl-spin 0.6s ease;
+  }
+  @keyframes places-ctrl-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .places-map-frame:fullscreen,
+  .places-map-frame:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    background: var(--card-bg);
+  }
+  .places-map-frame:fullscreen .places-amap-canvas,
+  .places-map-frame:-webkit-full-screen .places-amap-canvas {
+    height: 100%;
+    min-height: 100%;
+  }
+  .places-map-toggles {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.45rem;
+    max-width: calc(100% - 7rem);
+  }
+  .places-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--card-bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line-divider);
+    font-size: 0.78rem;
+    box-shadow: 0 4px 16px color-mix(in oklch, black 8%, transparent);
+    cursor: pointer;
+    user-select: none;
+  }
+  .places-toggle input {
+    accent-color: var(--primary);
+  }
+  .places-toggle--cluster {
+    accent-color: #14b8a6;
+  }
+  .places-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.85rem;
+  }
+  .place-card {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--line-divider);
+    background: var(--card-bg);
+    animation: places-card-in 0.45s ease both;
+    animation-delay: var(--stagger, 0s);
+  }
+  .place-card.is-hidden {
+    display: none;
+  }
+  .place-card-pin {
+    color: var(--primary);
+    margin-top: 0.15rem;
+  }
+  .place-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .place-name {
+    font-weight: 700;
+  }
+  .place-exp {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+  .place-date {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    opacity: 0.6;
+  }
+  .place-source-tag {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+    color: var(--primary);
+  }
+  .places-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+  }
+  @keyframes places-card-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (max-width: 640px) {
+    .places-stats {
+      grid-template-columns: 1fr;
+    }
+    .places-amap-canvas {
+      height: 420px;
+      min-height: 360px;
+    }
+  }
+</style>
+
+<style is:global>
+  /* AMap 注入的 DOM 不带 Astro scope，需全局样式 */
+  .places-pin {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--pin, #12d6a8);
+    border: 3px solid #fff;
+    box-shadow:
+      0 0 0 4px color-mix(in oklch, var(--pin, #12d6a8) 40%, transparent),
+      0 4px 12px color-mix(in oklch, var(--pin, #12d6a8) 55%, transparent);
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .places-pin--count {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  }
+  .places-pin--count span {
+    line-height: 1;
+  }
+  .places-cluster {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: #12d6a8;
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 16px color-mix(in oklch, #12d6a8 50%, transparent);
+    cursor: pointer;
+    pointer-events: auto;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (max-width: 768px) {
+    .places-cluster {
+      width: 48px;
+      height: 48px;
+      font-size: 16px;
+    }
+  }
+  .places-owner-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #ef4444;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 4px color-mix(in oklch, #ef4444 25%, transparent);
+  }
+  .places-cluster-count {
+    line-height: 1;
+  }
+  .places-amap-fallback {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    min-height: 360px;
+    padding: 2rem;
+    text-align: center;
+    color: var(--deep-text);
+    opacity: 0.8;
+  }
+  .places-popup {
+    width: min(280px, 78vw);
+    background: #fff;
+    color: #1f2937;
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18);
+    padding: 12px 12px 10px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .places-popup-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .places-popup-head strong {
+    font-size: 15px;
+  }
+  .places-popup-close {
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: pointer;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .places-popup-date {
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 12px;
+  }
+  .places-popup-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .places-popup-tag {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+  .places-popup-exp {
+    margin: 8px 0 0;
+    color: #374151;
+  }
+  .places-popup-link {
+    display: inline-flex;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    color: #4b5563;
+    text-decoration: none;
+    font-size: 12px;
+  }
+  .places-gallery {
+    position: relative;
+    margin-top: 10px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #e5e7eb;
+  }
+  .places-gallery-viewport {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+  }
+  .places-gallery-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .places-gallery-img.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .places-gallery-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.55);
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .places-gallery-prev {
+    left: 8px;
+  }
+  .places-gallery-next {
+    right: 8px;
+  }
+  .places-gallery-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 0 8px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.08));
+  }
+  .places-gallery-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(107, 114, 128, 0.45);
+    cursor: pointer;
+  }
+  .places-gallery-dot.is-active {
+    background: #14b8a6;
+  }
+  :root.dark .places-popup {
+    background: #111827;
+    color: #e5e7eb;
+  }
+  :root.dark .places-popup-close,
+  :root.dark .places-popup-link,
+  :root.dark .places-popup-tag {
+    background: #1f2937;
+    color: #d1d5db;
+  }
+  :root.dark .places-popup-date {
+    color: #9ca3af;
+  }
+</style>

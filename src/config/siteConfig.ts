@@ -134,6 +134,22 @@ export const siteConfig: SiteConfig = {
 		dynamic: true,
 		// 音乐可视化页面开关
 		music: true,
+		// 足迹地图页面开关
+		places: true,
+	},
+
+	// 足迹地图配置（高德地图）
+	placesMap: {
+		// 高德 Web 端 JS API Key
+		amapKey: "599f1507ae283cc3d8fe300a2327b876",
+		// 高德安全密钥
+		amapSecurityJsCode: "a128a9062568528700bbd3a8cc574a37",
+		// 站点主人位置（地图初始中心和标记点）
+		ownerLocation: {
+			lng: 113.321276,
+			lat: 23.119376,
+			label: "中国尊",
+		},
 	},
 	// 日记页面配置
 	diary: {
@@ -290,19 +306,4 @@ export const siteConfig: SiteConfig = {
 	// 站点语言，在本配置文件顶部SITE_LANG定义
 	lang: SITE_LANG,
 
-	// 音乐配置
-	music: {
-		// 歌单配置
-		playlists: [
-			{ id: "17924204831", name: "纯音乐", server: "netease" },
-			{ id: "17933567326", name: "我的喜欢", server: "netease" },
-			{ id: "zhoujielun", name: "周杰伦", server: "netease", type: "custom" },
-			{ id: "17964946766", name: "陶喆", server: "netease" },
-			{ id: "17957187425", name: "方大同", server: "netease" },
-			{ id: "17956985703", name: "G.E.M.邓紫棋", server: "netease" },
-			{ id: "17957136689", name: "林俊杰", server: "netease" },
-			{ id: "17957661244", name: "孙燕姿", server: "netease" },
-			{ id: "17966019560", name: "告五人", server: "netease" },
-		],
-	},
 };

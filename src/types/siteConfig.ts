@@ -92,6 +92,22 @@ export type SiteConfig = {
 		anime: boolean;
 		dynamic?: boolean;
 		music: boolean;
+		// 足迹地图页面开关
+		places: boolean;
+	};
+
+	// 足迹地图配置（高德地图）
+	placesMap?: {
+		// 高德 Web 端 JS API Key
+		amapKey: string;
+		// 高德安全密钥
+		amapSecurityJsCode: string;
+		// 站点主人位置（地图初始中心和标记点）
+		ownerLocation: {
+			lng: number; // 经度
+			lat: number; // 纬度
+			label: string; // 位置标签文字
+		};
 	};
 
 	// 日记页面配置

@@ -45,8 +45,41 @@ const dynamicCollection = defineCollection({
 	}),
 });
 
+const placesCollection = defineCollection({
+	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/places" }),
+	schema: z.object({
+		date: z.coerce.date(),
+		endDate: z.coerce.date().optional(),
+		province: z.string(),
+		city: z.string().optional().default(""),
+		district: z.string().optional().default(""),
+		experience: z.string().optional().default(""),
+		visitCount: z.number().optional().default(1),
+		source: z.enum(["manual", "timeline"]).optional().default("manual"),
+		timelineId: z.string().optional(),
+		category: z.string().optional(),
+		lat: z.number().optional(),
+		lng: z.number().optional(),
+		/** 足迹照片（URL 列表），点击地图点位时轮播展示 */
+		images: z.array(z.string()).optional().default([]),
+		/** 可选外链（如游记文章） */
+		link: z.string().optional(),
+	}),
+});
+
+const momentsCollection = defineCollection({
+	loader: glob({ pattern: "**/*.md", base: "./src/content/moments" }),
+	schema: z.object({
+		published: z.coerce.date(),
+		tags: z.array(z.string()).optional().default([]),
+		location: z.string().optional().default(""),
+	}),
+});
+
 export const collections = {
 	dynamic: dynamicCollection,
 	posts: postsCollection,
 	spec: specCollection,
+	places: placesCollection,
+	moments: momentsCollection,
 };
