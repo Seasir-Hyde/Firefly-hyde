@@ -10,6 +10,7 @@
 @import './tags.css';
 @import './display-settings.css';
 @import './categories.css';
+@import './mouse.css';
 
 @plugin '@tailwindcss/typography';
 

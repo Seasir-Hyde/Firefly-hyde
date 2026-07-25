@@ -49,9 +49,9 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 	// 我的及其子菜单
 	links.push({
-		name: "我的",
+		name: "动态",
 		url: "#",
-		icon: "material-symbols:person",
+		icon: "material-symbols:bolt-outline",
 		children: [
 			// 朋友圈 
 			LinkPresets.Moments, 
@@ -59,20 +59,31 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			// 动态
 			LinkPresets.Dynamic,
 
+			// 日记
+			LinkPresets.Diary,
+		],
+	});
+
+	// 我的及其子菜单
+	links.push({
+		name: "我的",
+		url: "#",
+		icon: "material-symbols:person",
+		children: [
 			// 相册
 			LinkPresets.Gallery,
 
 			// 追番
 			LinkPresets.Anime,
 
+			// 番组计划
+			LinkPresets.Bangumi,
+
 			// 设备
 			LinkPresets.Devices,
 
 			// 音乐
 			LinkPresets.Music,
-
-			// 日记
-			LinkPresets.Diary,
 		],
 	});
 

@@ -60,11 +60,16 @@ const pageTitle = "音乐";
 
 	</style>
 	<script is:inline>
+		// 保存进入页面前的原始主题状态，用于离开时恢复
+		const originalThemeClass = document.documentElement.classList.contains('dark');
+		const originalDataTheme = document.documentElement.getAttribute('data-theme');
+
+		// 添加音乐页面全屏样式类
 		document.documentElement.classList.add('music-fullscreen');
-		// 音乐页锁定深色模式
+		// 音乐页临时锁定深色模式（不修改 localStorage）
 		document.documentElement.classList.add('dark');
-		localStorage.setItem('theme', 'dark');
-		// 阻止主题切换
+
+		// 阻止主题切换的函数
 		function blockThemeSwitch() {
 			document.documentElement.classList.add('dark');
 		}
@@ -79,6 +84,53 @@ const pageTitle = "音乐";
 			});
 		});
 		themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+		// 清理标记，确保只执行一次
+		let cleanedUp = false;
+
+		// 离开音乐页面时恢复原始主题并清理监听器
+		function cleanupMusicPage() {
+			if (cleanedUp) return;
+			cleanedUp = true;
+
+			// 断开 MutationObserver
+			themeObserver.disconnect();
+			// 移除 storage 事件监听器
+			window.removeEventListener('storage', blockThemeSwitch);
+			// 移除音乐页面全屏样式类
+			document.documentElement.classList.remove('music-fullscreen');
+			// 恢复原始主题
+			if (!originalThemeClass) {
+				document.documentElement.classList.remove('dark');
+			}
+			if (originalDataTheme) {
+				document.documentElement.setAttribute('data-theme', originalDataTheme);
+			}
+		}
+
+		// 监听 Swup 页面导航事件，在离开时清理
+		function setupSwupCleanup() {
+			const handleVisitStart = function() {
+				cleanupMusicPage();
+			};
+
+			if (window.swup && window.swup.hooks) {
+				window.swup.hooks.on('visit:start', handleVisitStart);
+			} else {
+				document.addEventListener('swup:enable', function onSwupReady() {
+					if (window.swup && window.swup.hooks) {
+						window.swup.hooks.on('visit:start', handleVisitStart);
+					}
+					document.removeEventListener('swup:enable', onSwupReady);
+				});
+			}
+		}
+
+		// 尝试设置 Swup 清理
+		setupSwupCleanup();
+
+		// 兜底：页面卸载时也清理
+		window.addEventListener('pagehide', cleanupMusicPage);
 	</script>
 	<MusicVisualizer client:only="svelte" />
 </Layout>
