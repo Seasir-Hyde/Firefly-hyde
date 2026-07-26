@@ -63,7 +63,7 @@
     position: relative;
     max-width: min(var(--banner-post-description-width, 50rem), 78vw);
     padding: 0.85rem 2.25rem;
-    border-radius: 4px;
+    border-radius: var(--radius-large);
     background: rgba(0, 0, 0, 0.16);
     font-size: 0.95rem;
     line-height: 1.7;

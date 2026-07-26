@@ -382,7 +382,7 @@ const hasMultipleImages =
                     class="object-cover h-full w-full"
                     src={src}
                     position={backgroundWallpaper.banner?.position}
-                    widths={[640, 750, 1080]}
+                    widths={[640, 1080]}
                     sizes="100vw"
                     loading={index === 0 ? "eager" : "lazy"}
                     fetchpriority={index === 0 ? "high" : undefined}
@@ -398,7 +398,7 @@ const hasMultipleImages =
                     class="object-cover h-full"
                     src={src}
                     position={backgroundWallpaper.banner?.position}
-                    widths={[1280, 1920, 2560]}
+                    widths={[1280, 1920]}
                     sizes="100vw"
                     loading={index === 0 ? "eager" : "lazy"}
                     fetchpriority={index === 0 ? "high" : undefined}
@@ -417,7 +417,7 @@ const hasMultipleImages =
                     class="object-cover h-full w-full"
                     src={backgroundImages.mobile[0]}
                     position={backgroundWallpaper.banner?.position}
-                    widths={[640, 750, 1080]}
+                    widths={[640, 1080]}
                     sizes="100vw"
                     loading="eager"
                     fetchpriority="high"
@@ -433,7 +433,7 @@ const hasMultipleImages =
                     class="object-cover h-full"
                     src={backgroundImages.desktop[0]}
                     position={backgroundWallpaper.banner?.position}
-                    widths={[1280, 1920, 2560]}
+                    widths={[1280, 1920]}
                     sizes="100vw"
                     loading="eager"
                     fetchpriority="high"

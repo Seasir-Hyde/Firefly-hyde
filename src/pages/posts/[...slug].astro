@@ -1,6 +1,5 @@
 ---
 import { render } from "astro:content";
-import * as path from "node:path";
 import Comment from "@components/comment/index.astro";
 import Markdown from "@components/common/Markdown.astro";
 import EncryptedPost from "@components/features/EncryptedPost.astro";
@@ -64,53 +63,26 @@ const showPostCover = Boolean(processedImage && coverImageConfig.enableInPost);
 const usePostCoverOverlay =
 	showPostCover && (coverImageConfig.enableInPostOverlay ?? true);
 
-let posterCoverUrl = processedImage;
-if (processedImage) {
-	const isLocal = !(
-		processedImage.startsWith("/") ||
-		processedImage.startsWith("http") ||
-		processedImage.startsWith("https") ||
-		processedImage.startsWith("data:")
-	);
-	if (isLocal) {
-		const basePath = getFileDirFromPath(entry.filePath || "");
-		const files = import.meta.glob<ImageMetadata>("../../**", {
-			import: "default",
-		});
-		let normalizedPath = path
-			.normalize(path.join("../../", basePath, processedImage))
-			.replace(/\\/g, "/");
-		const file = files[normalizedPath];
-		if (file) {
-			const img = await file();
-			posterCoverUrl = img.src;
-		}
+const getDirectImageUrl = (src: string | undefined): string | null => {
+	if (!src) return null;
+	if (
+		src.startsWith("http://") ||
+		src.startsWith("https://") ||
+		src.startsWith("//") ||
+		src.startsWith("data:")
+	) {
+		return src;
 	}
-}
+	return src.startsWith("/") ? url(src) : null;
+};
 
-// 处理头像URL
-let posterAvatarUrl: string | null = profileConfig.avatar || null;
-if (posterAvatarUrl) {
-	const isLocalAvatar = !(
-		posterAvatarUrl.startsWith("/") ||
-		posterAvatarUrl.startsWith("http") ||
-		posterAvatarUrl.startsWith("https") ||
-		posterAvatarUrl.startsWith("data:")
-	);
-	if (isLocalAvatar) {
-		const files = import.meta.glob<ImageMetadata>("../../**", {
-			import: "default",
-		});
-		const normalizedPath = path
-			.normalize(path.join("../../", posterAvatarUrl))
-			.replace(/\\/g, "/");
-		const file = files[normalizedPath];
-		if (file) {
-			const img = await file();
-			posterAvatarUrl = img.src;
-		}
-	}
-}
+// 海报优先复用页面上已经优化过的图片，本地源路径不再单独导入。
+const posterCoverUrl = showPostCover ? null : getDirectImageUrl(processedImage);
+const posterCoverSelector = showPostCover ? "#post-cover img" : null;
+const posterAvatarUrl = getDirectImageUrl(profileConfig.avatar);
+const posterAvatarSelector = profileConfig.avatar
+	? ".profile-avatar-image img"
+	: null;
 
 dayjs.extend(utc);
 
@@ -378,9 +350,11 @@ const relatedPosts = await getRelatedPosts(entry, 5);
                             description={entry.data.description || entry.data.title}
                             pubDate={formatDateToYYYYMMDD(entry.data.published)}
                             coverImage={posterCoverUrl}
+                            coverImageSelector={posterCoverSelector}
                             url={Astro.url.href}
                             siteTitle={siteConfig.title}
                             avatar={posterAvatarUrl}
+                            avatarSelector={posterAvatarSelector}
                           />
                         )
                       }
@@ -466,9 +440,11 @@ const relatedPosts = await getRelatedPosts(entry, 5);
                             description={entry.data.description || entry.data.title}
                             pubDate={formatDateToYYYYMMDD(entry.data.published)}
                             coverImage={posterCoverUrl}
+                            coverImageSelector={posterCoverSelector}
                             url={Astro.url.href}
                             siteTitle={siteConfig.title}
                             avatar={posterAvatarUrl}
+                            avatarSelector={posterAvatarSelector}
                           />
                         )
                       }
