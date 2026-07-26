@@ -11,202 +11,147 @@ const { description, descriptionSource = "ai" } = Astro.props;
 const isManual = descriptionSource === "manual";
 const sourceLabel = isManual ? "人工编写" : "AI 摘要";
 const iconName = isManual
-	? "material-symbols:person"
-	: "material-symbols:psychology";
+	? "material-symbols:edit-note"
+	: "material-symbols:psychiatry";
 ---
 
-<div id="ai-summary" class="ai-summary-wrapper rounded-xl mb-6 onload-animation">
+<div class="ai-summary-wrapper rounded-xl mb-6">
   <div class="ai-summary">
-    <div class="ai-summary-header">
-      <div class="ai-summary-icon">
-        <Icon name={iconName} class="text-base" />
+    <div class="ai-summary-inner">
+      <div class="ai-summary-header">
+        <div class="ai-summary-icon">
+          <Icon name={iconName} class="text-base" />
+        </div>
+        <span class="ai-summary-label">{sourceLabel}</span>
       </div>
-      <span class="ai-summary-label">{sourceLabel}</span>
-    </div>
-    <div class="ai-summary-content">
-      <p id="ai-summary-text" class="ai-summary-text" data-full-text={description}></p>
-      <span class="ai-summary-cursor"></span>
+      <p
+        class="ai-summary-text js-ai-summary-text dark:text-neutral-100"
+        data-full-text={description}
+      ></p>
     </div>
   </div>
 </div>
 
 <style>
-  .ai-summary-wrapper {
-    position: relative;
-    background: var(--card-bg);
-    border: 1px solid var(--line-divider);
+
+.ai-summary {
+    background: color-mix(in srgb,var(--card-bg) 94%,transparent);
     overflow: hidden;
-  }
+    border-radius: 0.75rem;
+    /* 三层阴影：顶部内发光 + 内边框线 + 基础下层柔和投影 */
+    box-shadow: 
+        0 1px 0 oklch(1 .012 var(--hue) / .55) inset,
+        0 0 0 1px oklch(1 .01 var(--hue) / .14) inset,
+        0 16px 48px oklch(.42 .06 var(--hue) / .16);
+    /* 给阴影加过渡，hover变化顺滑 */
+    transition: box-shadow 0.3s ease;
+}
 
-  /* 左侧主题色渐变条 */
-  .ai-summary-wrapper::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: linear-gradient(
-      180deg,
-      var(--primary) 0%,
-      color-mix(in srgb, var(--primary) 50%, transparent) 100%
-    );
-  }
+.ai-summary:hover {
+    /* 内阴影完全不变，只加大外层向下阴影 */
+    box-shadow: 
+        0 1px 0 oklch(1 .012 var(--hue) / .55) inset,
+        0 0 0 1px oklch(1 .01 var(--hue) / .14) inset,
+        /* 垂直偏移更大，模糊更大，透明度更高，阴影更深、向下散开 */
+        0 24px 64px oklch(.3 .08 var(--hue) / .28);
+}
 
-  .ai-summary {
-    padding: 1rem 1.25rem 1rem 1.5rem;
+
+  .ai-summary-inner {
+    padding: 1rem 1.25rem;
   }
 
   .ai-summary-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.625rem;
   }
 
   .ai-summary-icon {
-    width: 1.625rem;
-    height: 1.625rem;
-    border-radius: 0.375rem;
-    background: color-mix(in srgb, var(--primary) 12%, transparent);
-    color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--primary) 14%, transparent);
+    color: var(--primary);
     flex-shrink: 0;
     transition: background-color 0.2s ease, transform 0.2s ease;
   }
 
   .ai-summary:hover .ai-summary-icon {
-    background: color-mix(in srgb, var(--primary) 18%, transparent);
+    background: color-mix(in srgb, var(--primary) 20%, transparent);
     transform: scale(1.05);
   }
 
-  
   .ai-summary-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--btn-content);
-    letter-spacing: 0.03em;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--primary);
   }
 
-  .ai-summary-content {
-    display: flex;
-    align-items: baseline;
-    gap: 1px;
-  }
-/*  */
   .ai-summary-text {
-    font-size: 0.9375rem;
-    line-height: 1.8;
-    color: var(--btn-content);
-    min-height: 1.8em;
+    font-size: 0.925rem;
+    line-height: 1.75;
+    min-height: 1.75em;
     margin: 0;
   }
 
-  /* 打字机光标 */
-  .ai-summary-cursor {
-    /* width: 2px;
-    height: 1.1em; */
-    background: var(--primary);
-    border-radius: 1px;
-    opacity: 0;
-    margin-left: 2px;
-    flex-shrink: 0;
-    animation: none;
-  }
-
-  .ai-summary-cursor.active {
-    opacity: 1;
-    animation: cursorBlink 0.8s step-end infinite;
-  }
-
-  @keyframes cursorBlink {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0;
-    }
-  }
-
-  /* 打字动画 - 淡入效果 */
-  .ai-summary-text.typing {
-    animation: textFadeIn 0.3s ease-out;
-  }
-
-  @keyframes textFadeIn {
-    from {
-      opacity: 0.6;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* 悬停效果 */
-  .ai-summary-wrapper {
-    transition: box-shadow 0.25s ease, border-color 0.25s ease;
-  }
-
-  .ai-summary-wrapper:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    border-color: color-mix(in srgb, var(--primary) 40%, transparent);
-  }
-
   /* 深色模式适配 */
-  :global(html.dark) .ai-summary-text {
-    color: var(--btn-content);
-  }
+:global(html.dark) .ai-summary:hover {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  /* 三层阴影加深：顶部内发光提亮、内边框、底层投影加深加重 */
+  box-shadow: 
+      0 1px 0 oklch(1 .012 var(--hue) / .65) inset,
+      0 0 0 1px oklch(1 .01 var(--hue) / .22) inset,
+      0 16px 48px oklch(.28 .08 var(--hue) / .32);
+  /* 给阴影加过渡，hover变化顺滑 */
+  transition: box-shadow 0.3s ease;
+}
 
-  :global(html.dark) .ai-summary-wrapper:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  }
 </style>
 
 <script is:inline>
-  (function typewriter() {
-    var el = document.getElementById("ai-summary-text");
-    var cursor = document.querySelector(".ai-summary-cursor");
-    if (!el) return;
+  (function initAiSummaryTypewriter() {
+    function run() {
+      const el = document.querySelector(".js-ai-summary-text");
+      if (!el || el.dataset.typingInit === "1") return;
+      el.dataset.typingInit = "1";
 
-    var fullText = el.getAttribute("data-full-text") || "";
-    if (!fullText) return;
+      const fullText = el.getAttribute("data-full-text") || "";
 
-    // 无障碍：尊重"减少动态效果"设置
-    var prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    if (prefersReducedMotion) {
-      el.textContent = fullText;
-      return;
+      // 无障碍：减少动态效果
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        el.textContent = fullText;
+        return;
+      }
+
+      let hasRun = false;
+      const speed = 45;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting && !hasRun) {
+              hasRun = true;
+              observer.unobserve(el);
+              startTyping(el, fullText, speed);
+            }
+          }
+        },
+        { threshold: 0.3 },
+      );
+
+      observer.observe(el);
     }
 
-    var hasRun = false;
-    var speed = 38;
-
-    // IntersectionObserver：只在元素进入视口时触发一次
-    var observer = new IntersectionObserver(
-      function(entries) {
-        for (var i = 0; i < entries.length; i++) {
-          var entry = entries[i];
-          if (entry.isIntersecting && !hasRun) {
-            hasRun = true;
-            observer.unobserve(el);
-            startTyping();
-          }
-        }
-      },
-      { threshold: 0.25 }
-    );
-
-    observer.observe(el);
-
-    function startTyping() {
-      var i = 0;
+    function startTyping(el, fullText, speed) {
+      let i = 0;
       el.textContent = "";
-      el.classList.add("typing");
-      if (cursor) cursor.classList.add("active");
 
       function tick() {
         if (i < fullText.length) {
@@ -214,28 +159,22 @@ const iconName = isManual
           i++;
 
           // 根据标点符号调整停顿时间
-          var char = fullText.charAt(i - 1);
-          var delay = speed;
-          if (char === "。" || char === "！" || char === "？" || char === "…") {
-            delay = speed * 5;
-          } else if (char === "，" || char === "、" || char === "；" || char === ":") {
-            delay = speed * 2.5;
+          const char = fullText.charAt(i - 1);
+          let delay = speed;
+          if (char === "，" || char === "、" || char === "；" || char === ":") {
+            delay = speed * 2;
+          } else if (char === "。" || char === "！" || char === "？" || char === "…") {
+            delay = speed * 3;
           }
 
           setTimeout(tick, delay);
-        } else {
-          // 打字结束，隐藏光标
-          el.classList.remove("typing");
-          if (cursor) {
-            setTimeout(function() {
-              cursor.classList.remove("active");
-            }, 1500);
-          }
         }
       }
 
-      // 延迟开始，增加期待感
       setTimeout(tick, 250);
     }
+
+    run();
+    document.addEventListener("astro:page-load", run);
   })();
 </script>

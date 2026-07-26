@@ -9,6 +9,7 @@ type PostData = {
 	updated?: Date;
 	draft: boolean;
 	description: string;
+	descriptionSource?: "manual" | "ai";
 	image: string;
 	tags: string[];
 	category: string | null;
@@ -46,7 +47,7 @@ const postsCollection: ContentCollection<PostData> = defineCollection({
 		updated: z.date().optional(),
 		draft: z.boolean().optional().default(false),
 		description: z.string().optional().default(""),
-		descriptionSource: z.string().optional().default(""),
+		descriptionSource: z.enum(["manual", "ai"]).optional(),
 		image: z.string().optional().default(""),
 		tags: z.array(z.string()).optional().default([]),
 		category: z.string().optional().nullable().default(""),

@@ -1,36 +1,61 @@
 /**
  * AI 摘要生成脚本
- * 运行方式: npx tsx scripts/fill-descriptions.ts
+ * 运行方式: pnpm fill-descriptions
+ * 等价于: npx tsx scripts/fill-descriptions/index.ts
  *
  * 功能：
- * - 扫描 src/content/blog/ 下所有 .md/.mdx 文件
+ * - 扫描 src/content/posts/ 下所有 .md/.mdx 文件
  * - 跳过已有 description 的文章
  * - 调用千问 API 生成摘要
  * - 写回 frontmatter (description + descriptionSource)
  */
 
-// 千问 API 配置（DashScope 兼容 OpenAI 格式）
-const QWEN_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
-const QWEN_MODEL = "qwen-plus";
+import { fileURLToPath } from "node:url";
+import fs from "fs";
+import path from "path";
 
-// API 密钥 - 直接写在脚本里，文件已加入 .gitignore
-const QWEN_API_KEY = process.env.QWEN_API_KEY;
-if (!QWEN_API_KEY) {
-  console.error("请设置环境变量 QWEN_API_KEY");
-  process.exit(1);
+const PROJECT_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
+
+function loadEnvFile() {
+  const envPath = path.join(PROJECT_ROOT, ".env");
+  // 按 \r?\n 分割，兼容 Windows；.env 中的值覆盖空环境变量
+  for (const line of fs.readFileSync(envPath, "utf-8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const equalsIdx = trimmed.indexOf("=");
+    if (equalsIdx === -1) continue;
+
+    const key = trimmed.slice(0, equalsIdx).trim();
+    let val = trimmed.slice(equalsIdx + 1).trim();
+
+    // 去除引号
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+
+    if (val) process.env[key] = val;
+  }
 }
+
+loadEnvFile();
+
+const QWEN_BASE_URL =
+  process.env.QWEN_BASE_URL ||
+  "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const QWEN_MODEL = process.env.QWEN_MODEL || "qwen-plus";
+const QWEN_API_KEY = process.env.QWEN_API_KEY || "";
+
+const POSTS_DIR = path.join(PROJECT_ROOT, "src/content/posts");
 
 // 每篇文章最多取前 2600 字作为上下文
 const MAX_CONTEXT_CHARS = 2600;
 
 // API 失败最多重试 2 次
 const MAX_RETRIES = 2;
-
-// 内容目录
-const CONTENT_DIR = "src/content/blog";
-
-import fs from "fs";
-import path from "path";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -60,37 +85,31 @@ function collectMarkdownFiles(dir: string): string[] {
 }
 
 /**
- * 解析 frontmatter
+ * 解析 frontmatter（只返回 frontmatter 内容和正文）
  */
-function parseFrontmatter(content: string): { data: Record<string, unknown>; body: string } {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!match) {
-    return { data: {}, body: content };
+function parseFrontmatter(raw: string): { frontmatter: string; body: string } | null {
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---(\r?\n[\s\S]*)$/);
+  if (!match) return null;
+  return { frontmatter: match[1], body: match[2] };
+}
+
+/**
+ * 判断文章是否已有 description（只检查 frontmatter 区块内，且值不能为空）
+ */
+function hasDescription(raw: string): boolean {
+  const parsed = parseFrontmatter(raw);
+  if (!parsed) return false;
+  
+  const descMatch = parsed.frontmatter.match(/^description\s*:\s*(.+)$/m);
+  if (!descMatch) return false;
+  
+  let value = descMatch[1].trim();
+  // 去掉引号
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    value = value.slice(1, -1);
   }
-
-  const yamlStr = match[1];
-  const body = match[2];
-  const data: Record<string, unknown> = {};
-
-  // 简单的 YAML 解析
-  for (const line of yamlStr.split("\n")) {
-    const colonIdx = line.indexOf(":");
-    if (colonIdx === -1) continue;
-
-    const key = line.slice(0, colonIdx).trim();
-    let value: unknown = line.slice(colonIdx + 1).trim();
-
-    // 去除引号
-    if ((value as string).startsWith('"') && (value as string).endsWith('"')) {
-      value = (value as string).slice(1, -1);
-    } else if ((value as string).startsWith("'") && (value as string).endsWith("'")) {
-      value = (value as string).slice(1, -1);
-    }
-
-    data[key] = value;
-  }
-
-  return { data, body };
+  
+  return value.length > 0;
 }
 
 /**
@@ -110,6 +129,31 @@ function extractContext(body: string, maxChars: number): string {
   return cleaned.length > maxChars
     ? `${cleaned.slice(0, maxChars)}...`
     : cleaned;
+}
+
+/**
+ * 校验并清洗 AI 返回的摘要文本
+ * 过滤无效输出，避免假成功
+ */
+function sanitizeDescription(text: string): string | null {
+  const cleaned = text
+    .replace(/^(摘要|简介|…).{0,8}[：:]\s*/i, "")
+    .replace(/\*\*/g, "")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (cleaned.length < 15) return null;
+  if (/^[\*\-_=.\s，。！？、]+$/.test(cleaned)) return null;
+  return cleaned;
+}
+
+/**
+ * 格式化 YAML 字符串（安全的单行格式）
+ */
+function formatYamlString(value: string): string {
+  const oneLine = value.replace(/\r?\n/g, " ").replace(/\s+/g, " ").trim();
+  return JSON.stringify(oneLine);
 }
 
 const SYSTEM_PROMPT = `你是一个以第一视角写作的个人博客作者。你的博客记录技术学习、日常生活和真实感悟。
@@ -155,7 +199,10 @@ async function generateDescription(
       });
 
       if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error(`  API 请求失败 (状态码: ${resp.status}): ${errorText.substring(0, 200)}`);
         if (attempt < MAX_RETRIES) {
+          console.log(`  重试中... (${attempt + 1}/${MAX_RETRIES})`);
           await sleep(1500 * (attempt + 1));
           continue;
         }
@@ -164,21 +211,46 @@ async function generateDescription(
 
       const json = (await resp.json()) as {
         choices?: Array<{ message?: { content?: string } }>;
+        error?: { message?: string };
       };
+      
+      if (json.error) {
+        console.error(`  API 返回错误: ${json.error.message}`);
+        if (attempt < MAX_RETRIES) {
+          console.log(`  重试中... (${attempt + 1}/${MAX_RETRIES})`);
+          await sleep(1500 * (attempt + 1));
+          continue;
+        }
+        return null;
+      }
+      
       const text = json?.choices?.[0]?.message?.content?.trim() ?? "";
 
-      // 清理 AI 可能加上的前缀
-      const cleaned = text
-        .replace(
-          /^(摘要|简介|内容简介|文章摘要|本文|这篇文章|总的来说|总之|概括).{0,8}[：:]\s*/i,
-          ""
-        )
-        .replace(/\s*---\s*$/, "")
-        .trim();
+      if (!text) {
+        console.log(`  API 返回空内容，重试中... (${attempt + 1}/${MAX_RETRIES})`);
+        if (attempt < MAX_RETRIES) {
+          await sleep(1500 * (attempt + 1));
+          continue;
+        }
+        return null;
+      }
 
-      return cleaned || null;
-    } catch (err) {
+      // 使用 sanitizeDescription 校验并清洗输出
+      const cleaned = sanitizeDescription(text);
+      if (!cleaned) {
+        console.log(`  内容校验失败（可能太短或无效），重试中... (${attempt + 1}/${MAX_RETRIES})`);
+        if (attempt < MAX_RETRIES) {
+          await sleep(1500 * (attempt + 1));
+          continue;
+        }
+        return null;
+      }
+
+      return cleaned;
+    } catch (err: any) {
+      console.error(`  请求异常: ${err.message}`);
       if (attempt < MAX_RETRIES) {
+        console.log(`  重试中... (${attempt + 1}/${MAX_RETRIES})`);
         await sleep(1500 * (attempt + 1));
         continue;
       }
@@ -189,7 +261,7 @@ async function generateDescription(
 }
 
 /**
- * 写回 frontmatter
+ * 写回 frontmatter（重建方式，更安全）
  */
 function writeFrontmatter(
   filePath: string,
@@ -197,48 +269,40 @@ function writeFrontmatter(
   description: string,
   source: "ai" | "manual"
 ): void {
-  let fm = raw;
+  const parsed = parseFrontmatter(raw);
+  if (!parsed) return;
 
-  // 检查 description 是否为空或不存在
-  const descMatch = fm.match(/^description\s*:\s*(.*)$/m);
-  const descValue = descMatch ? descMatch[1].trim() : "";
-  const hasRealDesc = descValue !== "" && descValue !== '""' && descValue !== "''";
+  // 去掉旧的 description 和 descriptionSource 字段
+  const frontmatter = parsed.frontmatter
+    .replace(/^description\s*:.*$/m, "")
+    .replace(/^descriptionSource\s*:.*$/m, "")
+    .trimEnd();
 
-  if (!hasRealDesc) {
-    const safeDesc = `"${description.replace(/"/g, '\\"')}"`;
+  // 重组文件内容
+  const newContent = [
+    "---",
+    frontmatter,
+    `description: ${formatYamlString(description)}`,
+    `descriptionSource: ${source}`,
+    "---",
+    parsed.body.replace(/^\r?\n?/, "\n"),
+  ].join("\n");
 
-    if (descMatch) {
-      // description 存在但为空，替换整行
-      fm = fm.replace(/^description\s*:\s*.*$/m, `description: ${safeDesc}`);
-    } else {
-      // description 不存在，在 frontmatter 结束标记前插入
-      const closingIdx = fm.indexOf("---", 4);
-      const beforeClose = fm.slice(0, closingIdx);
-      const afterClose = fm.slice(closingIdx);
-      fm = `${beforeClose.trimEnd()}\ndescription: ${safeDesc}\n\n${afterClose.trimStart()}`;
-    }
-  }
-
-  // 处理 descriptionSource 字段
-  const hasSource = /^descriptionSource\s*:\s*/m.test(fm);
-  if (!hasSource) {
-    const closingIdx = fm.indexOf("---", 4);
-    const beforeClose = fm.slice(0, closingIdx);
-    const afterClose = fm.slice(closingIdx);
-    fm = `${beforeClose.trimEnd()}\ndescriptionSource: ${source}\n\n${afterClose.trimStart()}`;
-  }
-
-  fs.writeFileSync(filePath, fm, "utf-8");
+  fs.writeFileSync(filePath, newContent, "utf-8");
 }
 
 /**
  * 主流程
  */
 async function main() {
-  const contentDir = path.resolve(CONTENT_DIR);
-  console.log(`扫描目录: ${contentDir}`);
+  if (!QWEN_API_KEY) {
+    console.error("请设置环境变量 QWEN_API_KEY");
+    process.exit(1);
+  }
 
-  const mdFiles = collectMarkdownFiles(contentDir);
+  console.log(`扫描目录: ${POSTS_DIR}`);
+
+  const mdFiles = collectMarkdownFiles(POSTS_DIR);
   console.log(`共找到 ${mdFiles.length} 个文件`);
 
   const missing: MissingItem[] = [];
@@ -246,15 +310,12 @@ async function main() {
 
   for (const filePath of mdFiles) {
     const raw = fs.readFileSync(filePath, "utf-8");
-    // 检查 description 是否为空或不存在
-    const descMatch = raw.match(/^description\s*:\s*(.*)$/m);
-    // 严格检查：如果值为空字符串（有无引号都要检查）
-    const descValue = descMatch ? descMatch[1].trim() : "";
-    const hasRealDesc = descValue !== "" && descValue !== '""' && descValue !== "''";
-    if (hasRealDesc) {
+    // 只检查 frontmatter 区块内是否有 description
+    if (hasDescription(raw)) {
       skipped++;
       continue;
     }
+
     // 提取标题
     const titleMatch = raw.match(/^title\s*:\s*(.*)$/m);
     const title = titleMatch

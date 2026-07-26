@@ -2,15 +2,15 @@
 title: 待办
 published: 2026-05-09
 pinned: true # 固定在顶部
-description: "最近在给 Astro 博客疯狂填坑和加功能：朋友圈、友链自助申请、AI 文章摘要、开发者提示、ustat 统计、天气组件都安排上了；顺手修了一堆生产环境的 bug，比如滚动条不显示、Footer 版本号丢失、浏览量卡加载；还把右侧滚动条样式调得跟 teek 一模一样～一边写一边吐槽，一边吐槽一边继续写。"
 image: api
 slug: /todo
 tags: ["Astro"]
 category: Firefly
 draft: false
+description: "最近又在折腾我的 Astro 博客啦，顺手整理了一份接下来的开发小计划。想给博客加个朋友圈和友链申请，顺便修一修之前遇到的小 Bug。这里也记了几个好用的工具链接当备忘录，大家一起来看看我最近又搞了哪些新花样吧。"
 descriptionSource: ai
-
 ---
+
 
 ## 功能
 - [ ] [Astro 集成 ech0 实现朋友圈](https://www.zzyang.top/posts/ech0/)
