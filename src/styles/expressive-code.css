@@ -67,3 +67,46 @@ body.wallpaper-transparent .expressive-code .frame {
   background: var(--card-bg-transparent) !important;
 }
 
+/* ===== Tab 代码块（rehype-code-group） ===== */
+/*
+ * 沿用插件自带的原生样式（下划线式标签），
+ * 只把颜色换成主题变量，并处理横向滚动与外边距。
+ */
+
+.rehype-code-group .rcg-tab-container {
+  /* 标签多时可换行，避免溢出 */
+  flex-wrap: wrap;
+  border-bottom-color: var(--line-divider);
+}
+
+.rehype-code-group .rcg-tab {
+  color: var(--btn-content);
+  opacity: var(--opacity-80);
+  transition:
+    color var(--duration-normal) var(--ease-standard),
+    opacity var(--duration-normal) var(--ease-standard);
+}
+
+.rehype-code-group .rcg-tab:hover {
+  color: var(--primary);
+  opacity: var(--opacity-100);
+}
+
+.rehype-code-group .rcg-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  opacity: var(--opacity-100);
+}
+
+.rehype-code-group .rcg-tab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  border-radius: 0.25rem;
+}
+
+/* 面板内的代码块贴合标签栏，去掉 markdown 默认的上下外边距 */
+.rehype-code-group .rcg-block > .expressive-code {
+  margin: 0 !important;
+}
+
+

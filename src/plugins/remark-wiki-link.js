@@ -3,7 +3,7 @@
  * @author CuteLeaf <xiaye@msn.com>
  */
 
-import { readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { slug } from "github-slugger";
@@ -58,12 +58,138 @@ function createPostUrl(contentPath) {
 	return `/posts/${encodedPath ? `${encodedPath}/` : ""}`;
 }
 
-function readPostMeta(contentPath) {
-	// 优先按 frontmatter slug 匹配
-	const bySlug = findMetaBySlug(contentPath);
-	if (bySlug) return bySlug;
+/**
+ * 由文章文件的绝对路径反推 content path。
+ */
+function toContentPath(filePath) {
+	return path
+		.relative(POSTS_DIR, filePath)
+		.replaceAll("\\", "/")
+		.replace(MARKDOWN_EXTENSION, "");
+}
 
-	// 其次按文件路径匹配
+/**
+ * 还原 Astro glob loader 生成的 entry.id——也就是文章 URL 的唯一来源。
+ * loader 在 schema 校验前先读原始 frontmatter，`slug` 存在时直接作为 id，
+ * 否则回退到文件路径。注意 `slug` 不在 posts 的 zod schema 里，
+ * 所以它只在这里（直接读 frontmatter）可见，`entry.data` 上取不到。
+ */
+function toPostId(meta) {
+	const declaredSlug =
+		typeof meta.data.slug === "string" ? meta.data.slug.trim() : "";
+
+	return declaredSlug || toContentPath(meta.filePath);
+}
+
+function readMetaFile(filePath) {
+	let stats;
+	try {
+		stats = statSync(filePath);
+	} catch {
+		return null;
+	}
+	if (!stats.isFile()) {
+		return null;
+	}
+
+	const cached = frontmatterCache.get(filePath);
+	if (cached && cached.mtimeMs === stats.mtimeMs) {
+		return cached.meta;
+	}
+
+	let data;
+	try {
+		data = matter(readFileSync(filePath, "utf8")).data ?? {};
+	} catch {
+		return null;
+	}
+
+	const meta = { filePath, data };
+	frontmatterCache.set(filePath, { mtimeMs: stats.mtimeMs, meta });
+	return meta;
+}
+
+function collectPostMetas() {
+	const metas = [];
+	const stack = [POSTS_DIR];
+
+	while (stack.length > 0) {
+		const dir = stack.pop();
+		let entries;
+		try {
+			entries = readdirSync(dir, { withFileTypes: true });
+		} catch {
+			// 目录读不到就跳过；注意这里只包住 readdirSync，
+			// 避免把下面的逻辑错误一起吞掉
+			continue;
+		}
+
+		for (const entry of entries) {
+			const fullPath = path.join(dir, entry.name);
+			if (entry.isDirectory()) {
+				stack.push(fullPath);
+				continue;
+			}
+			if (!MARKDOWN_EXTENSION.test(entry.name)) {
+				continue;
+			}
+			const meta = readMetaFile(fullPath);
+			if (meta) {
+				metas.push(meta);
+			}
+		}
+	}
+
+	return metas;
+}
+
+function findMetaBySlug(metas, target) {
+	return (
+		metas.find(
+			(meta) =>
+				typeof meta.data.slug === "string" && meta.data.slug.trim() === target,
+		) ?? null
+	);
+}
+
+/**
+ * 按裸文件名匹配，兼容 Obsidian「尽可能简短的形式」链接格式。
+ * 只在全站唯一时接受，重名时要求写出更长的路径。
+ */
+function findMetaByBaseName(metas, target) {
+	if (target.includes("/")) {
+		return null;
+	}
+
+	const matches = metas.filter(
+		(meta) =>
+			path.basename(meta.filePath).replace(MARKDOWN_EXTENSION, "") === target,
+	);
+
+	if (matches.length === 1) {
+		return matches[0];
+	}
+	if (matches.length > 1) {
+		console.warn(
+			`[remark-wiki-link] "[[${target}]]" 匹配到多个同名文件，已跳过：${matches
+				.map((meta) => toContentPath(meta.filePath))
+				.join(", ")}。请改写为更长的路径。`,
+		);
+	}
+
+	return null;
+}
+
+function readPostMeta(contentPath) {
+	const metas = collectPostMetas();
+
+	// 1. frontmatter slug —— 它就是 Astro 的 entry.id，优先级最高
+	const bySlug = findMetaBySlug(metas, contentPath);
+	if (bySlug) {
+		return bySlug;
+	}
+
+	// 2. 文件路径精确匹配
 	const candidates = [
 		`${contentPath}.md`,
 		`${contentPath}.mdx`,
@@ -73,82 +199,14 @@ function readPostMeta(contentPath) {
 	];
 
 	for (const candidate of candidates) {
-		const filePath = path.join(POSTS_DIR, candidate);
-		let stats;
-		try {
-			stats = statSync(filePath);
-		} catch {
-			continue;
+		const meta = readMetaFile(path.join(POSTS_DIR, candidate));
+		if (meta) {
+			return meta;
 		}
-		if (!stats.isFile()) {
-			continue;
-		}
-
-		const cached = frontmatterCache.get(filePath);
-		if (cached && cached.mtimeMs === stats.mtimeMs) {
-			return cached.meta;
-		}
-
-		let data;
-		try {
-			data = matter(readFileSync(filePath, "utf8")).data ?? {};
-		} catch {
-			return null;
-		}
-
-		const meta = { filePath, data };
-		frontmatterCache.set(filePath, { mtimeMs: stats.mtimeMs, meta });
-		return meta;
 	}
 
-	return null;
-}
-
-function findMetaBySlug(targetSlug) {
-	const exts = [".md", ".mdx", ".markdown"];
-
-	function walk(dir) {
-		let entries;
-		try {
-			entries = fs.readdirSync(dir, { withFileTypes: true });
-		} catch {
-			return null;
-		}
-		for (const entry of entries) {
-			const fullPath = path.join(dir, entry.name);
-			if (entry.isDirectory()) {
-				const found = walk(fullPath);
-				if (found) return found;
-			} else if (exts.some((ext) => entry.name.endsWith(ext))) {
-				let stats;
-				try {
-					stats = statSync(fullPath);
-				} catch {
-					continue;
-				}
-
-				const cached = frontmatterCache.get(fullPath);
-				if (cached && cached.mtimeMs === stats.mtimeMs) {
-					if (cached.meta.data.slug === targetSlug) return cached.meta;
-					continue;
-				}
-
-				let data;
-				try {
-					data = matter(readFileSync(fullPath, "utf8")).data ?? {};
-				} catch {
-					continue;
-				}
-
-				const meta = { filePath: fullPath, data };
-				frontmatterCache.set(fullPath, { mtimeMs: stats.mtimeMs, meta });
-				if (data.slug === targetSlug) return meta;
-			}
-		}
-		return null;
-	}
-
-	return walk(POSTS_DIR);
+	// 3. 裸文件名兜底
+	return findMetaByBaseName(metas, contentPath);
 }
 
 function formatPublishedDate(value) {
@@ -178,7 +236,7 @@ function createRemoteCoverImg(src, extraProperties) {
 	);
 }
 
-function createCoverNode(meta, parsed, context) {
+function createCoverNode(meta, resolvedPath, context) {
 	const image =
 		typeof meta.data.image === "string" ? meta.data.image.trim() : "";
 
@@ -187,8 +245,9 @@ function createCoverNode(meta, parsed, context) {
 	}
 
 	// 随机封面图 API：复用 CoverImage 的 data-api-urls 客户端重试机制
+	// seed 与 PostCard / 文章页保持一致（Astro 的 entry.id 会去掉末尾的 /index）
 	if (image === "api") {
-		const seed = parsed.contentPath.replace(/\/index$/i, "");
+		const seed = resolvedPath.replace(/\/index$/i, "");
 		const firstUrl = processCoverImageSync(image, seed);
 		if (!firstUrl) {
 			return null;
@@ -273,6 +332,29 @@ function parseWikiLinkValue(value) {
 	return { destination, alias, contentPath, heading };
 }
 
+/**
+ * Obsidian 在「基于仓库根目录的绝对路径」模式下会自动把文件名填进别名位，
+ * 写出 `[[guide/foo|foo]]`——这不是作者指定的标题，只是让笔记里别显示整条路径。
+ * 因此别名与链接目标本身重合时视为噪声，回退到文章的 frontmatter title。
+ */
+function resolveAlias(parsed, meta) {
+	if (!parsed.alias) {
+		return "";
+	}
+
+	const noise = new Set([
+		parsed.destination,
+		parsed.contentPath,
+		path.basename(parsed.contentPath),
+	]);
+	if (meta) {
+		noise.add(toContentPath(meta.filePath));
+		noise.add(path.basename(meta.filePath).replace(MARKDOWN_EXTENSION, ""));
+	}
+
+	return noise.has(parsed.alias) ? "" : parsed.alias;
+}
+
 function createElement(tagName, properties, children) {
 	return {
 		type: "paragraph",
@@ -291,10 +373,12 @@ function createWikiLinkCard(parsed, context) {
 		return null;
 	}
 
+	const resolvedPath = toPostId(meta);
 	const title =
-		typeof meta.data.title === "string" && meta.data.title
+		resolveAlias(parsed, meta) ||
+		(typeof meta.data.title === "string" && meta.data.title
 			? meta.data.title
-			: parsed.contentPath;
+			: resolvedPath);
 	const encrypted =
 		typeof meta.data.password === "string" && meta.data.password.length > 0;
 	const description =
@@ -348,7 +432,7 @@ function createWikiLinkCard(parsed, context) {
 
 	const children = [createElement("div", { class: "wlc-info" }, info)];
 
-	const cover = createCoverNode(meta, parsed, context);
+	const cover = createCoverNode(meta, resolvedPath, context);
 	if (cover) {
 		children.push(createElement("div", { class: "wlc-cover" }, [cover]));
 	}
@@ -357,7 +441,7 @@ function createWikiLinkCard(parsed, context) {
 		"a",
 		{
 			class: "card-wiki-link no-styling",
-			href: createPostUrl(parsed.contentPath),
+			href: createPostUrl(resolvedPath),
 		},
 		children,
 	);
@@ -375,7 +459,7 @@ function createWikiLink(value) {
 			? meta.data.title
 			: "";
 
-	let text = parsed.alias;
+	let text = resolveAlias(parsed, meta);
 	if (!text) {
 		if (parsed.contentPath) {
 			const pageText =
@@ -386,7 +470,9 @@ function createWikiLink(value) {
 		}
 	}
 
-	const pageUrl = parsed.contentPath ? createPostUrl(parsed.contentPath) : "";
+	const pageUrl = parsed.contentPath
+		? createPostUrl(meta ? toPostId(meta) : parsed.contentPath)
+		: "";
 	const url = `${pageUrl}${parsed.heading ? `#${slug(parsed.heading)}` : ""}`;
 
 	return {
@@ -447,7 +533,7 @@ function tryCreateCardFromParagraph(node, context) {
 	}
 
 	const parsed = parseWikiLinkValue(match[1]);
-	if (!parsed || parsed.alias || parsed.heading || !parsed.contentPath) {
+	if (!parsed || parsed.heading || !parsed.contentPath) {
 		return null;
 	}
 
@@ -486,8 +572,20 @@ function transformNode(node, context) {
  *
  * - `[[slug]]` alone in a paragraph becomes a link card with the post's
  *   title, description, published date, category, tags and cover image.
+ * - `[[slug|alias]]` alone in a paragraph also becomes a link card, with
+ *   the alias replacing the post title.
  * - Inline `[[slug]]` becomes a normal link whose text is the post title.
- * - `[[slug|alias]]` and `[[slug#heading]]` always render as normal links.
+ * - `[[slug#heading]]` always renders as a normal link.
+ *
+ * An alias that merely repeats the link target (`[[guide/foo|foo]]`, which is
+ * what Obsidian inserts on its own) is treated as noise and ignored, so the
+ * post's real title still wins.
+ *
+ * Targets resolve in three steps: `frontmatter.slug`, then exact file path,
+ * then bare file name (for Obsidian's "shortest path when possible" format,
+ * accepted only when unique). URLs are always derived from the resolved
+ * post's `entry.id` rather than from the link text, so a bare file name
+ * still produces the post's real URL.
  */
 export function remarkWikiLink() {
 	return (tree, file) => {
