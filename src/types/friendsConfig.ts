@@ -15,4 +15,13 @@ export type FriendsPageConfig = {
 	showCustomContent?: boolean; // 是否显示自定义内容（friends.mdx）
 	showComment?: boolean; // 是否显示评论区，默认 true
 	randomizeSort?: boolean; // 是否打乱排序，如果为 true，将忽略 weight，随机排序
+	// 本站点信息（用于友链申请表单）
+	site?: {
+		name: string; // 站点名称
+		desc: string; // 站点描述
+		url: string; // 站点链接
+		avatar: string; // 头像链接
+	};
+	// 注意事项（申请表单下方展示）
+	notes?: Array<{ title: string; content: string }>;
 };

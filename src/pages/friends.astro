@@ -40,6 +40,15 @@ const allTags = [...new Set(items.flatMap((item) => item.tags || []))].sort();
 const title = friendsPageConfig.title || i18n(I18nKey.friends);
 const description =
 	friendsPageConfig.description || i18n(I18nKey.friendsDescription);
+
+// 站点信息和注意事项（带默认值）
+const siteInfo = friendsPageConfig.site ?? {
+	name: "",
+	desc: "",
+	url: "",
+	avatar: "",
+};
+const notes = friendsPageConfig.notes ?? [];
 ---
 
 <MainGridLayout title={title} description={description}>
@@ -49,14 +58,35 @@ const description =
     <div class="card-base z-10 px-9 py-6 relative w-full">
       <!-- 页面标题和描述 -->
       <div class="mb-4">
-        <div class="flex items-center gap-3 mb-3">
-          <div
-            class="h-8 w-8 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70"
-          >
-            <Icon is:inline name="material-symbols:group" class="text-[1.5rem]" />
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="h-8 w-8 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70 shrink-0"
+            >
+              <Icon is:inline name="material-symbols:group" class="text-[1.5rem]" />
+            </div>
+            <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100 truncate">
+              {title}
+            </div>
           </div>
-          <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-            {title}
+          {/* 右侧操作按钮：随机访问 + 自助申请 */}
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              id="random-friend-btn"
+              type="button"
+              class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-(--primary) text-white hover:opacity-90 transition-opacity text-sm font-medium cursor-pointer"
+            >
+              <Icon is:inline name="material-symbols:shuffle" class="text-base" />
+              <span class="hidden sm:inline">随机访问</span>
+            </button>
+            <button
+              id="apply-friend-btn"
+              type="button"
+              class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-(--line-divider) text-neutral-700 dark:text-neutral-300 hover:bg-(--btn-regular-bg-hover) hover:border-(--primary) transition-all text-sm font-medium cursor-pointer"
+            >
+              <Icon is:inline name="material-symbols:person-add" class="text-base" />
+              <span class="hidden sm:inline">申请友链</span>
+            </button>
           </div>
         </div>
         {
@@ -105,7 +135,18 @@ const description =
         )
       }
 
-      <div class="friends-grid my-4">
+      <!-- 动态友链加载状态 -->
+      <div id="friends-loading" class="hidden my-4">
+        <div class="flex items-center justify-center gap-2 text-(--content-meta)">
+          <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+          </svg>
+          <span>加载中...</span>
+        </div>
+      </div>
+
+      <div class="friends-grid my-4" id="friends-grid">
         {
           items.length === 0 && (
             <div class="col-span-full flex flex-col items-center justify-center py-12 text-neutral-400 dark:text-neutral-500">
@@ -177,6 +218,158 @@ const description =
       <div class="friends-empty hidden flex-col items-center justify-center py-12 text-neutral-400 dark:text-neutral-500">
         <Icon is:inline name="material-symbols:search-off-rounded" class="text-4xl mb-3" />
         <div class="text-sm">{i18n(I18nKey.searchNoResults)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <div class="card-base z-10 px-9 py-6 relative w-full mb-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* 左栏：本站在线信息 */}
+        <div class="rounded-2xl border border-(--line-divider) overflow-hidden flex flex-col">
+          <div class="p-5 sm:p-6 flex flex-col flex-1">
+            <div class="flex items-center gap-4 mb-5">
+              <div class="relative shrink-0">
+                <div class="w-16 h-16 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 ring-2 ring-(--primary)/20">
+                  <img
+                    src={siteInfo.avatar}
+                    alt={siteInfo.name}
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-(--primary) flex items-center justify-center shadow">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-neutral-900 dark:text-neutral-100">{siteInfo.name}</h3>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{siteInfo.desc}</p>
+              </div>
+            </div>
+
+            <div class="space-y-2.5 flex-1">
+              {[
+                { label: "站点名称", value: siteInfo.name },
+                { label: "站点描述", value: siteInfo.desc },
+                { label: "站点链接", value: siteInfo.url },
+                { label: "头像链接", value: siteInfo.avatar },
+              ].map((item) => (
+                <div class="flex items-center justify-between gap-2 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2">
+                  <div class="min-w-0">
+                    <p class="text-[0.65rem] text-neutral-400 dark:text-neutral-500 mb-0.5">{item.label}</p>
+                    <p class="text-xs font-medium truncate text-neutral-900 dark:text-neutral-100">{item.value}</p>
+                  </div>
+                  <button onclick={`navigator.clipboard.writeText('${item.value.replace(/'/g, "\\'")}');this.querySelectorAll('svg')[0].classList.add('hidden');this.querySelectorAll('svg')[1].classList.remove('hidden');setTimeout(()=>{this.querySelectorAll('svg')[0].classList.remove('hidden');this.querySelectorAll('svg')[1].classList.add('hidden')},1500)`} class="shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/10 dark:bg-white/10 text-neutral-900 dark:text-neutral-100 hover:opacity-80 transition-opacity cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    <svg class="w-3.5 h-3.5 hidden text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 右栏：申请流程 */}
+        <div class="rounded-2xl border border-(--line-divider) overflow-hidden flex flex-col">
+          <div class="p-5 sm:p-6 flex flex-col flex-1">
+            <h3 class="text-lg font-bold mb-5 flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
+              <span class="w-7 h-7 rounded-lg bg-(--primary)/10 flex items-center justify-center text-(--primary)">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11 17H7q-2.075 0-3.537-1.463T2 12t1.463-3.537T7 7h4v2H7q-1.25 0-2.125.875T4 12t.875 2.125T7 15h4zm-3-4v-2h8v2zm5 4v-2h4q1.25 0 2.125-.875T20 12t-.875-2.125T17 9h-4V7h4q2.075 0 3.538 1.463T22 12t-1.463 3.538T17 17z"/></svg>
+              </span>
+              申请友链
+            </h3>
+
+            <div id="friend-apply-steps" class="space-y-0 flex-1">
+              <div class="flex gap-3.5">
+                <div class="flex flex-col items-center">
+                  <div class="w-7 h-7 rounded-full bg-(--primary) text-white text-xs font-bold flex items-center justify-center shrink-0">1</div>
+                  <div class="w-0.5 flex-1 bg-(--line-divider) my-1.5"></div>
+                </div>
+                <div class="pb-4">
+                  <p class="font-semibold text-sm mb-1 text-neutral-900 dark:text-neutral-100">添加本站友链</p>
+                  <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">请先在您的网站友链页面添加本站信息</p>
+                </div>
+              </div>
+
+              <div class="flex gap-3.5">
+                <div class="flex flex-col items-center">
+                  <div class="w-7 h-7 rounded-full bg-(--primary) text-white text-xs font-bold flex items-center justify-center shrink-0">2</div>
+                  <div class="w-0.5 flex-1 bg-(--line-divider) my-1.5"></div>
+                </div>
+                <div class="pb-4 flex-1 min-w-0">
+                  <p class="font-semibold text-sm mb-1 text-neutral-900 dark:text-neutral-100">填写申请信息：</p>
+                  {/* 申请表单：提交本站信息到后端，状态为 pending，等待审核 */}
+                  <form id="friend-link-form" class="space-y-3">
+                    <div>
+                      <label class="block text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-1">站点名称 <span class="text-red-500">*</span></label>
+                      <input type="text" name="title" required placeholder="您的站点名称" class="w-full rounded-lg bg-black/5 dark:bg-white/5 border border-(--line-divider) px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-1">站点描述 <span class="text-red-500">*</span></label>
+                      <input type="text" name="desc" required placeholder="您的站点描述" class="w-full rounded-lg bg-black/5 dark:bg-white/5 border border-(--line-divider) px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-1">站点链接 <span class="text-red-500">*</span></label>
+                      <input type="url" name="siteUrl" required placeholder="https://example.com" class="w-full rounded-lg bg-black/5 dark:bg-white/5 border border-(--line-divider) px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-1">头像链接 <span class="text-red-500">*</span></label>
+                      <input type="url" name="imgUrl" required placeholder="https://example.com/avatar.png" class="w-full rounded-lg bg-black/5 dark:bg-white/5 border border-(--line-divider) px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-1">联系邮箱（可选）</label>
+                      <input type="email" name="email" placeholder="方便站长必要时联系" class="w-full rounded-lg bg-black/5 dark:bg-white/5 border border-(--line-divider) px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-1">留言（可选）</label>
+                      <textarea name="message" rows="2" placeholder="例如已添加本站友链的页面地址" class="w-full rounded-lg bg-black/5 dark:bg-white/5 border border-(--line-divider) px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-colors resize-none"></textarea>
+                    </div>
+                    <div class="pt-1">
+                      <button type="button" id="friend-submit-btn" class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-(--primary) text-white hover:opacity-90 transition-opacity text-sm font-medium cursor-pointer w-full disabled:opacity-50 disabled:pointer-events-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        <span>提交申请</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="flex gap-3.5">
+                <div class="flex flex-col items-center">
+                  <div class="w-7 h-7 rounded-full bg-(--primary) text-white text-xs font-bold flex items-center justify-center shrink-0">3</div>
+                </div>
+                <div>
+                  <p class="font-semibold text-sm mb-1 text-neutral-900 dark:text-neutral-100">等待审核</p>
+                  <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">确认信息无误后会尽快添加您的友链</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="friend-form-success" class="hidden flex-col items-center justify-center gap-3 py-8 text-center">
+              <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <div>
+                <p class="font-semibold text-green-600 dark:text-green-400">申请已提交！</p>
+                <p class="text-xs text-green-500/80 dark:text-green-400/80 mt-1">审核通过后会尽快添加您的友链，请耐心等待</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* 底部注意事项 */}
+    <div class="rounded-2xl border border-(--line-divider) overflow-hidden card-base z-10 px-9 py-6 relative w-full">
+      <h3 class="text-base font-bold mb-4 flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
+        <svg class="w-4.5 h-4.5 text-(--primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        注意事项
+      </h3>
+      <div class="space-y-3 text-sm text-neutral-600 dark:text-neutral-400">
+        {notes.map((item) => (
+          <div class="flex items-baseline gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-(--primary) shrink-0 translate-y-[-2px]"></span>
+            <p><strong class="text-neutral-800 dark:text-neutral-200">{item.title}</strong>：{item.content}</p>
+          </div>
+        ))}
       </div>
     </div>
   </div>
@@ -279,11 +472,241 @@ const description =
     }
   </script>
 
+  <script is:inline>
+    // 申请友链表单逻辑
+    function initFriendForm() {
+      // 获取表单、提交按钮、成功提示、步骤容器
+      var form = document.getElementById('friend-link-form');
+      var submitBtn = document.getElementById('friend-submit-btn');
+      var successEl = document.getElementById('friend-form-success');
+      var stepsEl = document.getElementById('friend-apply-steps');
+
+      // 防止重复初始化（swup 切换页面时会再次触发）
+      if (!form || !submitBtn || submitBtn.dataset.initialized) return;
+
+      // 防重复提交标记
+      var isSubmitting = false;
+
+      submitBtn.dataset.initialized = 'true';
+      submitBtn.addEventListener('click', async function() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+
+        // 读取表单字段并去掉首尾空格
+        var title = form.querySelector('input[name="title"]').value.trim();
+        var desc = form.querySelector('input[name="desc"]').value.trim();
+        var siteUrl = form.querySelector('input[name="siteUrl"]').value.trim();
+        var imgUrl = form.querySelector('input[name="imgUrl"]').value.trim();
+        var email = form.querySelector('input[name="email"]').value.trim();
+        var message = form.querySelector('textarea[name="message"]').value.trim();
+
+        // 校验：任一必填项为空则弹 toast 并返回
+        if (!title || !desc || !siteUrl || !imgUrl) {
+          isSubmitting = false;
+          var toast = document.createElement('div');
+          toast.className = 'cc-toast error';
+          toast.textContent = '请填写完整信息';
+          document.body.appendChild(toast);
+          setTimeout(function() { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
+          return;
+        }
+
+        // 进入提交状态：禁用按钮、文案改为"提交中..."
+        submitBtn.disabled = true;
+        submitBtn.querySelector('span').textContent = '提交中...';
+
+        try {
+          // 向后端提交申请，状态默认为 pending
+          var res = await fetch('https://api.seasir.top/api/friends', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, desc: desc, siteUrl: siteUrl, imgUrl: imgUrl, email: email, message: message })
+          });
+
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.message || '提交失败');
+          if (!data.success) throw new Error(data.message || '提交失败');
+          // 提交成功：隐藏步骤、显示成功提示
+          if (stepsEl) stepsEl.style.display = 'none';
+          successEl.classList.remove('hidden');
+          successEl.style.display = 'flex';
+        } catch (err) {
+          // 网络/后端错误：转换文案并弹 toast
+          var msg = err.message === 'Failed to fetch' ? '网络连接失败，请检查网络' : (err.message || '提交失败，请稍后重试');
+          var toast = document.createElement('div');
+          toast.className = 'cc-toast error';
+          toast.textContent = msg;
+          document.body.appendChild(toast);
+          setTimeout(function() { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
+        } finally {
+          // 恢复按钮状态
+          isSubmitting = false;
+          submitBtn.disabled = false;
+          submitBtn.querySelector('span').textContent = '提交申请';
+        }
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initFriendForm);
+    } else {
+      initFriendForm();
+    }
+
+    document.addEventListener('swup:contentReplaced', initFriendForm);
+  </script>
+
+  <script is:inline>
+    function renderFriendCard(item) {
+      var tagsHtml = '';
+      if (item.tags && item.tags.length > 0) {
+        tagsHtml = '<div class="flex flex-wrap gap-1 mt-1">' +
+          item.tags.slice(0, 3).map(function(tag) {
+            return '<span class="text-[0.65rem] px-1.5 py-0.5 rounded bg-(--btn-regular-bg-hover) text-(--content-meta) transition-colors duration-300">' + tag + '</span>';
+          }).join('') +
+        '</div>';
+      }
+      return '<a href="' + item.siteUrl + '" target="_blank" rel="noopener noreferrer" data-tags="' + (item.tags ? item.tags.join(',') : '') + '" class="friend-card group flex items-center gap-3 p-2.5 rounded-xl border border-(--line-divider) hover:border-(--primary) hover:bg-(--card-bg) transition-all duration-300 hover:shadow-lg relative overflow-hidden animate-fade-in-up">' +
+        '<div class="absolute inset-0 bg-(--primary) opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"></div>' +
+        '<div class="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">' +
+          '<img src="' + item.imgUrl + '" alt="' + item.title + '" class="w-full h-full object-cover" loading="lazy" />' +
+        '</div>' +
+        '<div class="grow min-w-0 flex flex-col justify-center gap-0.5">' +
+          '<div class="flex items-center justify-between">' +
+            '<div class="font-bold text-base text-(--btn-content) group-hover:text-(--primary) transition-colors truncate pr-4">' + item.title + '</div>' +
+            '<svg class="text-(--primary) text-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"/></svg>' +
+          '</div>' +
+          '<div class="text-sm text-(--content-meta) line-clamp-1" title="' + item.desc + '">' + item.desc + '</div>' +
+          tagsHtml +
+        '</div>' +
+      '</a>';
+    }
+
+    function loadDynamicFriends() {
+      var loading = document.getElementById('friends-loading');
+      var grid = document.getElementById('friends-grid');
+      if (!grid) return;
+
+      if (loading) loading.classList.remove('hidden');
+
+      fetch('https://api.seasir.top/api/friends')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          var friends = data.items;
+          if (Array.isArray(friends) && friends.length > 0) {
+            var html = friends.map(function(item) {
+              return renderFriendCard(item);
+            }).join('');
+            grid.insertAdjacentHTML('beforeend', html);
+          }
+        })
+        .catch(function(err) {
+          console.error('加载动态友链失败:', err);
+        })
+        .finally(function() {
+          if (loading) loading.classList.add('hidden');
+        });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadDynamicFriends);
+    } else {
+      loadDynamicFriends();
+    }
+
+    document.addEventListener('swup:contentReplaced', loadDynamicFriends);
+  </script>
+
+  <script is:inline>
+    // 顶部按钮逻辑：随机访问友链 + 滚动到申请表单
+    function initFriendsHeaderButtons() {
+      var randomBtn = document.getElementById('random-friend-btn');
+      var applyBtn = document.getElementById('apply-friend-btn');
+
+      function showToast(msg) {
+        var toast = document.createElement('div');
+        toast.className = 'cc-toast error';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(function() { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
+      }
+
+      // 随机访问：从当前可见的友链卡片中随机选一个，在新标签页打开
+      if (randomBtn && !randomBtn.dataset.initialized) {
+        randomBtn.dataset.initialized = 'true';
+        randomBtn.addEventListener('click', function() {
+          var cards = document.querySelectorAll('#friends-grid .friend-card');
+          var validCards = [];
+          cards.forEach(function(card) {
+            if (card.href && card.style.display !== 'none') {
+              validCards.push(card);
+            }
+          });
+
+          if (validCards.length === 0) {
+            showToast('暂无可访问的友链');
+            return;
+          }
+
+          var randomCard = validCards[Math.floor(Math.random() * validCards.length)];
+          window.open(randomCard.href, '_blank', 'noopener,noreferrer');
+        });
+      }
+
+      // 申请友链：平滑滚动到申请表单，并短暂高亮提示
+      if (applyBtn && !applyBtn.dataset.initialized) {
+        applyBtn.dataset.initialized = 'true';
+        applyBtn.addEventListener('click', function() {
+          var target = document.getElementById('friend-apply-steps') || document.getElementById('friend-link-form');
+          if (!target) return;
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target.classList.add('friend-apply-highlight');
+          setTimeout(function() { target.classList.remove('friend-apply-highlight'); }, 1800);
+        });
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initFriendsHeaderButtons);
+    } else {
+      initFriendsHeaderButtons();
+    }
+    document.addEventListener('swup:contentReplaced', initFriendsHeaderButtons);
+  </script>
+
   <style is:global>
     .friends-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 0.75rem;
+    }
+
+    /* 友链申请表单的轻提示 */
+    .cc-toast {
+      position: fixed;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      padding: 0.7rem 1.2rem;
+      border-radius: 0.75rem;
+      font-size: 0.85rem;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.8);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .cc-toast.error {
+      background: rgba(220, 38, 38, 0.95);
+    }
+
+    /* 申请友链按钮点击后的高亮动画 */
+    .friend-apply-highlight {
+      animation: friend-apply-fade 1.8s ease-out;
+      border-radius: 1rem;
+    }
+    @keyframes friend-apply-fade {
+      0% { outline: 2px solid var(--primary); outline-offset: 8px; }
+      100% { outline: 2px solid transparent; outline-offset: 12px; }
     }
   </style>
 </MainGridLayout>

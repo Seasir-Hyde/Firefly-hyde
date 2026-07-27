@@ -41,3 +41,4 @@ package/
 .codex*
 .claude
 .mimocode
+scripts/hyde-Supabase-friends.js

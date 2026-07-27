@@ -11,13 +11,41 @@ export const friendsPageConfig: FriendsPageConfig = {
 	description: "",
 
 	// 是否显示底部自定义内容（friends.mdx 中的内容）
-	showCustomContent: true,
+	showCustomContent: false, 	// 本站信息、申请表单、注意事项已内联，故关闭
 
 	// 是否显示评论区，需要先在commentConfig.ts启用评论系统
-	showComment: true,
+	showComment: false,
 
 	// 是否开启随机排序配置，如果开启，就会忽略权重，构建时进行一次随机排序
 	randomizeSort: false,
+
+	// 本站点信息（用于友链申请表单，请改为你自己的站点信息）
+	site: {
+		name: "Hyde Blog",
+		desc: "人心中的成见是一座大山",
+		url: "https://seasir.top",
+		avatar: "https://seasir.top/assets/avatar.avif",
+	},
+
+	// 注意事项
+	notes: [
+		{
+			title: "互换原则",
+			content: "请先将本站添加到您的友链页面，确认后会添加您的友链",
+		},
+		{
+			title: "链接维护",
+			content: "友链网站长期无法访问或内容违规，将会被移除",
+		},
+		{
+			title: "内容要求",
+			content: "内容积极向上，不含有任何含色情/反动/暴力等违法违规内容",
+		},
+		{
+			title: "站点要求",
+			content: "支持 HTTPS，以原创内容为主，能够正常访问且有持续更新",
+		},
+	],
 };
 
 // 友链配置
