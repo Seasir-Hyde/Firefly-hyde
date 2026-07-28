@@ -50,9 +50,9 @@ main:
           script: echo -n $(date "+%Y-%m-%d %H:%M")
           exports:
             info: CUSTOM_ENV_DATE_INFO
-        - name: 🏠 设置淘宝源
+        - name: 🏠 设置npm官方源
           script: |
-            npm config set registry https://registry.npmmirror.com
+            npm config set registry https://registry.npmjs.org
         - name: 🖨️ 打印环境
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
