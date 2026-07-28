@@ -68,16 +68,7 @@ main:
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
             npm install -g pnpm && node -v && npm -v && yarn -v && pnpm -v
-        - name: 💡 安装依赖
-          script: |
-            rm -rf node_modules
-
-            pnpm store prune || true
-
-            # 删除 lock 中 tarball 地址
-            sed -i '/tarball:/d' pnpm-lock.yaml || true
-
-            pnpm install --no-frozen-lockfile
+        - name: 💡 安装依赖 
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
