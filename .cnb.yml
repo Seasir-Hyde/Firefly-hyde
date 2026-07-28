@@ -50,19 +50,6 @@ main:
           script: echo -n $(date "+%Y-%m-%d %H:%M")
           exports:
             info: CUSTOM_ENV_DATE_INFO
-        - name: 🏠 配置双源
-          script: |
-            pnpm config delete registry || true
-            pnpm config delete @iconify-json:registry || true
-
-            # 默认镜像
-            pnpm config set registry https://registry.npmmirror.com
-
-            # iconify 强制官方源
-            pnpm config set @iconify-json:registry https://registry.npmjs.org
-
-            echo "registry=$(pnpm config get registry)"
-            echo "iconify=$(pnpm config get @iconify-json:registry)"
         - name: 🖨️ 打印环境
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
