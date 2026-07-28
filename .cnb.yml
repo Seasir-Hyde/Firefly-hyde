@@ -73,7 +73,7 @@ main:
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
             pnpm install
-        - name: 📦️ 编译项目
+        - name: 📦️ 编译项目1
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
