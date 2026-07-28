@@ -45,6 +45,10 @@ export const friendsPageConfig: FriendsPageConfig = {
 			title: "站点要求",
 			content: "支持 HTTPS，以原创内容为主，能够正常访问且有持续更新",
 		},
+		{
+			title: "通过审核",
+			content: "工作日 48 小时内，节假日顺延。",
+		},
 	],
 };
 

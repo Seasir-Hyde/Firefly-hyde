@@ -49,6 +49,12 @@ const siteInfo = friendsPageConfig.site ?? {
 	avatar: "",
 };
 const notes = friendsPageConfig.notes ?? [];
+
+const escapedSiteName = (siteInfo.name || "").replace(/'/g, "\\'");
+const escapedSiteDesc = (siteInfo.desc || "").replace(/'/g, "\\'");
+const escapedSiteUrl = (siteInfo.url || "").replace(/'/g, "\\'");
+const escapedSiteAvatar = (siteInfo.avatar || "").replace(/'/g, "\\'");
+const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedSiteName}\\n站点描述：${escapedSiteDesc}\\n站点链接：${escapedSiteUrl}\\n头像链接：${escapedSiteAvatar}');this.querySelectorAll('svg')[0].classList.add('hidden');this.querySelectorAll('svg')[1].classList.remove('hidden');setTimeout(()=>{this.querySelectorAll('svg')[0].classList.remove('hidden');this.querySelectorAll('svg')[1].classList.add('hidden')},1500)`;
 ---
 
 <MainGridLayout title={title} description={description}>
@@ -74,17 +80,29 @@ const notes = friendsPageConfig.notes ?? [];
             <button
               id="random-friend-btn"
               type="button"
-              class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-(--primary) text-white hover:opacity-90 transition-opacity text-sm font-medium cursor-pointer"
+              class="friend-action-btn relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg dark:text-white border border-(--primary) hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
             >
-              <Icon is:inline name="material-symbols:shuffle" class="text-base" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="1em"
+                height="1em"
+                viewBox="0 0 512 512"
+                class="text-base"
+              >
+                <!-- Icon from File Icons by John Gardner - https://github.com/file-icons/icons/blob/master/LICENSE.md -->
+                <path
+                  fill="currentColor"
+                  d="M470.435 45.423L16.827 221.249c-18.254 8.188-24.428 24.585-4.412 33.484l116.37 37.173l281.368-174.79c15.363-10.973 31.091-8.047 17.557 4.024L186.053 341.075l-7.591 93.076c7.031 14.371 19.905 14.438 28.117 7.295l66.858-63.589l114.505 86.187c26.595 15.826 41.066 5.613 46.788-23.394l75.105-357.47c7.798-35.705-5.5-51.437-39.4-37.757"
+                />
+              </svg>
               <span class="hidden sm:inline">随机访问</span>
             </button>
             <button
               id="apply-friend-btn"
               type="button"
-              class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-(--line-divider) text-neutral-700 dark:text-neutral-300 hover:bg-(--btn-regular-bg-hover) hover:border-(--primary) transition-all text-sm font-medium cursor-pointer"
+              class="friend-action-btn relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-(--primary) text-white dark:text-white hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
             >
-              <Icon is:inline name="material-symbols:person-add" class="text-base" />
+              <svg data-v-2d63c78e="" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10543" width="18" height="18"><path data-v-2d63c78e="" d="M535.630769 821.169231l-41.353846-5.907693s-27.569231-5.907692-41.353846-11.815384c-7.876923-1.969231-17.723077 0-23.630769 5.907692l-9.846154 9.846154c-57.107692 57.107692-149.661538 63.015385-208.738462 11.815385-66.953846-57.107692-68.923077-159.507692-7.876923-220.553847l149.661539-149.661538c19.692308-19.692308 43.323077-31.507692 66.953846-39.384615 31.507692-7.876923 64.984615-5.907692 94.523077 5.907692 17.723077 7.876923 35.446154 17.723077 51.2 33.476923 7.876923 7.876923 13.784615 15.753846 19.692307 25.6 7.876923 13.784615 25.6 15.753846 35.446154 3.938462l55.138462-55.138462c7.876923-7.876923 7.876923-19.692308 1.969231-29.538462-7.876923-11.815385-17.723077-21.661538-27.569231-31.507692-13.784615-13.784615-29.538462-27.569231-47.261539-37.415384-27.569231-17.723077-59.076923-29.538462-92.553846-35.446154-61.046154-11.815385-128-1.969231-183.138461 27.56923-21.661538 11.815385-43.323077 27.569231-61.046154 45.292308l-143.753846 143.753846C17.723077 622.276923 9.846154 791.630769 110.276923 897.969231c104.369231 114.215385 281.6 116.184615 389.907692 7.876923l49.23077-49.230769c13.784615-9.846154 3.938462-33.476923-13.784616-35.446154zM897.969231 114.215385c-108.307692-100.430769-277.661538-92.553846-380.061539 11.815384L472.615385 169.353846c-13.784615 13.784615-3.938462 37.415385 13.784615 39.384616 27.569231 1.969231 55.138462 7.876923 82.707692 15.753846 7.876923 1.969231 17.723077 0 23.63077-5.907693l9.846153-9.846153c57.107692-57.107692 149.661538-63.015385 208.738462-11.815385 66.953846 57.107692 68.923077 159.507692 7.876923 220.553846L669.538462 567.138462c-19.692308 19.692308-43.323077 31.507692-66.953847 39.384615-31.507692 7.876923-64.984615 5.907692-94.523077-5.907692-17.723077-7.876923-35.446154-17.723077-51.2-33.476923-7.876923-7.876923-13.784615-15.753846-19.692307-25.6-7.876923-13.784615-25.6-15.753846-35.446154-3.938462l-55.138462 55.138462c-7.876923 7.876923-7.876923 19.692308-1.96923 29.538461 7.876923 11.815385 17.723077 21.661538 27.56923 31.507692 13.784615 13.784615 31.507692 27.569231 47.261539 37.415385 27.569231 17.723077 59.076923 29.538462 90.584615 35.446154 61.046154 11.815385 128 1.969231 183.138462-27.569231 21.661538-11.815385 43.323077-27.569231 61.046154-45.292308l149.661538-149.661538c110.276923-108.307692 106.338462-285.538462-5.907692-389.907692z" fill="currentColor" p-id="10544"></path></svg>
               <span class="hidden sm:inline">申请友链</span>
             </button>
           </div>
@@ -247,6 +265,16 @@ const notes = friendsPageConfig.notes ?? [];
               </div>
             </div>
 
+            {/* 一键复制所有信息按钮 */}
+            <button
+              onclick={copyAllOnClick}
+              class="w-full flex items-center justify-center gap-2 rounded-lg bg-(--primary) text-white px-4 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer mb-3"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <svg class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>一键复制所有信息</span>
+            </button>
+
             <div class="space-y-2.5 flex-1">
               {[
                 { label: "站点名称", value: siteInfo.name },
@@ -265,7 +293,25 @@ const notes = friendsPageConfig.notes ?? [];
                   </button>
                 </div>
               ))}
+
+             {/* 底部注意事项 */}
+    <div class="rounded-2xl overflow-hidden  z-10 px-0 py-6 relative w-full">
+      <h3 class="text-base font-bold mb-4 flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
+        <svg class="w-4.5 h-4.5 text-(--primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        注意事项
+      </h3>
+      <div class="space-y-3 text-sm text-neutral-600 dark:text-neutral-400">
+        {notes.map((item) => (
+          <div class="flex items-baseline gap-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-(--primary) shrink-0 translate-y-[-2px]"></span>
+            <p><strong class="text-neutral-800 dark:text-neutral-200">{item.title}</strong>：{item.content}</p>
+          </div>
+        ))}
+      </div>
+    </div>
             </div>
+
+            
           </div>
         </div>
 
@@ -357,21 +403,7 @@ const notes = friendsPageConfig.notes ?? [];
       </div>
     </div>
 
-    {/* 底部注意事项 */}
-    <div class="rounded-2xl border border-(--line-divider) overflow-hidden card-base z-10 px-9 py-6 relative w-full">
-      <h3 class="text-base font-bold mb-4 flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
-        <svg class="w-4.5 h-4.5 text-(--primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        注意事项
-      </h3>
-      <div class="space-y-3 text-sm text-neutral-600 dark:text-neutral-400">
-        {notes.map((item) => (
-          <div class="flex items-baseline gap-2.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-(--primary) shrink-0 translate-y-[-2px]"></span>
-            <p><strong class="text-neutral-800 dark:text-neutral-200">{item.title}</strong>：{item.content}</p>
-          </div>
-        ))}
-      </div>
-    </div>
+    
   </div>
 
   {friendsPageConfig.showCustomContent !== false && (
@@ -707,6 +739,46 @@ const notes = friendsPageConfig.notes ?? [];
     @keyframes friend-apply-fade {
       0% { outline: 2px solid var(--primary); outline-offset: 8px; }
       100% { outline: 2px solid transparent; outline-offset: 12px; }
+    }
+
+    /* 按钮闪光效果 */
+    .friend-action-btn {
+      overflow: hidden;
+    }
+    .friend-action-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent);
+      transition: left 0.6s ease;
+      pointer-events: none;
+    }
+    .friend-action-btn:hover::before {
+      left: 100%;
+    }
+
+    /* 按钮内发光效果 */
+    .friend-action-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.15);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .friend-action-btn:hover::after {
+      opacity: 1;
     }
   </style>
 </MainGridLayout>
