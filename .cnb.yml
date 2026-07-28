@@ -50,15 +50,34 @@ main:
           script: echo -n $(date "+%Y-%m-%d %H:%M")
           exports:
             info: CUSTOM_ENV_DATE_INFO
-        - name: 🏠 设置腾讯源
+        - name: 🏠 配置双源
           script: |
-            npm config set registry http://mirrors.tencent.com/npm/
+            pnpm config delete registry || true
+            pnpm config delete @iconify-json:registry || true
+
+            # 默认镜像
+            pnpm config set registry https://registry.npmmirror.com
+
+            # iconify 强制官方源
+            pnpm config set @iconify-json:registry https://registry.npmjs.org
+
+            echo "registry=$(pnpm config get registry)"
+            echo "iconify=$(pnpm config get @iconify-json:registry)"
         - name: 🖨️ 打印环境
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
             npm install -g pnpm && node -v && npm -v && yarn -v && pnpm -v
-        - name: 💡 安装依赖 
+        - name: 💡 安装依赖
+          script: |
+            rm -rf node_modules
+
+            pnpm store prune || true
+
+            # 删除 lock 中 tarball 地址
+            sed -i '/tarball:/d' pnpm-lock.yaml || true
+
+            pnpm install --no-frozen-lockfile
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
