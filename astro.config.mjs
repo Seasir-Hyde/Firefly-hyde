@@ -224,6 +224,7 @@ export default defineConfig({
 				},
 			},
 			frames: {
+				// 保留原生复制按钮，外观由 src/styles/expressive-code.css 覆盖成主题风格
 				showCopyToClipboardButton: true,
 			},
 		}),
