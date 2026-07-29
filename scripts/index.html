@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyde友链审核管理后台</title>
+<link rel="icon" href="https://seasir.top/favicon/favicon.ico" type="image/x-icon" />
+<link rel="preconnect" href="https://unpkg.com" crossorigin />
+<link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="//unpkg.com/element-plus/theme-chalk/dark/css-vars.css" media="print" onload="this.media='all'" />
+<script defer src="//unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script defer src="//unpkg.com/element-plus"></script>
+<script defer src="//unpkg.com/element-plus/dist/locale/zh-cn.min.js"></script>
+<style>
+* {margin:0;padding:0;box-sizing:border-box;}
+#app {padding:24px;margin:0 auto;}
+.push-tip {margin-bottom:16px;padding:12px 16px;border-radius:8px;background:var(--el-fill-color-lighter);}
+.header-bar {display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.header-theme-btn {padding:6px;cursor:pointer;color:var(--el-text-color-primary);border-radius:6px;border:1px solid var(--el-border-color);background:transparent;display:flex;align-items:center;justify-content:center;}
+.header-theme-btn:hover {background:var(--el-fill-color-lighter);}
+.filter-wrap {display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.search-input {flex:1;min-width:280px;}
+.batch-bar {display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:6px;flex-wrap:wrap;}
+.table-box {border-radius:8px;overflow:hidden;border:1px solid var(--el-border-color);}
+.form-dialog .el-form-item {margin-bottom:18px;}
+.avatar-img {width:40px;height:40px;border-radius:6px;object-fit:cover;}
+.header-title {font-size:22px;font-weight:600;}
+.header-actions {display:flex;gap:10px;align-items:center;}
+.filter-select {width:100px;}
+.table-link {color:var(--el-color-primary);word-break:break-all;}
+.theme-option-item {padding:10px 16px;cursor:pointer;border-radius:6px;}
+.theme-option-item:hover {background:var(--el-fill-color-lighter);}
+.theme-option-item.active {background:var(--el-color-primary-light-3);color:var(--el-color-primary);}
+.tags-ellipsis {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.op-cell {display:flex;align-items:center;justify-content:center;height:100%;gap:4px;flex-wrap:nowrap;}
+.pagination-wrap {display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-right:8px;gap:16px;}
+.el-button--small {
+    border-radius: calc(var(--el-border-radius-base) - 1px);
+    padding: 5px 4px;
+    font-size: 12px;
+}
+@media (max-width: 768px) {
+  /* 筛选区保持单行，搜索框自适应，下拉框固定窄宽 */
+  .filter-wrap {flex-wrap:nowrap;}
+  .filter-wrap .search-input {flex:1;min-width:0;}
+  .pagination-wrap {justify-content:center;flex-wrap:wrap;}
+  .el-pagination {flex-wrap:wrap;justify-content:center;}
+  .el-pagination__jump {display: none;}
+  /* 弹窗宽度铺满屏幕，左右留边距 */
+  .el-dialog {
+    width: calc(100% - 24px);
+    margin: 0 auto ;
+    top: 10vh ;
+    transform: translateY(0);
+  }
+  /* 弹窗内边距缩小 */
+  .el-dialog__body {
+    padding: 12px 16px;
+  }
+  .el-dialog__header {
+    padding: 12px 16px ;
+  }
+  .el-dialog__footer {
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  /* 表单标签取消固定宽度，文字居上 */
+  .form-dialog .el-form-item__label {
+    width: auto;
+    text-align: left;
+    padding-bottom: 6px;
+    display: block;
+  }
+  /* 表单项间距缩小 */
+  .form-dialog .el-form-item {
+    margin-bottom: 14px;
+  }
+  /* 输入框、下拉框100%宽度 */
+  .form-dialog .el-input,
+  .form-dialog .el-select {
+    width: 100%;
+  }
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="push-tip">${pushStatusText}</div>
+  <div class="header-bar">
+    <h1 class="header-title">友链审核管理</h1>
+    <div class="header-actions">
+      <el-button type="success" @click="openAddDialog">新增友链</el-button>
+      <button class="header-theme-btn" @click="themeDialogVisible = true">
+        ${themeSvg}
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-wrap">
+    <el-input class="search-input" v-model="searchKeyword" placeholder="搜索标题/描述/链接/标签/IP/邮箱/权重" prefix-icon="Search"></el-input>
+    <el-select v-model="filterStatus" placeholder="筛选状态" class="filter-select">
+      <el-option label="全部状态" value=""></el-option>
+      <el-option label="待审核" value="pending"></el-option>
+      <el-option label="已通过" value="approved"></el-option>
+      <el-option label="已拒绝" value="rejected"></el-option>
+    </el-select>
+  </div>
+
+  <div class="table-box">
+    <el-table :data="pagedTableData" border stripe v-loading="loading" @selection-change="handleSelectionChange" empty-text="暂无友链数据">
+      <el-table-column type="selection" width="40"></el-table-column>
+      <el-table-column label="头像" width="85">
+        <template #default="scope">
+          <img v-if="scope.row.imgUrl" class="avatar-img" :src="scope.row.imgUrl" @error="$event.target.style.display='none'" />
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" width="110">
+        <template #default="scope">
+          <el-tag :type="statusTypeMap[scope.row.status] || 'info'" size="small">
+            {{ statusMap[scope.row.status] }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="站点名称" prop="title" min-width="130"></el-table-column>
+    
+      <el-table-column label="描述" prop="desc" min-width="200"></el-table-column>
+      <el-table-column label="站点链接" prop="siteUrl" min-width="240">
+        <template #default="scope">
+          <a :href="scope.row.siteUrl" target="_blank" class="table-link">{{ scope.row.siteUrl }}</a>
+        </template>
+      </el-table-column>
+      <el-table-column label="标签" min-width="160">
+        <template #default="scope">
+          <span class="tags-ellipsis" v-if="scope.row.tags && scope.row.tags.length > 0">{{ scope.row.tags.join(", ") }}</span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="权重" prop="weight" width="80" align="center">
+        <template #default="scope">
+          <span v-if="normalizeWeight(scope.row.weight) !== null">{{ normalizeWeight(scope.row.weight) }}</span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="IP" prop="ip" width="150"></el-table-column>
+      <el-table-column label="邮箱" prop="email" min-width="200"></el-table-column>
+      <el-table-column label="留言" prop="message" min-width="200"></el-table-column>
+      <el-table-column label="申请时间" prop="createdAt" width="170">
+        <template #default="scope">{{ formatTime(scope.row.createdAt) }}</template>
+      </el-table-column>
+      <el-table-column label="更新时间" prop="updatedAt" width="170">
+        <template #default="scope">{{ formatTime(scope.row.updatedAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="100" fixed="right">
+        <template #default="scope">
+          <div class="op-cell">
+            <!-- 永久显示通过按钮 -->
+            <el-button text type="success" size="small" @click="singlePass(scope.row.id)">通过</el-button>
+
+            <el-dropdown @command="(cmd) => handleRowCommand(cmd, scope.row)">
+              <el-button text size="small">更多</el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="edit">编辑</el-dropdown-item>
+                  <el-dropdown-item command="reject">拒绝</el-dropdown-item>
+                  <el-dropdown-item command="delete">删除</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
+
+  <div class="pagination-wrap">
+    <div class="batch-bar">
+      <span>已选中 {{ selectedIds.length }} 条</span>
+      <el-dropdown @command="handleBatchCommand" :disabled="selectedIds.length === 0">
+        <el-button type="primary" size="small" :disabled="selectedIds.length === 0">批量操作</el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="batchPass">批量通过</el-dropdown-item>
+            <el-dropdown-item command="batchReject">批量拒绝</el-dropdown-item>
+            <el-dropdown-item command="batchDelete">批量删除</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+    </div>
+    <el-pagination
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :total="filterTableData.length"
+      :page-sizes="[15, 20, 30]"
+      layout="total, sizes, prev, pager, next, jumper"
+      background
+    ></el-pagination>
+  </div>
+
+<!-- 新增友链表单 -->
+  <el-dialog v-model="dialogVisible" :title="dialogTitle" width="640px" :close-on-click-modal="false">
+    <el-form class="form-dialog" :model="formData" label-width="100px">
+      <el-form-item label="站点名称">
+        <el-input v-model="formData.title" maxlength="50" placeholder="1-50字符"></el-input>
+      </el-form-item>
+      <el-form-item label="站点描述">
+        <el-input v-model="formData.desc" type="textarea" :rows="3" maxlength="200" placeholder="1-200字符"></el-input>
+      </el-form-item>
+      <el-form-item label="站点链接">
+        <el-input v-model="formData.siteUrl" placeholder="https://example.com"></el-input>
+      </el-form-item>
+      <el-form-item label="头像链接">
+        <el-input v-model="formData.imgUrl" placeholder="头像链接，必填"></el-input>
+      </el-form-item>
+      <el-form-item label="联系邮箱">
+        <el-input v-model="formData.email" placeholder="用于站长联系（可选）"></el-input>
+      </el-form-item>
+      <el-form-item label="留言">
+        <el-input v-model="formData.message" type="textarea" :rows="3" placeholder="留言内容（可选）"></el-input>
+      </el-form-item>
+      <el-form-item label="标签">
+        <el-input v-model="formData.tagsStr" placeholder="多个标签用英文逗号分隔"></el-input>
+      </el-form-item>
+      <el-form-item label="审核状态">
+        <el-select v-model="formData.status">
+          <el-option label="待审核" value="pending"></el-option>
+          <el-option label="已通过" value="approved"></el-option>
+          <el-option label="已拒绝" value="rejected"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="权重">
+        <el-input-number v-model="formData.weight" :min="0" :step="1" step-strictly controls-position="right" placeholder="数字越大排序越靠前"></el-input-number>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="submitForm">保存</el-button>
+    </template>
+  </el-dialog>
+
+  <el-dialog v-model="themeDialogVisible" title="选择界面主题" width="360px" :close-on-click-modal="true">
+    <div class="theme-option-item" :class="{active: themeMode === 'system'}" @click="selectTheme('system')">
+      跟随系统
+    </div>
+    <div class="theme-option-item" :class="{active: themeMode === 'light'}" @click="selectTheme('light')">
+      浅色模式
+    </div>
+    <div class="theme-option-item" :class="{active: themeMode === 'dark'}" @click="selectTheme('dark')">
+      暗黑模式
+    </div>
+  </el-dialog>
+
+  <!-- 删除二次确认弹窗：确认按钮 5s 倒计时（单条 / 批量复用） -->
+  <el-dialog v-model="deleteConfirmVisible" :title="deleteMode === 'batch' ? '批量删除' : '危险操作'" width="420px" :close-on-click-modal="false" @close="stopDeleteCountdown">
+    <span>{{ deleteConfirmText }}</span>
+    <template #footer>
+      <el-button @click="cancelDelete">取消</el-button>
+      <el-button type="danger" :disabled="deleteCountdown > 0" @click="confirmDelete">
+        {{ deleteCountdown > 0 ? '确认删除 (' + deleteCountdown + 's)' : '确认删除' }}
+      </el-button>
+    </template>
+  </el-dialog>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+const { createApp, ref, reactive, computed, onMounted, watch, onUnmounted } = Vue;
+const { ElMessage, ElMessageBox } = ElementPlus;
+const ADMIN_API = "${ADMIN_PREFIX}/friends";
+
+const statusMap = Object.freeze({
+  pending: "待审核",
+  approved: "已通过",
+  rejected: "已拒绝"
+});
+const statusTypeMap = Object.freeze({
+  approved: "success",
+  pending: "warning",
+  rejected: "danger"
+});
+
+createApp({
+  setup() {
+    const loading = ref(false);
+    const tableData = ref([]);
+    const searchKeyword = ref("");
+    const filterStatus = ref("");
+    const selectedIds = ref([]);
+    const currentPage = ref(1);
+    const pageSize = ref(15);
+
+    const dialogVisible = ref(false);
+    const dialogTitle = ref("新增友链");
+    const editRowId = ref("");
+    // 补全所有表单字段，消除赋值undefined报错
+    const formData = reactive({
+      title: "",
+      desc: "",
+      siteUrl: "",
+      imgUrl: "",
+      email: "",
+      message: "",
+      tagsStr: "",
+      status: "pending",
+      weight: 0
+    });
+
+    const themeDialogVisible = ref(false);
+    const themeMode = ref(localStorage.getItem("themeMode") || "system");
+    const systemDarkMedia = window.matchMedia("(prefers-color-scheme: dark)");
+
+    // 移动端检测
+    const isMobile = ref(window.innerWidth <= 768);
+    let resizeTimer = null;
+    const resizeHandler = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        isMobile.value = window.innerWidth <= 768;
+      }, 150);
+    };
+
+    const formatTime = (timestamp) => {
+      if (!timestamp) return "-";
+      const d = new Date(timestamp);
+      const pad = n => String(n).padStart(2, "0");
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+    };
+
+    const normalizeWeight = (w) => {
+      if (w === null || w === undefined || w === "") return null;
+      const n = Number(w);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const filterTableData = computed(() => {
+      let list = tableData.value;
+      const kw = debouncedKeyword.value.trim().toLowerCase();
+      if (filterStatus.value) {
+        list = list.filter(item => item.status === filterStatus.value);
+      }
+      if (kw) {
+        list = list.filter(item => {
+          const tagText = Array.isArray(item.tags) ? item.tags.join(",") : "";
+          const weightText = item.weight != null ? String(item.weight) : "";
+          const text = [item.title, item.desc, item.siteUrl, item.ip, item.email, tagText, weightText].join(" ").toLowerCase();
+          return text.includes(kw);
+        });
+      }
+      return list;
+    });
+
+    const pagedTableData = computed(() => {
+      const start = (currentPage.value - 1) * pageSize.value;
+      const end = start + pageSize.value;
+      return filterTableData.value.slice(start, end);
+    });
+
+    watch([searchKeyword, filterStatus], () => {
+      currentPage.value = 1;
+    });
+
+    // 搜索防抖：250ms，避免快速输入时频繁重算
+    const debouncedKeyword = ref("");
+    let searchDebounceTimer = null;
+    watch(searchKeyword, (val) => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        debouncedKeyword.value = val;
+      }, 250);
+    });
+
+    watch([filterTableData, pageSize], ([newData]) => {
+      const totalPages = Math.ceil(newData.length / pageSize.value);
+      if (currentPage.value > totalPages && totalPages > 0) {
+        currentPage.value = totalPages;
+      } else if (totalPages === 0) {
+        currentPage.value = 1;
+      }
+    });
+
+    const applyTheme = (mode) => {
+      const html = document.documentElement;
+      html.classList.remove("dark");
+      if (mode === "dark") {
+        html.classList.add("dark");
+      } else if (mode === "system") {
+        if (systemDarkMedia.matches) html.classList.add("dark");
+      }
+      localStorage.setItem("themeMode", mode);
+    };
+    const selectTheme = (mode) => {
+      themeMode.value = mode;
+      applyTheme(mode);
+      themeDialogVisible.value = false;
+      ElMessage.success("主题切换完成");
+    };
+    const initTheme = () => {
+      applyTheme(themeMode.value);
+      systemDarkMedia.addEventListener("change", () => {
+        if (themeMode.value === "system") applyTheme("system");
+      });
+    };
+
+    const loadList = async () => {
+      loading.value = true;
+
+      try {
+        const res = await fetch(ADMIN_API);
+        const json = await res.json();
+        if (json.success) {
+          const items = json.items || [];
+          items.sort((a, b) => (Number(b.weight) || 0) - (Number(a.weight) || 0));
+          tableData.value = items;
+        } else {
+          ElMessage.error(json.message || "数据加载失败");
+        }
+      } catch (err) {
+        ElMessage.error("网络请求失败");
+        console.error(err);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const handleSelectionChange = (val) => {
+      selectedIds.value = val.map(item => item.id);
+    };
+
+    const openAddDialog = () => {
+      dialogTitle.value = "新增友链";
+      editRowId.value = "";
+      formData.title = "";
+      formData.desc = "";
+      formData.siteUrl = "";
+      formData.imgUrl = "";
+      formData.email = "";
+      formData.message = "";
+      formData.tagsStr = "";
+      formData.status = "pending";
+      formData.weight = 0;
+      dialogVisible.value = true;
+    };
+
+    const openEditDialog = (row) => {
+      dialogTitle.value = "编辑友链";
+      editRowId.value = row.id;
+      formData.title = row.title || "";
+      formData.desc = row.desc || "";
+      formData.siteUrl = row.siteUrl || "";
+      formData.imgUrl = row.imgUrl || "";
+      formData.email = row.email || "";
+      formData.message = row.message || "";
+      formData.tagsStr = Array.isArray(row.tags) ? row.tags.join(",") : "";
+      formData.status = row.status || "pending";
+      formData.weight = (() => {
+        const n = Number(row.weight);
+        return Number.isFinite(n) ? n : 0;
+      })();
+      dialogVisible.value = true;
+    };
+
+    const submitForm = async () => {
+      const { title, desc, siteUrl, imgUrl, email, message, tagsStr, status, weight } = formData;
+      if (!title || title.length > 50) return ElMessage.warning("标题必填，长度1-50字符");
+      if (!desc || desc.length > 200) return ElMessage.warning("描述必填，长度1-200字符");
+      if (!siteUrl) return ElMessage.warning("站点链接必填");
+      try { new URL(siteUrl); } catch { return ElMessage.warning("站点链接格式不正确"); }
+      if (!imgUrl) return ElMessage.warning("头像地址必填");
+      const w = Number(weight);
+      if (!Number.isFinite(w)) return ElMessage.warning("权重必须是数字");
+      const tags = tagsStr.split(",").map(s => s.trim()).filter(s => s);
+      const payload = { title, desc, siteUrl, imgUrl, email, message, tags, status, weight: w };
+
+      try {
+        if (editRowId.value) {
+          payload.id = editRowId.value;
+          const res = await fetch(ADMIN_API, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+          if (json.success) {
+            ElMessage.success("编辑成功");
+            dialogVisible.value = false;
+            loadList();
+          } else {
+            ElMessage.error(json.message || "编辑失败");
+          }
+        } else {
+          const res = await fetch(ADMIN_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+          if (json.success) {
+            ElMessage.success("新增成功");
+            dialogVisible.value = false;
+            loadList();
+          } else {
+            ElMessage.error(json.message || "新增失败");
+          }
+        }
+      } catch (err) {
+        ElMessage.error("操作失败，网络异常");
+        console.error(err);
+      }
+    };
+
+    const singlePass = (id) => {
+      ElMessageBox.confirm("确定通过这条友链的审核？", "通过确认", {
+        confirmButtonText: "确认通过",
+        cancelButtonText: "取消",
+        type: "success"
+      }).then(() => updateSingleStatus(id, "approved"))
+        .catch(() => ElMessage.info("已取消"));
+    };
+    const singleReject = (id) => {
+      ElMessageBox.confirm("确定拒绝这条友链的审核？", "拒绝确认", {
+        confirmButtonText: "确认拒绝",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => updateSingleStatus(id, "rejected"))
+        .catch(() => ElMessage.info("已取消"));
+    };
+    const updateSingleStatus = async (id, status) => {
+      try {
+        const res = await fetch(ADMIN_API, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status })
+        });
+        const json = await res.json();
+        if (json.success) {
+          ElMessage.success("操作成功");
+          loadList();
+        } else {
+          ElMessage.error(json.message || "操作失败");
+        }
+      } catch {
+        ElMessage.error("网络异常");
+      }
+    };
+
+    // 删除二次确认：确认按钮 5s 倒计时（单条 / 批量复用）
+    const deleteConfirmVisible = ref(false);
+    const deleteMode = ref("single");
+    const pendingDeleteId = ref("");
+    const deleteCountdown = ref(0);
+    let deleteCountdownTimer = null;
+
+    const deleteConfirmText = computed(() => {
+      return deleteMode.value === "batch"
+        ? "确定永久删除选中的 " + selectedIds.value.length + " 条友链？删除后无法恢复！"
+        : "确定永久删除这条友链？删除后无法恢复！";
+    });
+
+    const startDeleteCountdown = () => {
+      deleteCountdown.value = 5;
+      if (deleteCountdownTimer) clearInterval(deleteCountdownTimer);
+      deleteCountdownTimer = setInterval(() => {
+        deleteCountdown.value -= 1;
+        if (deleteCountdown.value <= 0) {
+          clearInterval(deleteCountdownTimer);
+          deleteCountdownTimer = null;
+          deleteCountdown.value = 0;
+        }
+      }, 1000);
+    };
+
+    const stopDeleteCountdown = () => {
+      if (deleteCountdownTimer) {
+        clearInterval(deleteCountdownTimer);
+        deleteCountdownTimer = null;
+      }
+      deleteCountdown.value = 0;
+    };
+
+    const singleDelete = (id) => {
+      deleteMode.value = "single";
+      pendingDeleteId.value = id;
+      deleteConfirmVisible.value = true;
+      startDeleteCountdown();
+    };
+
+    const cancelDelete = () => {
+      deleteConfirmVisible.value = false;
+      stopDeleteCountdown();
+      ElMessage.info("已取消删除");
+    };
+
+    const confirmDelete = async () => {
+      if (deleteCountdown.value > 0) return;
+      deleteConfirmVisible.value = false;
+      stopDeleteCountdown();
+      // 批量删除
+      if (deleteMode.value === "batch") {
+        const results = await Promise.allSettled(
+          selectedIds.value.map(id =>
+            fetch(ADMIN_API, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id })
+            }).then(r => r.json())
+          )
+        );
+        const success = results.filter(r => r.status === "fulfilled" && r.value.success).length;
+        const fail = selectedIds.value.length - success;
+        ElMessage.success("批量删除完成：成功" + success + "条，失败" + fail + "条");
+        selectedIds.value = [];
+        loadList();
+        return;
+      }
+      // 单条删除
+      const id = pendingDeleteId.value;
+      try {
+        const res = await fetch(ADMIN_API, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id })
+        });
+        const json = await res.json();
+        if (json.success) {
+          ElMessage.success("删除成功");
+          loadList();
+        } else {
+          ElMessage.error(json.message || "删除失败");
+        }
+      } catch {
+        ElMessage.error("网络异常");
+      }
+    };
+
+    const batchPass = async () => {
+      if (selectedIds.value.length === 0) return ElMessage.warning("请先勾选友链");
+      const tipText = "确定批量通过选中的 " + selectedIds.value.length + " 条友链？";
+      ElMessageBox.confirm(tipText, "批量操作", {
+        confirmButtonText: "确认",
+        cancelButtonText: "取消",
+        type: "info"
+      }).then(async () => {
+        const results = await Promise.allSettled(
+          selectedIds.value.map(id =>
+            fetch(ADMIN_API, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id, status: "approved" })
+            }).then(r => r.json())
+          )
+        );
+        const success = results.filter(r => r.status === "fulfilled" && r.value.success).length;
+        const fail = selectedIds.value.length - success;
+        ElMessage.success("批量完成：成功" + success + "条，失败" + fail + "条");
+        selectedIds.value = [];
+        loadList();
+      }).catch(() => ElMessage.info("已取消"));
+    };
+    const batchReject = async () => {
+      if (selectedIds.value.length === 0) return ElMessage.warning("请先勾选友链");
+      const tipText = "确定批量拒绝选中的 " + selectedIds.value.length + " 条友链？";
+      ElMessageBox.confirm(tipText, "批量操作", {
+        confirmButtonText: "确认",
+        cancelButtonText: "取消",
+        type: "info"
+      }).then(async () => {
+        const results = await Promise.allSettled(
+          selectedIds.value.map(id =>
+            fetch(ADMIN_API, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id, status: "rejected" })
+            }).then(r => r.json())
+          )
+        );
+        const success = results.filter(r => r.status === "fulfilled" && r.value.success).length;
+        const fail = selectedIds.value.length - success;
+        ElMessage.success("批量完成：成功" + success + "条，失败" + fail + "条");
+        selectedIds.value = [];
+        loadList();
+      }).catch(() => ElMessage.info("已取消"));
+    };
+    const batchDelete = () => {
+      if (selectedIds.value.length === 0) return ElMessage.warning("请先勾选友链");
+      deleteMode.value = "batch";
+      deleteConfirmVisible.value = true;
+      startDeleteCountdown();
+    };
+
+    const handleRowCommand = (command, row) => {
+      switch (command) {
+        case "edit":
+          openEditDialog(row);
+          break;
+        case "reject":
+          singleReject(row.id);
+          break;
+        case "delete":
+          singleDelete(row.id);
+          break;
+      }
+    };
+
+    const handleBatchCommand = (command) => {
+      switch (command) {
+        case "batchPass":
+          batchPass();
+          break;
+        case "batchReject":
+          batchReject();
+          break;
+        case "batchDelete":
+          batchDelete();
+          break;
+      }
+    };
+
+    onMounted(() => {
+      initTheme();
+      loadList();
+      window.addEventListener("resize", resizeHandler);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener("resize", resizeHandler);
+      stopDeleteCountdown();
+      clearTimeout(searchDebounceTimer);
+      clearTimeout(resizeTimer);
+    });
+
+    return {
+      isMobile,
+      loading,
+      tableData,
+      pagedTableData,
+      filterTableData,
+      searchKeyword,
+      filterStatus,
+      selectedIds,
+      currentPage,
+      pageSize,
+      statusMap,
+      statusTypeMap,
+      dialogVisible,
+      dialogTitle,
+      formData,
+      themeMode,
+      themeDialogVisible,
+      selectTheme,
+      formatTime,
+      normalizeWeight,
+      handleSelectionChange,
+      openAddDialog,
+      openEditDialog,
+      submitForm,
+      singlePass,
+      singleReject,
+      singleDelete,
+      deleteConfirmVisible,
+      deleteMode,
+      deleteConfirmText,
+      deleteCountdown,
+      cancelDelete,
+      confirmDelete,
+      stopDeleteCountdown,
+      batchPass,
+      batchReject,
+      batchDelete,
+      handleRowCommand,
+      handleBatchCommand
+    };
+  }
+}).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount("#app");
+});
+</script>
+</body>
+</html>

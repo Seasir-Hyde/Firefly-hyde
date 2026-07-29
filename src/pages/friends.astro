@@ -80,7 +80,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
             <button
               id="random-friend-btn"
               type="button"
-              class="friend-action-btn relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg dark:text-white border border-(--primary) hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
+              class="friend-action-btn relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-(--primary) dark:text-white border border-(--primary) hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -549,7 +549,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 
         try {
           // 向后端提交申请，状态默认为 pending
-          var res = await fetch('https://api.seasir.top/api/friends', {
+          var res = await fetch('https://seasir.top/api/friends', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: title, desc: desc, siteUrl: siteUrl, imgUrl: imgUrl, email: email, message: message })
@@ -621,11 +621,14 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 
       if (loading) loading.classList.remove('hidden');
 
-      fetch('https://api.seasir.top/api/friends')
+      fetch('https://seasir.top/api/friends')
         .then(function(res) { return res.json(); })
         .then(function(data) {
           var friends = data.items;
           if (Array.isArray(friends) && friends.length > 0) {
+            friends.sort(function(a, b) {
+              return (Number(b.weight) || 0) - (Number(a.weight) || 0);
+            });
             var html = friends.map(function(item) {
               return renderFriendCard(item);
             }).join('');

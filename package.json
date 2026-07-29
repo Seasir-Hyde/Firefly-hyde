@@ -16,7 +16,8 @@
     "format": "biome format --write ./src",
     "lint": "biome check --write ./src",
     "preinstall": "npx only-allow pnpm",
-    "lqips": "npx tsx scripts/generate-lqips.ts"
+    "lqips": "npx tsx scripts/generate-lqips.ts",
+    "fill-descriptions": "npx tsx scripts/fill-descriptions/index.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",

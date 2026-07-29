@@ -2,7 +2,6 @@
 title: AI 摘要实现
 published: 2026-07-27
 pinned: false
-
 image: api
 slug: /ai-summary-tutorial
 tags: ["Firefly"]
@@ -187,7 +186,17 @@ const resp = await fetch(`${QWEN_BASE_URL}/chat/completions`, {
 
 完整脚本获取：[fill-descriptions/index.ts](https://cnb.cool/W3C/Hyde/Firefly-hyde/-/blob/main/fill-descriptions/index.ts)
 
+```bash [package.json]
+# package.json
+{
+  "scripts": {
+    "fill-descriptions": "npx tsx scripts/fill-descriptions/index.ts"
+  },
+}
+```
+
 ```bash
+# 终端运行脚本
 pnpm fill-descriptions
 ```
 
