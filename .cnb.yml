@@ -59,7 +59,7 @@ main:
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
-            pnpm install
+            pnpm install --registry https://registry.npmjs.org
         - name: 📦️ 编译项目1
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
