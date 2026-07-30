@@ -60,12 +60,12 @@ main:
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
             pnpm install --registry https://registry.npmjs.org
-        - name: 📦️ 编译项目1
+        - name: 📦️ 编译项目
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
             pnpm build   #打包命令    
-        - name: 🚚 部署到Pages
+        - name: 🚚 部署到EdgeOne Pages
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           image: node:22
