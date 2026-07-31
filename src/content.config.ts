@@ -101,8 +101,11 @@ const placesCollection = defineCollection({
 		lng: z.number().optional(),
 		/** 足迹照片（URL 列表），点击地图点位时轮播展示 */
 		images: z.array(z.string()).optional().default([]),
-		/** 可选外链（如游记文章） */
-		link: z.string().optional(),
+		/** 可选外链（如游记文章）；YAML 中 `link:` 留空会被解析为 null，此处归一化为 undefined */
+		link: z
+			.string()
+			.nullish()
+			.transform((v) => v ?? undefined),
 	}),
 });
 

@@ -307,6 +307,16 @@ export const siteConfig: SiteConfig = {
 		noReferrerDomains: ["*.hdslb.com", "*.bilibili.com"],
 	},
 
+	// Cookie 同意条配置
+	cookieConsent: {
+		enable: true,
+		message:
+			"本站使用 Cookie 进行访问统计，并借助本地存储记住您的主题与界面偏好。您可自由选择是否接受统计类 Cookie。",
+		acceptText: "接受",
+		rejectText: "拒绝",
+		// privacyPolicyUrl: "/privacy/",
+	},
+
 	// 站点语言，在本配置文件顶部SITE_LANG定义
 	lang: SITE_LANG,
 

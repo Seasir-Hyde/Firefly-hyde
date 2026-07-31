@@ -1,0 +1,198 @@
+---
+import { analyticsConfig, siteConfig } from "@/config";
+
+const consent = siteConfig.cookieConsent;
+if (!consent?.enable) return;
+
+const storageKey = consent.storageKey ?? "firefly-cookie-consent";
+const message =
+  consent.message ??
+  "本站使用 Cookie 进行访问统计，并借助本地存储记住您的主题与界面偏好。您可自由选择是否接受统计类 Cookie。";
+const acceptText = consent.acceptText ?? "接受";
+const rejectText = consent.rejectText ?? "拒绝";
+const privacyPolicyUrl = consent.privacyPolicyUrl?.trim();
+const analyticsConfigStr = JSON.stringify(analyticsConfig);
+---
+
+<div
+  id="cookie-consent-banner"
+  class="cookie-consent-banner fixed bottom-0 inset-x-0 z-[10001] translate-y-full opacity-0 pointer-events-none transition-all duration-500 ease-out"
+  role="dialog"
+  aria-live="polite"
+  aria-label="Cookie 提示"
+  data-storage-key={storageKey}
+  data-analytics={analyticsConfigStr}
+>
+  <div
+    class="mx-auto max-w-(--page-width) px-4 py-3 md:px-6 md:py-4 border-t border-(--line-divider) bg-(--card-bg) shadow-[0_-4px_24px_rgba(0,0,0,0.08)]"
+  >
+    <div
+      class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6"
+    >
+      <p class="text-sm leading-relaxed dark:text-white">
+        {message}
+        {
+          privacyPolicyUrl && (
+            <a
+              href={privacyPolicyUrl}
+              class="ml-1 text-(--primary) hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {consent.privacyPolicyText ?? "隐私说明"}
+            </a>
+          )
+        }
+      </p>
+      <div class="flex shrink-0 items-center gap-2 self-end md:self-auto">
+        <button
+          type="button"
+          id="cookie-consent-reject"
+          class="rounded-lg border border-(--line-divider) px-4 py-2 text-sm dark:text-white transition hover:bg-(--btn-regular-bg-hover)"
+        >
+          {rejectText}
+        </button>
+        <button
+          type="button"
+          id="cookie-consent-accept"
+          class="rounded-lg bg-(--primary) px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+        >
+          {acceptText}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { loadAnalytics } from "@/utils/load-analytics";
+  import type { AnalyticsConfig } from "@/types/config";
+
+  const COOKIE_NAME = "firefly_cookie_consent";
+  const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+  let actionsBound = false;
+
+  function getBanner() {
+    return document.getElementById("cookie-consent-banner");
+  }
+
+  function getConfig() {
+    const banner = getBanner();
+    if (!banner) return null;
+
+    let analytics: AnalyticsConfig;
+    try {
+      analytics = JSON.parse(banner.dataset.analytics || "{}");
+    } catch {
+      analytics = {};
+    }
+
+    return {
+      storageKey: banner.dataset.storageKey || "firefly-cookie-consent",
+      analytics,
+    };
+  }
+
+  function getStoredConsent(storageKey: string) {
+    try {
+      return localStorage.getItem(storageKey);
+    } catch {
+      return null;
+    }
+  }
+
+  function setConsent(
+    storageKey: string,
+    value: "accepted" | "rejected",
+    analytics: AnalyticsConfig,
+  ) {
+    try {
+      localStorage.setItem(storageKey, value);
+    } catch {
+      /* ignore */
+    }
+
+    document.cookie = `${COOKIE_NAME}=${value}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+
+    if (value === "accepted") {
+      loadAnalytics(analytics);
+    }
+  }
+
+  function showBanner() {
+    const banner = getBanner();
+    if (!banner) return;
+    requestAnimationFrame(() => {
+      banner.classList.remove(
+        "translate-y-full",
+        "opacity-0",
+        "pointer-events-none",
+      );
+      banner.classList.add(
+        "translate-y-0",
+        "opacity-100",
+        "pointer-events-auto",
+      );
+    });
+  }
+
+  function hideBanner() {
+    const banner = getBanner();
+    if (!banner) return;
+    banner.classList.add("translate-y-full", "opacity-0", "pointer-events-none");
+    banner.classList.remove(
+      "translate-y-0",
+      "opacity-100",
+      "pointer-events-auto",
+    );
+  }
+
+  function bindBannerActions(
+    storageKey: string,
+    analytics: AnalyticsConfig,
+  ) {
+    if (actionsBound) return;
+
+    const acceptBtn = document.getElementById("cookie-consent-accept");
+    const rejectBtn = document.getElementById("cookie-consent-reject");
+    if (!acceptBtn || !rejectBtn) return;
+
+    actionsBound = true;
+
+    acceptBtn.addEventListener("click", () => {
+      setConsent(storageKey, "accepted", analytics);
+      hideBanner();
+    });
+
+    rejectBtn.addEventListener("click", () => {
+      setConsent(storageKey, "rejected", analytics);
+      hideBanner();
+    });
+  }
+
+  function initCookieConsent() {
+    const config = getConfig();
+    if (!config) return;
+
+    const { storageKey, analytics } = config;
+    bindBannerActions(storageKey, analytics);
+
+    const stored = getStoredConsent(storageKey);
+    if (stored === "accepted") {
+      loadAnalytics(analytics);
+      return;
+    }
+    if (stored === "rejected") return;
+
+    showBanner();
+  }
+
+  initCookieConsent();
+  document.addEventListener("astro:page-load", initCookieConsent);
+</script>
+
+<style>
+  .cookie-consent-banner {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+</style>

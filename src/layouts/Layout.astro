@@ -3,6 +3,7 @@ import GoogleAnalytics from "@components/analytics/GoogleAnalytics.astro";
 import La51Analytics from "@components/analytics/La51Analytics.astro";
 import MicrosoftClarity from "@components/analytics/MicrosoftClarity.astro";
 import UmamiAnalytics from "@components/analytics/UmamiAnalytics.astro";
+import CookieConsent from "@components/widget/CookieConsent.astro";
 import CodeGroupManager from "@components/features/CodeGroupManager.astro";
 import FancyboxManager from "@components/features/FancyboxManager.astro";
 import FontSetup from "@components/features/FontSetup.astro";
@@ -82,6 +83,9 @@ if (siteConfig.post.generateOgImages && postSlug) {
 const favicons: Favicon[] =
 	siteConfig.favicon.length > 0 ? siteConfig.favicon : defaultFavicons;
 
+// Cookie 同意开启时，延迟加载统计脚本，改由 CookieConsent 在用户同意后调用 loadAnalytics()
+const deferAnalytics = siteConfig.cookieConsent?.enable ?? false;
+
 // const siteLang = siteConfig.lang.replace('_', '-')
 if (!lang) {
 	lang = `${siteConfig.lang}`;
@@ -95,13 +99,13 @@ const siteLang = lang.replace("_", "-");
 <html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode}>
   <head>
     <meta charset="UTF-8" />
-    {analyticsConfig?.googleAnalyticsId && (
+    {analyticsConfig?.googleAnalyticsId && !deferAnalytics && (
             <GoogleAnalytics analyticsId={analyticsConfig.googleAnalyticsId} />
     )}
-    {analyticsConfig?.microsoftClarityId && (
+    {analyticsConfig?.microsoftClarityId && !deferAnalytics && (
             <MicrosoftClarity clarityId={analyticsConfig.microsoftClarityId} />
     )}
-        {analyticsConfig?.umamiAnalytics?.websiteId && (
+        {analyticsConfig?.umamiAnalytics?.websiteId && !deferAnalytics && (
           <UmamiAnalytics
           websiteId={analyticsConfig.umamiAnalytics.websiteId}
           scriptUrl={analyticsConfig.umamiAnalytics.scriptUrl}
@@ -111,7 +115,7 @@ const siteLang = lang.replace("_", "-");
           replays={analyticsConfig.umamiAnalytics.replays}
           />
         )}
-        {analyticsConfig?.la51Analytics?.Id && (
+        {analyticsConfig?.la51Analytics?.Id && !deferAnalytics && (
             <La51Analytics
             analyticsId={analyticsConfig.la51Analytics.Id}
             sdkUrl={analyticsConfig.la51Analytics?.sdkUrl}
@@ -607,6 +611,9 @@ const siteLang = lang.replace("_", "-");
 
     <!-- Tab 代码块交互 -->
     <CodeGroupManager />
+
+    <!-- Cookie 同意条与延迟统计加载 -->
+    <CookieConsent />
   </body>
 </html>
 

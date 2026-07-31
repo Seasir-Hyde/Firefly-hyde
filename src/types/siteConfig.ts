@@ -223,6 +223,17 @@ export type SiteConfig = {
 		}[];
 	};
 
+	// Cookie 同意条配置
+	cookieConsent?: {
+		enable?: boolean;
+		storageKey?: string;
+		message?: string;
+		acceptText?: string;
+		rejectText?: string;
+		privacyPolicyUrl?: string;
+		privacyPolicyText?: string;
+	};
+
 	// 图片优化配置
 	imageOptimization?: {
 		/**
