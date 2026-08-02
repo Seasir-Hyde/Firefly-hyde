@@ -26,17 +26,16 @@ const showTitle = widgetConfig?.showTitle !== false;
   class={className}
   style={style}
 >
-  <div>
-    <!-- 公告栏内容 -->
-    <div class="text-neutral-600 dark:text-neutral-300 leading-relaxed mb-3">
-      {config.content}
-    </div>
+  <div id="announcement-content">
+    <!-- 静态配置内容（作为后备） -->
+    <div class="announcement-item mb-4 last:mb-0">
+      <div class="text-neutral-600 dark:text-neutral-300 leading-relaxed mb-3">
+        {config.content}
+      </div>
 
-    <!-- 可选链接和关闭按钮 -->
-    <div class="flex items-center justify-between gap-3">
-      <div>
-        {
-          config.link && config.link.enable !== false && (
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          {config.link && config.link.enable !== false && (
             <a
               href={config.link.url}
               target={config.link.external ? "_blank" : "_self"}
@@ -45,12 +44,10 @@ const showTitle = widgetConfig?.showTitle !== false;
             >
               {config.link.text}
             </a>
-          )
-        }
-      </div>
+          )}
+        </div>
 
-      {
-        config.closable && (
+        {config.closable && (
           <button
             class="btn-regular rounded-lg h-8 w-8 text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
             onclick="this.closest('widget-layout').style.display='none'"
@@ -58,8 +55,55 @@ const showTitle = widgetConfig?.showTitle !== false;
           >
             <Icon is:inline name="fa7-solid:xmark" class="text-sm" />
           </button>
-        )
-      }
+        )}
+      </div>
     </div>
   </div>
+
+  <!-- 客户端 JavaScript：动态获取公告数据 -->
+  <script is:inline>
+    (async function() {
+      try {
+        const response = await fetch('/api/public/announcements');
+        if (!response.ok) return;
+        const data = await response.json();
+        const announcements = data.announcements || [];
+        if (announcements.length === 0) return;
+
+        const container = document.getElementById('announcement-content');
+        if (!container) return;
+
+        // 清空静态内容
+        container.innerHTML = '';
+
+        // 渲染 API 获取的公告
+        announcements.forEach(function(announcement) {
+          const item = document.createElement('div');
+          item.className = 'announcement-item mb-4 last:mb-0';
+
+          let html = '';
+
+          // 标题
+          if (announcement.title) {
+            html += '<div class="font-medium text-neutral-800 dark:text-neutral-200 mb-2">' +
+              announcement.title.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+          }
+
+          // 内容
+          html += '<div class="text-neutral-600 dark:text-neutral-300 leading-relaxed mb-3">' +
+            announcement.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+
+          // 关闭按钮
+          if (announcement.closable) {
+            html += '<div class="flex items-center justify-end"><button class="btn-regular rounded-lg h-8 w-8 text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors" onclick="this.closest(\'.announcement-item\').style.display=\'none\'" aria-label="关闭公告"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="text-sm w-4 h-4"><path fill="currentColor" d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"/></svg></button></div>';
+          }
+
+          item.innerHTML = html;
+          container.appendChild(item);
+        });
+      } catch (e) {
+        console.log('获取公告 API 失败，使用静态配置');
+      }
+    })();
+  </script>
 </WidgetLayout>
