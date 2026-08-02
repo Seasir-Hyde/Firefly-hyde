@@ -59,8 +59,8 @@ main:
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
-            pnpm install --registry https://registry.npmjs.org
-            cd admin && pnpm install --registry https://registry.npmjs.org && cd ..
+            pnpm install --registry https://registry.npmjs.org --allow-build=esbuild,sharp
+            cd admin && pnpm install --registry https://registry.npmjs.org --allow-build=esbuild && cd ..
         - name: 📦️ 编译项目
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
