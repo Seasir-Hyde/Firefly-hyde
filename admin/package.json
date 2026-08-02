@@ -4,6 +4,11 @@
 	"version": "0.1.0",
 	"type": "module",
 	"description": "Firefly 博客管理后台 - React 18 + Vite + Semi Design",
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild"
+		]
+	},
 	"scripts": {
 		"dev": "vite",
 		"dev:edgeone": "edgeone makers dev",
