@@ -55,16 +55,17 @@ main:
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
             npm install -g pnpm && node -v && npm -v && yarn -v && pnpm -v
-        - name: 💡 安装依赖 
+        - name: 💡 安装依赖
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
             pnpm install --registry https://registry.npmjs.org
+            cd admin && pnpm install --registry https://registry.npmjs.org && cd ..
         - name: 📦️ 编译项目
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
-            pnpm build   #打包命令    
+            BUILD_ADMIN=1 pnpm build   #打包命令（包含 admin）    
         - name: 🚚 部署到EdgeOne Pages
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
