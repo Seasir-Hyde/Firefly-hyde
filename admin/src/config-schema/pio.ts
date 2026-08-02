@@ -1,0 +1,241 @@
+// 看板娘配置 schema（P0：Spine + Live2D 两 key）
+import type { ConfigDomainSchema } from "./types";
+
+export const pioSchema: ConfigDomainSchema = {
+	domain: "pio",
+	label: "看板娘",
+	group: "功能",
+	hasForm: true,
+	groups: [
+		{
+			label: "Spine",
+			fields: [
+				{ key: "spine.enable", label: "启用 Spine", control: "switch" },
+				{ key: "spine.model.path", label: "模型路径", control: "input", placeholder: "/pio/models/spine/..." },
+				{
+					key: "spine.model.scale",
+					label: "缩放",
+					control: "number",
+					min: 0.1,
+					max: 5,
+					step: 0.1,
+				},
+				{
+					key: "spine.model.x",
+					label: "模型 X 偏移",
+					control: "number",
+				},
+				{
+					key: "spine.model.y",
+					label: "模型 Y 偏移",
+					control: "number",
+				},
+				{
+					key: "spine.position.corner",
+					label: "角落位置",
+					control: "select",
+					options: [
+						{ label: "左下", value: "bottom-left" },
+						{ label: "右下", value: "bottom-right" },
+						{ label: "左上", value: "top-left" },
+						{ label: "右上", value: "top-right" },
+					],
+				},
+				{
+					key: "spine.position.offsetX",
+					label: "位置 X 偏移",
+					control: "number",
+				},
+				{
+					key: "spine.position.offsetY",
+					label: "位置 Y 偏移",
+					control: "number",
+				},
+				{
+					key: "spine.size.width",
+					label: "宽度",
+					control: "number",
+					min: 50,
+				},
+				{
+					key: "spine.size.height",
+					label: "高度",
+					control: "number",
+					min: 50,
+				},
+				{
+					key: "spine.interactive.enabled",
+					label: "启用交互",
+					control: "switch",
+				},
+				{ key: "spine.interactive.clickAnimations", label: "点击动画", control: "tags", placeholder: "动画名后点「添加」" },
+				{ key: "spine.interactive.clickMessages", label: "点击提示语", control: "tags", placeholder: "提示语后点「添加」" },
+				{
+					key: "spine.interactive.messageDisplayTime",
+					label: "提示显示时长 (ms)",
+					control: "number",
+					min: 500,
+				},
+				{ key: "spine.interactive.idleAnimations", label: "待机动画", control: "tags", placeholder: "待机动画名后点「添加」" },
+				{
+					key: "spine.interactive.idleInterval",
+					label: "待机间隔 (ms)",
+					control: "number",
+					min: 1000,
+				},
+				{
+					key: "spine.responsive.hideOnMobile",
+					label: "移动端隐藏",
+					control: "switch",
+				},
+				{
+					key: "spine.responsive.mobileBreakpoint",
+					label: "移动端断点 (px)",
+					control: "number",
+					min: 320,
+				},
+				{
+					key: "spine.zIndex",
+					label: "层级 z-index",
+					control: "number",
+				},
+				{
+					key: "spine.opacity",
+					label: "透明度",
+					control: "slider",
+					min: 0,
+					max: 1,
+					step: 0.05,
+				},
+			],
+		},
+		{
+			label: "Live2D",
+			fields: [
+				{ key: "live2d.enable", label: "启用 Live2D", control: "switch" },
+				{
+					key: "live2d.model",
+					label: "模型列表",
+					control: "objectList",
+					itemLabelKey: "path",
+					emptyItem: {
+						path: "",
+						volume: 0,
+						scale: 1,
+						x: 0,
+						y: 0,
+					},
+					itemSchema: [
+						{ key: "path", label: "模型路径", control: "input", placeholder: "/pio/models/live2d/…" },
+						{
+							key: "volume",
+							label: "音量",
+							control: "slider",
+							min: 0,
+							max: 1,
+							step: 0.05,
+						},
+						{
+							key: "scale",
+							label: "缩放",
+							control: "number",
+							min: 0.1,
+							max: 5,
+							step: 0.1,
+						},
+						{ key: "x", label: "X", control: "number" },
+						{ key: "y", label: "Y", control: "number" },
+					],
+				},
+				{
+					key: "live2d.position",
+					label: "位置",
+					control: "select",
+					options: [
+						{ label: "左下", value: "bottom-left" },
+						{ label: "右下", value: "bottom-right" },
+					],
+				},
+				{
+					key: "live2d.size.width",
+					label: "宽度",
+					control: "number",
+					min: 50,
+				},
+				{
+					key: "live2d.size.height",
+					label: "高度",
+					control: "number",
+					min: 50,
+				},
+				{ key: "live2d.primaryColor", label: "主色", control: "input", placeholder: "var(--l2d-msg-bg)" },
+				{
+					key: "live2d.transitionDuration",
+					label: "过渡时长 (ms)",
+					control: "number",
+					min: 0,
+				},
+				{
+					key: "live2d.transitionType",
+					label: "过渡类型",
+					control: "select",
+					options: [
+						{ label: "滑动", value: "slide" },
+						{ label: "淡入淡出", value: "fade" },
+					],
+				},
+				{
+					key: "live2d.menus.items",
+					label: "菜单项",
+					control: "objectList",
+					itemLabelKey: "label",
+					emptyItem: { icon: "", label: "", action: "" },
+					itemSchema: [
+						{ key: "icon", label: "图标", control: "input", placeholder: "图标名或路径" },
+						{ key: "label", label: "标签", control: "input", placeholder: "菜单显示文字" },
+						{ key: "action", label: "动作", control: "input", placeholder: "如 change / about" },
+					],
+				},
+				{
+					key: "live2d.menus.align",
+					label: "菜单对齐",
+					control: "select",
+					options: [
+						{ label: "左", value: "left" },
+						{ label: "右", value: "right" },
+					],
+				},
+				{
+					key: "live2d.tips.enable",
+					label: "启用提示气泡",
+					control: "switch",
+				},
+				{ key: "live2d.tips.welcomeMessage", label: "欢迎语", control: "tags", placeholder: "欢迎语后点「添加」" },
+				{ key: "live2d.tips.messages", label: "随机提示", control: "tags", placeholder: "随机提示后点「添加」" },
+				{
+					key: "live2d.tips.duration",
+					label: "显示时长 (ms)",
+					control: "number",
+					min: 500,
+				},
+				{
+					key: "live2d.tips.interval",
+					label: "间隔 (ms)",
+					control: "number",
+					min: 1000,
+				},
+				{
+					key: "live2d.responsive.hideOnMobile",
+					label: "移动端隐藏",
+					control: "switch",
+				},
+				{
+					key: "live2d.responsive.mobileBreakpoint",
+					label: "移动端断点 (px)",
+					control: "number",
+					min: 320,
+				},
+			],
+		},
+	],
+};

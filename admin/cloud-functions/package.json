@@ -1,0 +1,7 @@
+{
+	"name": "firefly-admin-cloud-functions",
+	"private": true,
+	"version": "0.1.0",
+	"description": "Cloud Functions（Node.js 20）：登录鉴权用 node:crypto，写链路用 isomorphic-git",
+	"type": "module"
+}

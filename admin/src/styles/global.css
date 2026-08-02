@@ -1,0 +1,105 @@
+/* Semi Design 建议引入 reset;此处再补极简全局样式 */
+html,
+body,
+#root {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+	background: var(--semi-color-bg-0);
+	color: var(--semi-color-text-0);
+}
+
+/* ---------- 移动端适配 ---------- */
+
+/* 应用根布局高度:优先 dvh(随移动端地址栏伸缩),不支持时回退 100vh */
+.app-root-layout {
+	height: 100vh;
+}
+@supports (height: 100dvh) {
+	.app-root-layout {
+		height: 100dvh;
+	}
+}
+
+/* 移动端:输入类控件字号提到 16px,防止 iOS Safari 聚焦时自动放大页面;桌面不命中 */
+@media (max-width: 767px) {
+	.semi-input,
+	.semi-input-textarea textarea,
+	.semi-select-selection {
+		font-size: 16px;
+	}
+}
+
+/* react-photo-view:隐藏其自带左右箭头(仅桌面渲染),统一用 AdminPhotoProvider
+   的自定义箭头(两端一致,且自带箭头与自定义箭头位置重叠会出现双箭头) */
+.PhotoView-Slider__ArrowLeft,
+.PhotoView-Slider__ArrowRight {
+	display: none;
+}
+
+/* 管理后台 Tabs：标签栏单行横向滑动，不换行、不出现箭头按钮；
+   滚动隔离在 .semi-tabs-bar 内，避免带动整页左右滑。
+   用于页面内容 / 资料数据 / 配置中心 / 系统设置 等页。
+   .site-config-scroll-tabs 为历史别名，与 .admin-scroll-tabs 等价。 */
+.admin-scroll-tabs,
+.site-config-scroll-tabs {
+	max-width: 100%;
+	overflow-x: hidden;
+}
+.admin-scroll-tabs .semi-tabs-bar,
+.site-config-scroll-tabs .semi-tabs-bar {
+	display: block !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	overflow-x: auto !important;
+	overflow-y: hidden !important;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior-x: contain;
+	touch-action: pan-x;
+	scrollbar-width: thin;
+}
+.admin-scroll-tabs .semi-tabs-bar-line,
+.admin-scroll-tabs .semi-tabs-bar-top,
+.site-config-scroll-tabs .semi-tabs-bar-line,
+.site-config-scroll-tabs .semi-tabs-bar-top {
+	display: flex !important;
+	flex-wrap: nowrap !important;
+	width: max-content !important;
+	min-width: 100%;
+	box-sizing: border-box;
+}
+.admin-scroll-tabs .semi-tabs-tab-list,
+.site-config-scroll-tabs .semi-tabs-tab-list {
+	display: flex !important;
+	flex-wrap: nowrap !important;
+	width: max-content !important;
+	float: none !important;
+}
+.admin-scroll-tabs .semi-tabs-tab,
+.site-config-scroll-tabs .semi-tabs-tab {
+	flex-shrink: 0 !important;
+	white-space: nowrap;
+}
+.admin-scroll-tabs .semi-tabs-content,
+.admin-scroll-tabs .semi-tabs-pane,
+.admin-scroll-tabs .semi-tabs-content-top,
+.site-config-scroll-tabs .semi-tabs-content,
+.site-config-scroll-tabs .semi-tabs-pane,
+.site-config-scroll-tabs .semi-tabs-content-top {
+	overflow-x: hidden;
+	max-width: 100%;
+}
+
+/* ---------- 移动端点击高亮处理 ----------
+   “点任何按钮都闪一下蓝、松开即消”——Android Chrome 的 -webkit-tap-highlight-color：
+   浏览器在可点击元素上叠加的一层半透明色，不是 CSS background，
+   所以覆盖 .semi-button:active 的 background 无效（前两次定位错误）。
+   全局置透明即可彻底去掉。Semi 按钮自身的 :active 底色反馈保留，无障碍不受影响。 */
+* {
+	-webkit-tap-highlight-color: transparent;
+}
+

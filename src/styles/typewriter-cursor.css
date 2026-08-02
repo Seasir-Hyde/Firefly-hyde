@@ -1,0 +1,30 @@
+/*
+ * 打字机光标 - 全局工具类
+ * 统一横幅副标题与 AI 摘要等处的闪烁光标样式，保持单一来源。
+ * 用法：为需要光标的元素追加 class="typewriter-cursor"
+ * 光标通过 ::after 伪元素渲染在文本末尾，随文本增长而跟随。
+ */
+.typewriter-cursor::after {
+  content: "|";
+  margin-left: 2px;
+  animation: typewriter-blink 1s infinite;
+  font-weight: 400;
+}
+
+@keyframes typewriter-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 无障碍：减少动态效果时停止闪烁，保留静态光标 */
+@media (prefers-reduced-motion: reduce) {
+  .typewriter-cursor::after {
+    animation: none;
+  }
+}

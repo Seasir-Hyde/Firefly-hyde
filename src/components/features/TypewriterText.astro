@@ -18,7 +18,7 @@ const textData = Array.isArray(text) ? JSON.stringify(text) : text;
 ---
 
 <span
-  class={`typewriter ${className}`}
+  class={`typewriter typewriter-cursor ${className}`}
   data-text={textData}
   data-speed={speed}
   data-delete-speed={deleteSpeed}
@@ -181,22 +181,5 @@ const textData = Array.isArray(text) ? JSON.stringify(text) : text;
 <style>
   .typewriter {
     position: relative;
-  }
-
-  .typewriter::after {
-    content: "|";
-    animation: blink 1s infinite;
-    margin-left: 2px;
-  }
-
-  @keyframes blink {
-    0%,
-    50% {
-      opacity: 1;
-    }
-    51%,
-    100% {
-      opacity: 0;
-    }
   }
 </style>

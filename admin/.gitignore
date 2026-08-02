@@ -1,0 +1,39 @@
+# 依赖与构建产物
+node_modules/
+dist/
+deploy-dist/
+.edgeone/
+
+# isomorphic-git 预打包产物（CI 每次 build 由 scripts/bundle-isomorphic-git.mjs 重生成，见十三章坑 4）
+cloud-functions/_shared/vendor/
+
+# 本地暂存（联调期间临时移走的写链路函数，已于 2b 归位；保留忽略以防残留）
+.cloud-funcs-stash/
+
+# TypeScript composite / vite.config 编译产物
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 日志
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.idea
+.vscode
+*.iml
+.DS_Store
+
+# Tencent Cloud EdgeOne
+.env
+.edgeone/*
+.tef_dist/*
+  

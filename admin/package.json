@@ -1,0 +1,38 @@
+{
+	"name": "firefly-admin",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"description": "Firefly 博客管理后台 - React 18 + Vite + Semi Design",
+	"scripts": {
+		"dev": "vite",
+		"dev:edgeone": "edgeone makers dev",
+		"build": "tsc -b && vite build && node scripts/bundle-isomorphic-git.mjs && node scripts/build-deploy-dist.mjs",
+		"build:vite": "tsc -b && vite build",
+		"bundle:git": "node scripts/bundle-isomorphic-git.mjs",
+		"preview": "vite preview",
+		"lint": "biome check --write ./src",
+		"format": "biome format --write ./src",
+		"type-check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@douyinfe/semi-icons": "^2.89.2",
+		"@douyinfe/semi-ui": "^2.89.2",
+		"@tanstack/react-query": "^5.62.11",
+		"md-editor-rt": "^5.8.1",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-photo-view": "^1.2.7",
+		"react-router-dom": "^6.28.0"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.5",
+		"@types/react": "^18.3.18",
+		"@types/react-dom": "^18.3.5",
+		"@vitejs/plugin-react": "^4.3.4",
+		"esbuild": "0.28.1",
+		"isomorphic-git": "1.38.6",
+		"typescript": "^5.7.3",
+		"vite": "^5.4.11"
+	}
+}

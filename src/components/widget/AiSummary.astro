@@ -2,8 +2,8 @@
 import { Icon } from "astro-icon/components";
 
 interface Props {
-	description: string;
-	descriptionSource?: "manual" | "ai" | string;
+  description: string;
+  descriptionSource?: "manual" | "ai" | string;
 }
 
 const { description, descriptionSource = "ai" } = Astro.props;
@@ -11,8 +11,8 @@ const { description, descriptionSource = "ai" } = Astro.props;
 const isManual = descriptionSource === "manual";
 const sourceLabel = isManual ? "人工编写" : "AI 摘要";
 const iconName = isManual
-	? "material-symbols:edit-note"
-	: "material-symbols:psychiatry";
+  ? "material-symbols:edit-note"
+  : "material-symbols:psychiatry";
 ---
 
 <div class="ai-summary-wrapper rounded-xl mb-6">
@@ -25,40 +25,83 @@ const iconName = isManual
         <span class="ai-summary-label">{sourceLabel}</span>
       </div>
       <p
-        class="ai-summary-text js-ai-summary-text dark:text-neutral-100"
+        class="ai-summary-text js-ai-summary-text typewriter-cursor dark:text-neutral-100"
         data-full-text={description}
-      ></p>
+      >
+      </p>
     </div>
+    <span class="ai-summary-decorative-a">Ai</span>
   </div>
 </div>
 
 <style>
-
-.ai-summary {
-    background: color-mix(in srgb,var(--card-bg) 94%,transparent);
+  .ai-summary {
+    position: relative;
+    background: color-mix(in srgb, var(--card-bg) 94%, transparent);
     overflow: hidden;
     border-radius: 0.75rem;
     /* 三层阴影：顶部内发光 + 内边框线 + 基础下层柔和投影 */
-    box-shadow: 
-        0 1px 0 oklch(1 .012 var(--hue) / .55) inset,
-        0 0 0 1px oklch(1 .01 var(--hue) / .14) inset,
-        0 16px 48px oklch(.42 .06 var(--hue) / .16);
+    box-shadow:
+      0 1px 0 oklch(1 0.012 var(--hue) / 0.55) inset,
+      0 0 0 1px oklch(1 0.01 var(--hue) / 0.14) inset,
+      0 16px 48px oklch(0.42 0.06 var(--hue) / 0.16);
     /* 给阴影加过渡，hover变化顺滑 */
     transition: box-shadow 0.3s ease;
-}
 
-.ai-summary:hover {
-    /* 内阴影完全不变，只加大外层向下阴影 */
-    box-shadow: 
-        0 1px 0 oklch(1 .012 var(--hue) / .55) inset,
-        0 0 0 1px oklch(1 .01 var(--hue) / .14) inset,
-        /* 垂直偏移更大，模糊更大，透明度更高，阴影更深、向下散开 */
-        0 24px 64px oklch(.3 .08 var(--hue) / .28);
-}
-
+    background:
+      radial-gradient(
+        circle at 10% 0%,
+        color-mix(in srgb, var(--primary) 18%, transparent),
+        transparent 34%
+      ),
+      radial-gradient(
+        circle at 92% 12%,
+        rgba(96, 165, 250, 0.14),
+        transparent 30%
+      ),
+      linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.76),
+        rgba(255, 255, 255, 0.46)
+      );
+  }
 
   .ai-summary-inner {
+    position: relative;
     padding: 1rem 1.25rem;
+  }
+
+  .ai-summary:hover {
+    box-shadow:
+      0 1px 0 oklch(1 0.012 var(--hue) / 0.55) inset,
+      0 0 0 1px oklch(1 0.01 var(--hue) / 0.14) inset,
+      0 24px 64px oklch(0.3 0.08 var(--hue) / 0.28);
+  }
+
+  .ai-summary-decorative-a {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 0.75rem;
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary) 35%, transparent),
+      color-mix(in srgb, var(--primary) 10%, transparent)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0.22;
+    pointer-events: none;
+    user-select: none;
+    letter-spacing: -0.05em;
+  }
+
+  .ai-summary:hover .ai-summary-decorative-a {
+    opacity: 0.3;
   }
 
   .ai-summary-header {
@@ -78,7 +121,9 @@ const iconName = isManual
     background: color-mix(in srgb, var(--primary) 14%, transparent);
     color: var(--primary);
     flex-shrink: 0;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
   }
 
   .ai-summary:hover .ai-summary-icon {
@@ -94,25 +139,48 @@ const iconName = isManual
   }
 
   .ai-summary-text {
+    position: relative;
     font-size: 0.925rem;
     line-height: 1.75;
     min-height: 1.75em;
     margin: 0;
+    padding-left: 0.75rem;
+  }
+
+  .ai-summary-text::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.35rem;
+    bottom: 0.35rem;
+    width: 2px;
+    border-radius: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--primary),
+      color-mix(in srgb, var(--primary) 40%, transparent)
+    );
+    opacity: 0.85;
   }
 
   /* 深色模式适配 */
-:global(html.dark) .ai-summary:hover {
-  overflow: hidden;
-  border-radius: 0.75rem;
-  /* 三层阴影加深：顶部内发光提亮、内边框、底层投影加深加重 */
-  box-shadow: 
-      0 1px 0 oklch(1 .012 var(--hue) / .65) inset,
-      0 0 0 1px oklch(1 .01 var(--hue) / .22) inset,
-      0 16px 48px oklch(.28 .08 var(--hue) / .32);
-  /* 给阴影加过渡，hover变化顺滑 */
-  transition: box-shadow 0.3s ease;
-}
+  :global(html.dark) .ai-summary:hover {
+    overflow: hidden;
+    border-radius: 0.75rem;
+    box-shadow:
+      0 1px 0 oklch(1 0.012 var(--hue) / 0.65) inset,
+      0 0 0 1px oklch(1 0.01 var(--hue) / 0.22) inset,
+      0 16px 48px oklch(0.28 0.08 var(--hue) / 0.32);
+    transition: box-shadow 0.3s ease;
+  }
 
+  :global(html.dark) .ai-summary-decorative-a {
+    opacity: 0.18;
+  }
+
+  :global(html.dark) .ai-summary:hover .ai-summary-decorative-a {
+    opacity: 0.26;
+  }
 </style>
 
 <script is:inline>
@@ -163,7 +231,12 @@ const iconName = isManual
           let delay = speed;
           if (char === "，" || char === "、" || char === "；" || char === ":") {
             delay = speed * 2;
-          } else if (char === "。" || char === "！" || char === "？" || char === "…") {
+          } else if (
+            char === "。" ||
+            char === "！" ||
+            char === "？" ||
+            char === "…"
+          ) {
             delay = speed * 3;
           }
 

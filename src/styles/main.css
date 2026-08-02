@@ -11,6 +11,7 @@
 @import './display-settings.css';
 @import './categories.css';
 @import './mouse.css';
+@import './typewriter-cursor.css';
 
 @plugin '@tailwindcss/typography';
 
