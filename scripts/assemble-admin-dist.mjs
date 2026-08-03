@@ -52,9 +52,9 @@ async function main() {
 
 	log("开始组装 admin 管理后台...");
 
-	// 1. 安装 admin 依赖
+	// 1. 安装 admin 依赖（包含 devDependencies，因为构建需要 TypeScript 类型定义和 Vite）
 	log("安装 admin 依赖...");
-	execSync("pnpm install", { cwd: ADMIN_DIR, stdio: "inherit" });
+	execSync("pnpm install --include-dev", { cwd: ADMIN_DIR, stdio: "inherit" });
 
 	// 2. 构建 admin 前端
 	log("构建 admin 前端...");
