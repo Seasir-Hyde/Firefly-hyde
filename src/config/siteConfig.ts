@@ -140,6 +140,8 @@ export const siteConfig: SiteConfig = {
 		music: true,
 		// 足迹地图页面开关
 		places: true,
+		// 书签导航页面开关
+		booknav: true,
 	},
 
 	// 足迹地图配置（高德地图）
@@ -182,6 +184,9 @@ export const siteConfig: SiteConfig = {
 		allowSwitch: true,
 		allowCoverSwitch: true,
 		showCover: true,
+		// 列表模式下封面图显示在哪一侧："right" 右侧，"left" 左侧
+		// 网格模式的封面固定在卡片顶部，不受此项影响
+		coverPosition: "right",
 		// 文章简介显示行数，设为 0 则不截断
 		descriptionLines: 2,
 		// 文章卡片底部统计和发布日期是否显示图标

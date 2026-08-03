@@ -16,6 +16,28 @@
     background: var(--btn-regular-bg) !important;
   }
 
+  /* 折叠渐变遮罩跟随站点亮暗色，而不是系统配色 */
+  /*
+   * expressive-code-collapsible 判断亮色的方式是 html.light / [data-theme='light'] /
+   * @media (prefers-color-scheme: light)，本站用的是 :root.dark 加
+   * data-theme='one-light' | 'one-dark-pro'，三种都命中不了；于是系统暗色 + 站点亮色时
+   * 只剩插件的暗色兜底值，遮罩就成了暗色。
+   *
+   * 插件所有渐变规则都优先读 --ec-collapse-bg-color，而遮罩层本身位于 .expressive-code
+   * 内部（div.expressive-code > .ec-collapse > .ec-collapse__content >
+   * figure.frame + div.ec-collapse__gradient），能继承到 expressive-code 按当前主题下发的
+   * --ec-frm-edBg，所以把这个变量指过去即可：颜色永远等于代码块自身背景，
+   * 既不用 !important，也不必硬编码主题色值。
+   */
+  .ec-collapse__gradient {
+    --ec-collapse-bg-color: var(--ec-frm-edBg);
+  }
+
+  /* 终端风格代码块的背景走另一个变量 */
+  .ec-collapse__content:has(> .frame.is-terminal) .ec-collapse__gradient {
+    --ec-collapse-bg-color: var(--ec-frm-trmBg);
+  }
+
   /* 折叠按钮样式适配主题色和亮暗色 */
   /* 只针对底部的toggle按钮，不改header-toggle */
   .ec-collapse__toggle {
@@ -67,11 +89,20 @@ body.wallpaper-transparent .expressive-code .frame {
   background: var(--card-bg-transparent) !important;
 }
 
+/* 透明模式下折叠遮罩改淡入半透明卡片背景，避免底部糊出一条不透明色块 */
+body.wallpaper-transparent .expressive-code .ec-collapse__gradient {
+  --ec-collapse-bg-color: var(--card-bg-transparent);
+}
+
 /* ===== Tab 代码块（rehype-code-group） ===== */
 /*
  * 沿用插件自带的原生样式（下划线式标签），
  * 只把颜色换成主题变量，并处理横向滚动与外边距。
  */
+
+.rehype-code-group {
+  margin: 1rem 0;
+}
 
 .rehype-code-group .rcg-tab-container {
   /* 标签多时可换行，避免溢出 */

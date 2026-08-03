@@ -1,7 +1,7 @@
 {
   "name": "firefly",
   "type": "module",
-  "version": "6.15.3",
+  "version": "6.15.6",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -111,11 +111,5 @@
     "rehype-callouts": "^2.2.0",
     "subset-font": "^2.5.0"
   },
-  "packageManager": "pnpm@9.14.4",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp"
-    ]
-  }
+  "packageManager": "pnpm@9.14.4"
 }

@@ -87,6 +87,8 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 足迹
 			LinkPresets.Places,
+			// 书签导航
+			LinkPresets.Booknav,
 		],
 	});
 
@@ -320,6 +322,12 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		url: "/anime/",
 		icon: "material-symbols:live-tv",
 		pageKey: "anime",
+	},
+	Booknav: {
+		name: "书签导航",
+		url: "/booknav/",
+		icon: "material-symbols:bookmarks",
+		pageKey: "booknav",
 	},
 };
 

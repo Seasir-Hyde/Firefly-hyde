@@ -80,9 +80,10 @@ export type SiteConfig = {
 
 	// 页面开关配置
 	pages: {
-		friends: boolean;
-		sponsor: boolean;
-		guestbook: boolean;
+		booknav: boolean; // 书签导航页面开关
+		friends: boolean; // 友链页面开关
+		sponsor: boolean; // 打赏页面开关
+		guestbook: boolean; // 留言板页面开关
 		bangumi: boolean;
 		gallery: boolean;
 		devices: boolean;
@@ -135,6 +136,8 @@ export type SiteConfig = {
 		allowSwitch: boolean; // 是否允许用户切换布局
 		allowCoverSwitch: boolean; // 是否允许用户切换文章封面图显示
 		showCover: boolean; // 是否在文章列表中显示封面图
+		// 列表模式下封面图的位置："right"=右侧（默认），"left"=左侧。网格模式封面固定在顶部，不受此项影响
+		coverPosition?: "left" | "right";
 		descriptionLines?: number; // 文章简介显示行数，设为 0 则不截断，默认 2
 		showStatsIcons?: boolean; // 文章卡片底部统计是否显示图标
 		// 标签显示位置："meta"=跟随元数据行（默认），"bottom"=卡片底部独立一行（将替换stats显示，二者只能选其一）

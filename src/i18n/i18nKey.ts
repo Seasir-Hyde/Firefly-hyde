@@ -110,6 +110,12 @@ enum I18nKey {
 	bangumi = "bangumi",
 	moments = "moments",
 
+	// 书签导航
+	booknav = "booknav",
+	booknavDescription = "booknavDescription",
+	searchBooknav = "searchBooknav",
+	booknavEmpty = "booknavEmpty",
+
 	// 番组计划筛选和状态文本
 	bangumiTitle = "bangumiTitle",
 	bangumiSubtitle = "bangumiSubtitle",

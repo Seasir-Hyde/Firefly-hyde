@@ -240,6 +240,9 @@ export default defineConfig({
 				if (pathname === "/friends/" && !siteConfig.pages.friends) {
 					return false;
 				}
+				if (pathname === "/booknav/" && !siteConfig.pages.booknav) {
+					return false;
+				}
 				if (pathname === "/sponsor/" && !siteConfig.pages.sponsor) {
 					return false;
 				}
