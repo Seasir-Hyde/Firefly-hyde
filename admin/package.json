@@ -6,7 +6,6 @@
 	"description": "Firefly 博客管理后台 - React 18 + Vite + Semi Design",
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",
-		"postinstall": "node node_modules/esbuild/install.js",
 		"dev": "vite",
 		"dev:edgeone": "edgeone makers dev",
 		"build": "tsc -b && vite build && node scripts/bundle-isomorphic-git.mjs && node scripts/build-deploy-dist.mjs",
