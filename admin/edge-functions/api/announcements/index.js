@@ -121,11 +121,12 @@ async function writeAll(kv, arr) {
 // 只保留已知字段，防任意字段写入 KV。
 function normalizeLink(input) {
 	if (!input || typeof input !== "object") return undefined;
-	if (typeof input.url !== "string" || !input.url.trim()) return undefined;
+	const url = typeof input.url === "string" ? input.url.trim() : "";
+	if (!url) return undefined;
 	return {
 		enable: input.enable !== false,
-		text: typeof input.text === "string" ? input.text : "",
-		url: input.url,
+		text: typeof input.text === "string" ? input.text.trim() : "",
+		url,
 		external: input.external === true,
 	};
 }

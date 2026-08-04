@@ -411,7 +411,7 @@ export const friendsConfig: FriendLink[] = [
 		siteurl: "https://ryu-chan.vercel.app/",
 		imgurl: "https://ryu-chan.vercel.app/profile.png",
 		tags: ["Astro"],
-		weight: 10,
+		weight: 0,
 		enabled: true,
 	},
 	{

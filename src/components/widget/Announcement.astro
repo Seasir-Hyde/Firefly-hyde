@@ -93,9 +93,30 @@ const showTitle = widgetConfig?.showTitle !== false;
           html += '<div class="text-neutral-600 dark:text-neutral-300 leading-relaxed mb-3">' +
             announcement.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
 
-          // 关闭按钮
-          if (announcement.closable) {
-            html += '<div class="flex items-center justify-end"><button class="btn-regular rounded-lg h-8 w-8 text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors" onclick="this.closest(\'.announcement-item\').style.display=\'none\'" aria-label="关闭公告"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="text-sm w-4 h-4"><path fill="currentColor" d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"/></svg></button></div>';
+          // 底部操作行（链接 + 关闭按钮）
+          const link = announcement.link;
+          const cleanedUrl = link ? String(link.url || '').trim().replace(/^`+|`+$/g, '').trim() : '';
+          const hasLink = link && link.enable !== false && cleanedUrl;
+          const hasClosable = announcement.closable;
+
+          if (hasLink || hasClosable) {
+            html += '<div class="flex items-center justify-between gap-3">';
+            if (hasLink) {
+              const linkExternal = link.external ? ' target="_blank" rel="noopener noreferrer"' : '';
+              const linkText = (link.text || '了解更多').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              html += '<div><a href="' +
+                cleanedUrl.replace(/"/g, '&quot;') + '"' +
+                linkExternal +
+                ' class="btn-regular rounded-lg px-3 py-1.5 text-sm font-medium active:scale-95 transition-transform">' +
+                linkText +
+                '</a></div>';
+            } else {
+              html += '<div></div>';
+            }
+            if (hasClosable) {
+              html += '<button class="btn-regular rounded-lg h-8 w-8 text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors" onclick="this.closest(\'.announcement-item\').style.display=\'none\'" aria-label="关闭公告"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="text-sm w-4 h-4"><path fill="currentColor" d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"/></svg></button>';
+            }
+            html += '</div>';
           }
 
           item.innerHTML = html;
