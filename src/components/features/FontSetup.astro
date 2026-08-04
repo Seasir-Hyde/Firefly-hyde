@@ -30,7 +30,7 @@ const selectedIds: string[] =
 // 每个字体的 fallback 由其在 fonts 中的 fallbacks 字段控制
 // 这里只拼接 CSS 变量引用，末尾加系统字体作为最终保底
 const SYSTEM_FONT_STACK =
-	"system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif";
+	"system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans SC, Microsoft YaHei, PingFang SC, sans-serif";
 const selectedFontVars = selectedIds.filter((v) => v !== "system");
 const bodyFontFamily =
 	selectedFontVars.length > 0

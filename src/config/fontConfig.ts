@@ -79,7 +79,7 @@ export const fontsList: FontDefinition[] = [
 				},
 			],
 		},
-		fallbacks: ["sans-serif"],
+		fallbacks: ["Noto Sans SC", "Microsoft YaHei", "PingFang SC", "sans-serif"],
 	},
 ];
 

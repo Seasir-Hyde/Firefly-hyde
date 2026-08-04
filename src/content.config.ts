@@ -115,6 +115,13 @@ const momentsCollection = defineCollection({
 		published: z.coerce.date(),
 		tags: z.array(z.string()).optional().default([]),
 		location: z.string().optional().default(""),
+		pinned: z.boolean().optional().default(false),
+		images: z
+			.union([z.string(), z.array(z.string())])
+			.optional(),
+		author: z.string().optional().default(""),
+		avatar: z.string().optional().default(""),
+		device: z.string().optional().default(""),
 	}),
 });
 
