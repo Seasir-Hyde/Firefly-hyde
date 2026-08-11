@@ -208,11 +208,7 @@ html {
     .is-theme-transitioning:not(.use-view-transition) #navbar[data-transparent-mode].scrolled > div,
     .is-theme-transitioning:not(.use-view-transition) body.wallpaper-transparent #navbar > div,
     .is-theme-transitioning:not(.use-view-transition) body.wallpaper-transparent #navbar[data-transparent-mode] > div,
-    .is-theme-transitioning:not(.use-view-transition) body.wallpaper-transparent #navbar[data-transparent-mode].scrolled > div,
-    .is-theme-transitioning:not(.use-view-transition) #wallpaper-wrapper ~ * #navbar > div,
-    .is-theme-transitioning:not(.use-view-transition) #wallpaper-wrapper ~ * #navbar[data-transparent-mode] > div,
-    .is-theme-transitioning:not(.use-view-transition) body:has(#wallpaper-wrapper) #navbar > div,
-    .is-theme-transitioning:not(.use-view-transition) body:has(#wallpaper-wrapper) #navbar[data-transparent-mode] > div {
+    .is-theme-transitioning:not(.use-view-transition) body.wallpaper-transparent #navbar[data-transparent-mode].scrolled > div {
         transition: none !important;
         backdrop-filter: none !important;
     }

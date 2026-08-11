@@ -4,9 +4,17 @@
   }
 
   .title {
-    font-family:
-      var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
-      Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(
+      --font-code,
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      "Liberation Mono",
+      "Courier New",
+      monospace
+    );
   }
 
   /* Language Badge 样式适配主题色和亮暗色 */

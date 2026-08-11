@@ -79,8 +79,7 @@
 }
 
 /* semifull 模式的透明阶段不单独显示 sticky shadow，避免 8px 和 50px 两段跳变 */
-#wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"]:not(.scrolled).navbar-sticky-shadow>div,
-body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scrolled).navbar-sticky-shadow>div {
+html[data-has-wallpaper] #navbar[data-transparent-mode="semifull"]:not(.scrolled).navbar-sticky-shadow>div {
     box-shadow: none !important;
 }
 
@@ -92,8 +91,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
 @media (min-width: 1024px) {
 
     /* "semi" */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semi"]>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semi"]>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semi"]>div {
         --navbar-surface-blur: var(--navbar-glass-blur, 20px) !important;
         background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55) * 100%), transparent) !important;
         border-radius: 0 0 0.75rem 0.75rem !important;
@@ -101,8 +99,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
     }
 
     /* "full" */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="full"]>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="full"]>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="full"]>div {
         --navbar-surface-blur: 0px !important;
         background: transparent !important;
         border: none !important;
@@ -111,8 +108,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
     }
 
     /* "semifull" (static) */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"]>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semifull"]>div {
         --navbar-surface-blur: 0px !important;
         background: transparent !important;
         border: none !important;
@@ -121,8 +117,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
     }
 
     /* "semifull" (scrolled) */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"].scrolled>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"].scrolled>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semifull"].scrolled>div {
         --navbar-surface-blur: var(--navbar-glass-blur, 20px) !important;
         background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55) * 100%), transparent) !important;
         border-radius: 0 0 0.75rem 0.75rem !important;
@@ -137,8 +132,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
 @media (max-width: 1023px) {
 
     /* "semi" */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semi"][data-is-home="true"]>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semi"][data-is-home="true"]>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semi"][data-is-home="true"]>div {
         --navbar-surface-blur: var(--navbar-glass-blur, 20px) !important;
         background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55) * 100%), transparent) !important;
         border-radius: 0 0 0.75rem 0.75rem !important;
@@ -146,8 +140,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
     }
 
     /* "full" */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="full"][data-is-home="true"]>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="full"][data-is-home="true"]>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="full"][data-is-home="true"]>div {
         --navbar-surface-blur: 0px !important;
         background: transparent !important;
         border: none !important;
@@ -156,8 +149,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
     }
 
     /* "semifull" (static) */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div {
         --navbar-surface-blur: 0px !important;
         background: transparent !important;
         border: none !important;
@@ -166,8 +158,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
     }
 
     /* "semifull" (scrolled) */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div {
         --navbar-surface-blur: var(--navbar-glass-blur, 20px) !important;
         background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55) * 100%), transparent) !important;
         border-radius: 0 0 0.75rem 0.75rem !important;
@@ -181,31 +172,27 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
 @media (min-width: 1024px) {
 
     /* "semi" */
-    :root.dark #wallpaper-wrapper~* #navbar[data-transparent-mode="semi"]>div,
-    :root.dark body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semi"]>div {
+    :root.dark[data-has-wallpaper] #navbar[data-transparent-mode="semi"]>div {
         background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55) * 100%), transparent) !important;
         box-shadow: var(--shadow-navbar-dark) !important;
     }
 
     /* "full" */
-    :root.dark #wallpaper-wrapper~* #navbar[data-transparent-mode="full"]>div,
-    :root.dark body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="full"]>div {
+    :root.dark[data-has-wallpaper] #navbar[data-transparent-mode="full"]>div {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
     }
 
     /* "semifull" (static) */
-    :root.dark #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"]>div,
-    :root.dark body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]>div {
+    :root.dark[data-has-wallpaper] #navbar[data-transparent-mode="semifull"]>div {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
     }
 
     /* "semifull" (scrolled) */
-    :root.dark #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"].scrolled>div,
-    :root.dark body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"].scrolled>div {
+    :root.dark[data-has-wallpaper] #navbar[data-transparent-mode="semifull"].scrolled>div {
         background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55) * 100%), transparent) !important;
         box-shadow: var(--shadow-navbar-dark) !important;
     }
@@ -217,31 +204,27 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
 @media (max-width: 1023px) {
 
     /* "semi" */
-    :root.dark #wallpaper-wrapper~* #navbar[data-transparent-mode="semi"][data-is-home="true"]>div,
-    :root.dark body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semi"][data-is-home="true"]>div {
+    :root.dark[data-has-wallpaper] #navbar[data-transparent-mode="semi"][data-is-home="true"]>div {
         background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55) * 100%), transparent) !important;
         box-shadow: var(--shadow-navbar-dark) !important;
     }
 
     /* "full" */
-    :root.dark #wallpaper-wrapper~* #navbar[data-transparent-mode="full"][data-is-home="true"]>div,
-    :root.dark body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="full"][data-is-home="true"]>div {
+    :root.dark[data-has-wallpaper] #navbar[data-transparent-mode="full"][data-is-home="true"]>div {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
     }
 
     /* "semifull" (static) */
-    :root.dark #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div,
-    :root.dark body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div {
+    :root.dark[data-has-wallpaper] #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
     }
 
     /* "semifull" (scrolled) */
-    :root.dark #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div,
-    :root.dark body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div {
+    :root.dark[data-has-wallpaper] #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div {
         background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55) * 100%), transparent) !important;
         box-shadow: var(--shadow-navbar-dark) !important;
     }
@@ -256,20 +239,16 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
     }
 
     /* 覆盖 banner 模式 semi / semifull 下的圆角 */
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semi"][data-is-home="true"]>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semi"][data-is-home="true"]>div,
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div,
-    #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div,
-    body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div {
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semi"][data-is-home="true"]>div,
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semifull"][data-is-home="true"]>div,
+    html[data-has-wallpaper] #navbar[data-transparent-mode="semifull"][data-is-home="true"].scrolled>div {
         border-radius: 0 !important;
     }
 }
 
 
 /* 页面切换期间强制 semifull 保持透明，避免自动回顶时出现背景闪烁 */
-.is-page-transitioning #wallpaper-wrapper~* #navbar[data-transparent-mode="semifull"]:not(.scrolled)>div,
-.is-page-transitioning body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scrolled)>div {
+.is-page-transitioning[data-has-wallpaper] #navbar[data-transparent-mode="semifull"]:not(.scrolled)>div {
     --navbar-surface-blur: 0px !important;
     background: transparent !important;
     border: none !important;
@@ -293,8 +272,10 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"]:not(.scro
  */
 
 /* 亮色主题 */
+html:not([data-wallpaper-mode="none"])[data-has-wallpaper]
+    :is(.dropdown-content, .float-panel),
 html:not([data-wallpaper-mode="none"])
-    :is(#wallpaper-wrapper~*, body:has(#wallpaper-wrapper), body.wallpaper-transparent)
+    body.wallpaper-transparent
     :is(.dropdown-content, .float-panel) {
     background: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(var(--navbar-panel-blur, 20px)) !important;
@@ -303,8 +284,10 @@ html:not([data-wallpaper-mode="none"])
 }
 
 /* 暗色主题 */
+:root.dark:not([data-wallpaper-mode="none"])[data-has-wallpaper]
+    :is(.dropdown-content, .float-panel),
 :root.dark:not([data-wallpaper-mode="none"])
-    :is(#wallpaper-wrapper~*, body:has(#wallpaper-wrapper), body.wallpaper-transparent)
+    body.wallpaper-transparent
     :is(.dropdown-content, .float-panel) {
     background: rgba(23, 23, 23, 0.8) !important;
     backdrop-filter: blur(var(--navbar-panel-blur, 20px)) !important;
@@ -319,7 +302,7 @@ html:not([data-wallpaper-mode="none"])
  * 使用高优先级选择器确保覆盖原主题样式
  * ============================================ */
 #navbar-wrapper #navbar[data-full-width="true"] > div,
-body:has(#wallpaper-wrapper) #navbar-wrapper #navbar[data-full-width="true"] > div,
+html[data-has-wallpaper] #navbar-wrapper #navbar[data-full-width="true"] > div,
 body.wallpaper-transparent #navbar-wrapper #navbar[data-full-width="true"] > div,
 #navbar-wrapper #navbar[data-full-width="true"].scrolled > div {
     border-radius: 0 !important;

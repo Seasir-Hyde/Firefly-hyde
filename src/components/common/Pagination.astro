@@ -1,6 +1,7 @@
 ---
 import type { Page } from "astro";
 import { Icon } from "astro-icon/components";
+import PageJump from "@/components/common/PageJump.svelte";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import { url } from "@/utils/url-utils";
@@ -51,6 +52,10 @@ const getPageUrl = (p: number) => {
 	if (p === 1) return "/";
 	return `/${p}/`;
 };
+
+// 传给 PageJump island 的跳转模板。函数没法跨 island 边界传，只能给字符串
+const jumpHrefTemplate = url("/{page}/");
+const jumpHrefFirst = url("/");
 ---
 
 <div class:list={[className, "pagination-wrapper flex flex-col gap-4 items-center"]} style={style}>
@@ -80,7 +85,14 @@ const getPageUrl = (p: number) => {
       </a>
 
       <div class="btn-card flex items-center rounded-(--radius-large) px-4 h-11 gap-1.5">
-        <span class="text-base font-bold text-(--primary)">{page.currentPage}</span>
+        <PageJump
+          client:load
+          variant="current"
+          currentPage={page.currentPage}
+          lastPage={page.lastPage}
+          hrefTemplate={jumpHrefTemplate}
+          hrefFirst={jumpHrefFirst}
+        />
         <span class="text-sm text-neutral-500 dark:text-neutral-500">/</span>
         <span class="text-base font-bold text-neutral-700 dark:text-neutral-300">{page.lastPage}</span>
       </div>
@@ -132,7 +144,16 @@ const getPageUrl = (p: number) => {
       {
         pages.map((p) => {
           if (p == HIDDEN)
-            return <Icon is:inline name="material-symbols:more-horiz" class="w-11 h-11 flex items-center justify-center text-neutral-700 dark:text-neutral-300" aria-hidden="true" />;
+            return (
+              <PageJump
+                client:load
+                variant="ellipsis"
+                currentPage={page.currentPage}
+                lastPage={page.lastPage}
+                hrefTemplate={jumpHrefTemplate}
+                hrefFirst={jumpHrefFirst}
+              />
+            );
           if (p == page.currentPage)
             return (
               <div

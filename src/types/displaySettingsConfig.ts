@@ -9,6 +9,12 @@ export type OverlaySwitchable =
 	  };
 
 export type DisplaySettingsConfig = {
+	// ── 总开关 (Master switch) ────────────────────────────
+
+	// 视图设置面板总开关
+	// 关闭时导航栏入口、设置面板以及下方所有设置项均不生效
+	enable: boolean;
+
 	// ── 外观 (Appearance) ──────────────────────────────────
 
 	// 主题色选择器开关

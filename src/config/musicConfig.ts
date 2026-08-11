@@ -39,7 +39,7 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	playMode: "list",
 
 	// 是否显启用歌词
-	showLyrics: true,
+	showLyrics: false,
 
 	// 是否同步全局播放器（当进入 /music 页面时）
 	// 设置为 true：侧边栏播放器完全同步 /music 页面的播放列表

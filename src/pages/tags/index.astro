@@ -29,13 +29,13 @@ const topMaxCount = topTags.length > 0 ? topTags[0].count : 1;
             <div class="flex flex-wrap gap-2.5">
                 {tags.map((t) => (
                     <a href={getTagUrl(t.name)}
-                       class="tag-item group inline-flex items-center gap-1.5 rounded-full
+                       class="tag-item group inline-flex items-center gap-1.5
                               text-sm font-medium px-3 py-1.5 transition-all duration-200"
                     >
                         <span>
                             {t.name.trim()}
                         </span>
-                        <span class="tag-count-badge text-xs font-bold px-1.5 rounded-full
+                        <span class="tag-count-badge text-xs font-bold px-1.5
                                      min-w-[1.5rem] text-center">
                             {t.count}
                         </span>
@@ -50,7 +50,7 @@ const topMaxCount = topTags.length > 0 ? topTags[0].count : 1;
         tags.length === 0 && (
             <div class="card-base px-8 py-12 text-center">
                 <Icon is:inline
-                    name="material-symbols:tag-off"
+                    name="material-symbols:tag-rounded"
                     class="text-5xl text-30 mx-auto mb-4"
                 />
                 <p class="text-30">{i18n(I18nKey.noData)}</p>

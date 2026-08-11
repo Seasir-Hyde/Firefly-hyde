@@ -48,7 +48,8 @@ const isNavbarMenuCentered = navbarMenuAlign === "center";
 // 检查是否为首页
 const isHomePageCheck = isHomePage(Astro.url.pathname);
 
-// 检查是否有任何显示设置可用
+// 检查是否有任何显示设置可用（总开关关闭时下方各项均为 false）
+const isDisplaySettingsEnabled = displaySettingsConfig.enable;
 const showThemeColor = displaySettingsConfig.themeColorSwitchable;
 const isWallpaperSwitchable = displaySettingsConfig.wallpaperModeSwitchable;
 const allowLayoutSwitch = displaySettingsConfig.layoutSwitchable;
@@ -222,7 +223,7 @@ const logoVariants = await Promise.all(
             </div>
         )}
         <NavMenuPanel links={links}></NavMenuPanel>
-        <DisplaySettings client:load></DisplaySettings>
+        {isDisplaySettingsEnabled && <DisplaySettings client:load></DisplaySettings>}
     </div>
 </div>
 
@@ -430,11 +431,10 @@ if (document.readyState === 'loading') {
                 }
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', loadPagefind);
-            } else {
-                loadPagefind();
-            }
+            window.__loadPagefind = function () {
+                if (!window.__pagefindLoading) window.__pagefindLoading = loadPagefind();
+                return window.__pagefindLoading;
+            };
         </script>
     )
 }

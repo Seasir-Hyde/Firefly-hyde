@@ -22,7 +22,7 @@ export const coverImageConfig: CoverImageConfig = {
 	enableInPost: true,
 
 	// 是否使用标题和元数据叠加在封面上的布局
-	enableInPostOverlay: true,
+	enableInPostOverlay: false,
 
 	// 是否显示转圈圈加载动画，会替代掉LQIP
 	showLoading: false,

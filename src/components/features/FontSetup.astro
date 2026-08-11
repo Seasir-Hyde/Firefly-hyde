@@ -30,7 +30,10 @@ const selectedIds: string[] =
 // 每个字体的 fallback 由其在 fonts 中的 fallbacks 字段控制
 // 这里只拼接 CSS 变量引用，末尾加系统字体作为最终保底
 const SYSTEM_FONT_STACK =
-	"system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans SC, Microsoft YaHei, PingFang SC, sans-serif";
+	"system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif";
+// 代码字体的系统保底栈，codeFont 没配置或字体加载失败时用它，保证行内代码/代码块始终是等宽字体
+const MONO_FONT_STACK =
+	'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
 const selectedFontVars = selectedIds.filter((v) => v !== "system");
 const bodyFontFamily =
 	selectedFontVars.length > 0
@@ -49,6 +52,12 @@ const bannerSubtitleFontVar = fontConfig.enable
 const navbarTitleFontVar = fontConfig.enable
 	? fontConfig.navbarTitleFont || ""
 	: "";
+const codeFontVar = fontConfig.enable ? fontConfig.codeFont || "" : "";
+// --font-code 由 fontConfig.codeFont 决定，行内代码和代码块统一引用它
+// 末尾始终带 MONO_FONT_STACK 保底，避免 codeFont 为空时 var() 解析失败导致字体回退到正文字体
+const codeFontFamily = codeFontVar
+	? `var(${codeFontVar}, ${MONO_FONT_STACK})`
+	: MONO_FONT_STACK;
 ---
 
 <!-- Astro Font API: 自动下载、缓存并生成优化的 @font-face -->
@@ -60,21 +69,29 @@ const navbarTitleFontVar = fontConfig.enable
 ))}
 
 <!-- 区域字体 CSS 变量 + body 字体 -->
-{fontConfig.enable && (bannerTitleFontVar || bannerSubtitleFontVar || navbarTitleFontVar || selectedFontVars.length > 0) && (
-  <style
-    set:html={`
-    ${bannerTitleFontVar || bannerSubtitleFontVar || navbarTitleFontVar ? `:root {
-      ${bannerTitleFontVar ? `--font-banner-title: var(${bannerTitleFontVar}, inherit);` : ""}
-      ${bannerSubtitleFontVar ? `--font-banner-subtitle: var(${bannerSubtitleFontVar}, inherit);` : ""}
-      ${navbarTitleFontVar ? `--font-navbar-title: var(${navbarTitleFontVar}, inherit);` : ""}
-    }` : ""}
+<!-- --font-code 无条件输出，即使关闭自定义字体，行内代码和代码块也要保持等宽字体 -->
+<style
+  set:html={`
+  :root {
+    --font-code: ${codeFontFamily};
+    ${bannerTitleFontVar ? `--font-banner-title: var(${bannerTitleFontVar}, inherit);` : ""}
+    ${bannerSubtitleFontVar ? `--font-banner-subtitle: var(${bannerSubtitleFontVar}, inherit);` : ""}
+    ${navbarTitleFontVar ? `--font-navbar-title: var(${navbarTitleFontVar}, inherit);` : ""}
+  }
 
-    body {
+  ${
+		fontConfig.enable &&
+		(bannerTitleFontVar ||
+			bannerSubtitleFontVar ||
+			navbarTitleFontVar ||
+			selectedFontVars.length > 0)
+			? `body {
       font-family: ${bodyFontFamily};
-    }
-  `}
-  />
-)}
+    }`
+			: ""
+	}
+`}
+/>
 
 <script>
   // 字体加载完成事件

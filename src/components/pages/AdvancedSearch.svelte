@@ -92,6 +92,7 @@ onMount(() => {
 		initialize();
 	} else {
 		// 生产环境等待 Pagefind 加载
+		window.__loadPagefind?.();
 		if (window.pagefind) {
 			initialize();
 		} else {

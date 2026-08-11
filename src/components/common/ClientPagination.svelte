@@ -1,4 +1,8 @@
 <script lang="ts">
+import PageJump from "@/components/common/PageJump.svelte";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+
 interface Props {
 	totalItems: number;
 	itemsPerPage: number;
@@ -49,13 +53,13 @@ function goToPage(page: number) {
         class="btn-card overflow-hidden rounded-(--radius-large) text-(--primary) w-11 h-11 disabled:opacity-50 disabled:cursor-not-allowed"
         onclick={() => goToPage(currentPage - 1)}
         disabled={currentPage === 1}
-        aria-label="上一页"
+        aria-label={i18n(I18nKey.paginationPrev)}
       >
         <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
 
       <div class="btn-card flex items-center rounded-(--radius-large) px-4 h-11 gap-1.5">
-        <span class="text-base font-bold text-(--primary)">{currentPage}</span>
+        <PageJump variant="current" {currentPage} lastPage={totalPages} onJump={goToPage} />
         <span class="text-sm text-neutral-500 dark:text-neutral-500">/</span>
         <span class="text-base font-bold text-neutral-700 dark:text-neutral-300">{totalPages}</span>
       </div>
@@ -65,7 +69,7 @@ function goToPage(page: number) {
         class="btn-card overflow-hidden rounded-(--radius-large) text-(--primary) w-11 h-11 disabled:opacity-50 disabled:cursor-not-allowed"
         onclick={() => goToPage(currentPage + 1)}
         disabled={currentPage === totalPages}
-        aria-label="下一页"
+        aria-label={i18n(I18nKey.paginationNext)}
       >
         <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
@@ -78,14 +82,14 @@ function goToPage(page: number) {
         class="btn-card overflow-hidden rounded-(--radius-large) text-(--primary) w-11 h-11 disabled:opacity-50 disabled:cursor-not-allowed"
         onclick={() => goToPage(currentPage - 1)}
         disabled={currentPage === 1}
-        aria-label="上一页"
+        aria-label={i18n(I18nKey.paginationPrev)}
       >
         <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
 
       {#each pageNumbers as pageItem}
         {#if pageItem === "..."}
-          <svg class="w-11 h-11 flex items-center justify-center text-neutral-700 dark:text-neutral-300" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          <PageJump variant="ellipsis" {currentPage} lastPage={totalPages} onJump={goToPage} />
         {:else}
           <button
             type="button"
@@ -106,7 +110,7 @@ function goToPage(page: number) {
         class="btn-card overflow-hidden rounded-(--radius-large) text-(--primary) w-11 h-11 disabled:opacity-50 disabled:cursor-not-allowed"
         onclick={() => goToPage(currentPage + 1)}
         disabled={currentPage === totalPages}
-        aria-label="下一页"
+        aria-label={i18n(I18nKey.paginationNext)}
       >
         <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>

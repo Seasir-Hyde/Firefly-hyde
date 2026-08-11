@@ -52,6 +52,10 @@ const hasCover =
 
 const coverWidth = "30%";
 
+// 网格模式封面是否撑满卡片贴边，false 则按卡片内容区的内边距内缩（间距随断点变化）
+const gridCoverFullWidth =
+	siteConfig.postListLayout.grid.coverFullWidth ?? false;
+
 const descriptionLines = Math.max(
 	0,
 	Math.trunc(siteConfig.postListLayout.descriptionLines ?? 2),
@@ -79,8 +83,17 @@ const statsShowReadingTime = statsConfig.showReadingTime ?? true;
 const tagsPosition = siteConfig.postListLayout.tagsPosition ?? "meta";
 const showTagsInMeta = metaShowTags && tagsPosition === "meta";
 const showTagsAtBottom = metaShowTags && tagsPosition === "bottom";
+// 底部标签样式："chip" 按钮样式，"text" 纯文字无底色
+const bottomTagsAsText =
+	(siteConfig.postListLayout.tagsBottomStyle ?? "chip") === "text";
 const descriptionClampLines = String(descriptionLines);
 const shouldClampDescription = descriptionLines > 0;
+
+// 底部标签：超出 tagCount 的部分折叠成一个 +N 提示，tagCount 为 0 时不限制
+const tagList = tags ?? [];
+const bottomTags = metaTagCount > 0 ? tagList.slice(0, metaTagCount) : tagList;
+const hiddenTags = tagList.slice(bottomTags.length);
+const hiddenTagCount = hiddenTags.length;
 
 const { remarkPluginFrontmatter } = await render(entry);
 const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
@@ -93,6 +106,7 @@ const minutes = remarkPluginFrontmatter.minutes;
     "post-card-wrapper",
     hasCover ? "has-cover" : "no-cover",
     pinned ? "pinned" : "",
+    gridCoverFullWidth ? "" : "grid-cover-inset",
     "card-base flex flex-col-reverse w-full rounded-(--radius-large) overflow-hidden relative",
     className,
   ]}
@@ -161,19 +175,40 @@ const minutes = remarkPluginFrontmatter.minutes;
     </div>
 
     <!-- bottom tags（与 stats 二选一） -->
-    {showTagsAtBottom && tags && tags.length > 0 && (
-      <div class="post-card-bottom-tags flex flex-wrap items-center gap-1.5 mt-auto pt-3">
-        {(metaTagCount > 0 ? tags.slice(0, metaTagCount) : tags).map((tag) => (
+    {showTagsAtBottom && bottomTags.length > 0 && (
+      <div
+        class:list={[
+          "post-card-bottom-tags flex flex-wrap items-center mt-auto pt-3",
+          bottomTagsAsText ? "gap-x-3 gap-y-1" : "gap-1.5",
+        ]}
+      >
+        {bottomTags.map((tag) => (
           <a
             href={getTagUrl(tag)}
             aria-label={`View all posts with the ${tag.trim()} tag`}
-            class="transition text-xs font-medium px-2.5 py-1 rounded-full
-              bg-black/5 dark:bg-white/10 text-neutral-500 dark:text-neutral-400
-              hover:bg-(--btn-regular-bg) hover:text-(--btn-content)"
+            class:list={[
+              "transition text-xs font-medium",
+              bottomTagsAsText
+                ? "text-50 hover:text-(--primary)"
+                : "tag-item px-2.5 py-1",
+            ]}
           >
             #{tag.trim()}
           </a>
         ))}
+        {hiddenTagCount > 0 && (
+          <span
+            title={hiddenTags.map((tag) => `#${tag.trim()}`).join(" ")}
+            class:list={[
+              "text-xs font-medium",
+              bottomTagsAsText
+                ? "text-50"
+                : "tag-item tag-item-static px-2.5 py-1",
+            ]}
+          >
+            +{hiddenTagCount}
+          </span>
+        )}
       </div>
     )}
 
@@ -407,6 +442,13 @@ const minutes = remarkPluginFrontmatter.minutes;
     border-radius: var(--radius-large) var(--radius-large) 0 0 !important;
     max-height: none !important;
     aspect-ratio: 2/1 !important;
+  }
+
+  /* 非贴边：封面按卡片内容区的内边距内缩，跟随 --grid-card-padding 随屏幕变化 */
+  :global(.grid-mode) .post-card-wrapper.grid-cover-inset .post-card-image {
+    width: calc(100% - var(--grid-card-padding, 1rem) * 2) !important;
+    margin: var(--grid-card-padding, 1rem) var(--grid-card-padding, 1rem) 0 !important;
+    border-radius: 0.75rem !important;
   }
 
   :global(.grid-mode) .description {

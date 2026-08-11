@@ -33,13 +33,22 @@ const fakeResult: SearchResult[] = [
 ];
 
 // --- UI Logic ---
+// pagefind.js 是按需加载的（见 Navbar.astro），搜索 UI 一被碰到就触发。
+// 幂等，重复调用只会拿到同一个 promise。
+const requestPagefind = (): void => {
+	window.__loadPagefind?.();
+};
+
 const togglePanel = () => {
+	requestPagefind();
 	document
 		.getElementById("search-panel")
 		?.classList.toggle("float-panel-closed");
 };
 
 const handleDesktopFocus = (event: FocusEvent): void => {
+	requestPagefind();
+
 	const input = event.currentTarget;
 	if (
 		input instanceof HTMLElement &&
@@ -207,6 +216,7 @@ top-20 left-4 md:left-[unset] right-4 shadow-2xl rounded-2xl p-2"
         <Icon icon="material-symbols:search"
               class="absolute text-[1.25rem] pointer-events-none ml-3 transition my-auto text-black/30 dark:text-white/30"></Icon>
         <input placeholder={i18n(I18nKey.search)} bind:value={keywordMobile}
+               on:focus={requestPagefind}
                class="pl-10 absolute inset-0 text-sm bg-transparent outline-0
                focus:w-60 text-black/50 dark:text-white/50"
         >

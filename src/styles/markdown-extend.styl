@@ -79,9 +79,9 @@
     border-style: dashed
 
   iframe
+    display: block
     border-radius: 0.75rem
-    margin-left: auto
-    margin-right: auto
+    margin: 1.25rem auto
     max-width: 100%
 
 a.card-github
@@ -536,7 +536,8 @@ a.card-wiki-link
     min-width: 0
     display: flex
     flex-direction: column
-    justify-content: center
+    // 顶部对齐，空白只留在下方，不再平分到标题上方
+    justify-content: flex-start
     gap: 0.35rem
 
   .wlc-title
@@ -558,6 +559,8 @@ a.card-wiki-link
     display: flex
     flex-flow: row wrap
     align-items: center
+    // 日期 / 分类 / 标签这一行贴底，和左侧封面的下边缘对齐
+    margin-top: auto
     column-gap: 0.75rem
     row-gap: 0.25rem
     font-size: 0.75rem
@@ -596,13 +599,14 @@ a.card-wiki-link
 
   .wlc-cover
     flex: 0 0 auto
+    order: -1
     width: 30%
     max-width: 13rem
     min-width: 7rem
-    min-height: 7.5rem
-    margin: -1rem -1.25rem -1rem 0
+    margin: 0
     align-self: stretch
     overflow: hidden
+    border-radius: 0.75rem
 
     img
       display: block
@@ -628,5 +632,11 @@ a.card-wiki-link
       display: none
 
   @media (max-width: 640px)
+    flex-flow: column nowrap
+
     .wlc-cover
-      min-height: 6rem
+      width: 100%
+      max-width: none
+      min-width: 0
+      aspect-ratio: 2 / 1
+      align-self: stretch

@@ -8,6 +8,7 @@ import CodeGroupManager from "@components/features/CodeGroupManager.astro";
 import FancyboxManager from "@components/features/FancyboxManager.astro";
 import FontSetup from "@components/features/FontSetup.astro";
 import MusicManager from "@components/features/MusicManager.astro";
+import MusicPlayerView from "@components/features/MusicPlayerView.astro";
 import SakuraEffect from "@components/features/SakuraEffect.astro";
 import ScrollProgressBar from "@components/features/ScrollProgressBar.astro";
 import TitleChange from "@components/features/TitleChange.astro"; //网页标题切换组件
@@ -18,6 +19,7 @@ import {
 	backgroundWallpaper,
 	displaySettingsConfig,
 	expressiveCodeConfig,
+	musicPlayerConfig,
 	profileConfig,
 	siteConfig,
 } from "@/config";
@@ -44,9 +46,17 @@ interface Props {
 	lang?: string;
 	setOGTypeArticle?: boolean;
 	postSlug?: string;
+	hasWallpaper?: boolean;
 }
 
-let { title, description, lang, setOGTypeArticle, postSlug } = Astro.props;
+let {
+	title,
+	description,
+	lang,
+	setOGTypeArticle,
+	postSlug,
+	hasWallpaper = false,
+} = Astro.props;
 
 // apply a class to the body element to decide the height of the banner, only used for initial page load
 // Swup can update the body for each page visit, but it's after the page transition, causing a delay for banner height change
@@ -108,7 +118,7 @@ const siteLang = lang.replace("_", "-");
 ---
 
 <!doctype html>
-<html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode}>
+<html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode} data-has-wallpaper={hasWallpaper ? "" : undefined} data-tag-style={siteConfig.tagStyle ?? "rectangle"} data-category-style={siteConfig.categoryStyle ?? "rectangle"}>
   <head>
     <meta charset="UTF-8" />
     <style is:inline>
@@ -617,6 +627,11 @@ const siteLang = lang.replace("_", "-");
     <MusicManager />
     <slot />
 
+    <!-- 播放器视图脚本：必须在 <slot /> 之后（解析到它时所有 widget 的 DOM 要已存在），
+         且在 MusicManager 之后（swup 重跑按文档顺序，window.__fireflyMusic 得先就位） -->
+    {(musicPlayerConfig.showInNavbar || musicPlayerConfig.showInSidebar !== false) && (
+      <MusicPlayerView />
+    )}
 
 
     <!-- Sakura Effect -->

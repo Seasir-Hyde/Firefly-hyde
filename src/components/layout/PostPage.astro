@@ -381,21 +381,15 @@ const coverPositionClass =
   /* Grid Mode Customization */
   #post-list-container.grid-mode :global(.post-card-wrapper) {
     flex-direction: column-reverse !important;
+    /* 网格模式卡片内边距，封面非贴边时的内缩量也取这个值，改这里两边一起变 */
+    --grid-card-padding: 1rem;
   }
 
-  #post-list-container.grid-mode :global(.post-card-image) {
-    width: 100% !important;
-    position: relative !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    border-radius: var(--radius-large) var(--radius-large) 0 0 !important;
-    /*aspect-ratio: 16/9 !important;*/
-  }
+  /* 网格模式封面的定位、宽度和圆角统一在 PostCard.astro 里维护（含 grid.coverFullWidth 贴边开关），此处不再重复覆盖 */
 
   #post-list-container.grid-mode :global(.post-card-content) {
     width: 100% !important;
-    padding: 1rem !important;
+    padding: var(--grid-card-padding, 1rem) !important;
   }
 
   #post-list-container.grid-mode :global(.no-cover .post-card-content) {

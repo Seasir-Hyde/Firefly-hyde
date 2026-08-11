@@ -14,7 +14,6 @@ if (!content) {
 }
 
 const now = new Date();
-const pad = (value) => String(value).padStart(2, "0");
 const timezone = siteConfig.timezone || "Asia/Shanghai";
 const dateParts = new Intl.DateTimeFormat("en-CA", {
 	timeZone: timezone,
