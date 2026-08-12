@@ -445,11 +445,11 @@ const minutes = remarkPluginFrontmatter.minutes;
   }
 
   /* 非贴边：封面按卡片内容区的内边距内缩，跟随 --grid-card-padding 随屏幕变化 */
-  :global(.grid-mode) .post-card-wrapper.grid-cover-inset .post-card-image {
+  /* :global(.grid-mode) .post-card-wrapper.grid-cover-inset .post-card-image {
     width: calc(100% - var(--grid-card-padding, 1rem) * 2) !important;
     margin: var(--grid-card-padding, 1rem) var(--grid-card-padding, 1rem) 0 !important;
     border-radius: 0.75rem !important;
-  }
+  } */
 
   :global(.grid-mode) .description {
     flex-grow: 0 !important;
