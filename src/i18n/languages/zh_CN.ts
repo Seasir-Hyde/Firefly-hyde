@@ -13,6 +13,13 @@ export const zh_CN: Translation = {
 	[Key.searchContent]: "内容",
 	[Key.searchViewMore]: "查看更多结果 ({count} 个更多)",
 	[Key.other]: "其他",
+
+	// 导航栏菜单分组
+	[Key.navArticles]: "文章",
+	[Key.navSocial]: "社交",
+	[Key.navMine]: "我的",
+	[Key.navAbout]: "关于",
+	[Key.navLinks]: "链接",
 	[Key.all]: "全部",
 	[Key.friendsFilterAll]: "全部",
 
@@ -64,7 +71,7 @@ export const zh_CN: Translation = {
 	[Key.musicAudioPlayer]: "音频播放器",
 
 	// 公告栏
-	[Key.announcement]: "公告",
+	[Key.announcement]: "📢 欢迎来访者",
 	[Key.announcementClose]: "关闭",
 
 	[Key.comments]: "评论",
@@ -206,9 +213,14 @@ export const zh_CN: Translation = {
 	[Key.vndbLengthLong]: "长",
 	[Key.vndbLengthVeryLong]: "极长",
 
-	// 追番
-	[Key.anime]: "追番",
-	[Key.animeSubtitle]: "我的追番列表，数据来自 Bilibili 和 TMDB",
+	// 追番 - Bilibili
+	[Key.bilibili]: "哔哩哔哩",
+	[Key.bilibiliSubtitle]: "我的哔哩哔哩追番与追剧列表",
+	[Key.bilibiliNotConfigured]: "未配置哔哩哔哩数据源",
+	[Key.bilibiliNotConfiguredDesc]:
+		"请在 src/config/siteConfig.ts 中配置 bilibili.uid",
+
+	// 追番 - 公共组件
 	[Key.animeTotal]: "总追番",
 	[Key.animeAverageRating]: "平均评分",
 	[Key.animeSearch]: "搜索番剧...",
@@ -221,20 +233,13 @@ export const zh_CN: Translation = {
 	[Key.animeDateAsc]: "最早发布",
 	[Key.animeNoResults]: "没有找到匹配的番剧",
 	[Key.animeLastUpdated]: "数据更新于",
-	[Key.animeSource]: "数据来源",
 	[Key.animeEpStatus]: "进度",
 	[Key.animeViewDetails]: "查看详情",
-	[Key.animeNotConfigured]: "未配置追番数据源",
-	[Key.animeNotConfiguredDesc]:
-		"请在 src/config/siteConfig.ts 中配置 Bilibili UID 或 TMDB API Key",
 	[Key.animeBilibiliAvg]: "Bilibili 均分",
-	[Key.animeTmdbAvg]: "TMDB 均分",
-	[Key.animeDualSynced]: "双源已同步",
 	[Key.animeNoOverview]: "暂无简介",
 	[Key.animeClose]: "关闭",
 	[Key.animeSynopsis]: "剧情简介",
 	[Key.animeWatchNow]: "立即观看",
-	[Key.animeViewTmdb]: "查看 TMDB 详情",
 	[Key.animeAllWithCount]: "全部 ({count})",
 	[Key.animeTVWithCount]: "TV ({count})",
 	[Key.animeMovieWithCount]: "电影 ({count})",
@@ -244,6 +249,36 @@ export const zh_CN: Translation = {
 	[Key.animeTypeChinese]: "国创",
 	[Key.animeTypeDrama]: "电视剧",
 	[Key.animeTypeConcert]: "演唱会",
+
+	// MyAnimeList
+	[Key.mal]: "MyAnimeList",
+	[Key.malSubtitle]: "我的 MyAnimeList 动画与漫画列表",
+	[Key.malCategoryAnime]: "动画",
+	[Key.malCategoryManga]: "漫画",
+	[Key.malFilterAll]: "全部",
+	[Key.malStatusWatching]: "在看",
+	[Key.malStatusReading]: "在读",
+	[Key.malStatusCompleted]: "已看完",
+	[Key.malStatusOnHold]: "搁置",
+	[Key.malStatusDropped]: "抛弃",
+	[Key.malStatusPlanToWatch]: "想看",
+	[Key.malStatusPlanToRead]: "想读",
+	[Key.malNoData]: "暂无数据",
+	[Key.malNoDataDescription]: "该分类下还没有任何条目",
+	[Key.malEmpty]: "暂无数据",
+	[Key.malEmptyReason]:
+		"可能的原因：用户名不存在、列表为私密、Client ID 无效或网络连接问题",
+	[Key.malFetchError]: "MyAnimeList 数据拉取失败",
+	[Key.malFetchErrorDesc]:
+		"构建时从 MyAnimeList API 获取数据失败。请确认用户名和 Client ID 正确，且列表为公开状态。",
+	[Key.malNotConfigured]: "未配置 MyAnimeList 用户信息",
+	[Key.malNotConfiguredDesc]:
+		"请在 src/config/siteConfig.ts 中配置你的 MyAnimeList 用户名和 Client ID（列表需为公开状态）",
+	[Key.malLastUpdated]: "数据更新于",
+	[Key.malSeasonWinter]: "冬季",
+	[Key.malSeasonSpring]: "春季",
+	[Key.malSeasonSummer]: "夏季",
+	[Key.malSeasonFall]: "秋季",
 
 	// 分页
 	[Key.paginationFirst]: "首页",

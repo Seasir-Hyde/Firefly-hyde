@@ -13,6 +13,13 @@ export const en: Translation = {
 	[Key.searchContent]: "Content",
 	[Key.searchViewMore]: "View more results ({count} more)",
 	[Key.other]: "Other",
+
+	// Navbar menu groups
+	[Key.navArticles]: "Articles",
+	[Key.navSocial]: "Social",
+	[Key.navMine]: "Mine",
+	[Key.navAbout]: "About",
+	[Key.navLinks]: "Links",
 	[Key.all]: "All",
 	[Key.friendsFilterAll]: "All",
 
@@ -78,7 +85,7 @@ export const en: Translation = {
 		"Here are my friends, welcome to visit and communicate with each other",
 	[Key.searchFriends]: "Search friends...",
 	[Key.friendsEmpty]: "No friends yet.",
-	[Key.booknav]: "Bookmark Directory",
+	[Key.booknav]: "Bookmark Nav",
 	[Key.booknavDescription]:
 		"A curated collection of useful sites, organized by category.",
 	[Key.searchBooknav]: "Search bookmarks...",
@@ -211,9 +218,14 @@ export const en: Translation = {
 	[Key.vndbLengthLong]: "Long",
 	[Key.vndbLengthVeryLong]: "Very long",
 
-	// Anime Tracking
-	[Key.anime]: "Anime",
-	[Key.animeSubtitle]: "My anime tracking list, data from Bilibili and TMDB",
+	// Anime Tracking - Bilibili
+	[Key.bilibili]: "Bilibili",
+	[Key.bilibiliSubtitle]: "My Bilibili follow list (anime + drama)",
+	[Key.bilibiliNotConfigured]: "Bilibili not configured",
+	[Key.bilibiliNotConfiguredDesc]:
+		"Configure bilibili.uid in src/config/siteConfig.ts",
+
+	// Anime Tracking - Shared components
 	[Key.animeTotal]: "Total",
 	[Key.animeAverageRating]: "Avg Rating",
 	[Key.animeSearch]: "Search anime...",
@@ -226,20 +238,13 @@ export const en: Translation = {
 	[Key.animeDateAsc]: "Oldest",
 	[Key.animeNoResults]: "No matching anime found",
 	[Key.animeLastUpdated]: "Data updated at",
-	[Key.animeSource]: "Source",
 	[Key.animeEpStatus]: "Progress",
 	[Key.animeViewDetails]: "View Details",
-	[Key.animeNotConfigured]: "Anime data source not configured",
-	[Key.animeNotConfiguredDesc]:
-		"Please configure Bilibili UID or TMDB API Key in src/config/siteConfig.ts",
 	[Key.animeBilibiliAvg]: "Bilibili Avg",
-	[Key.animeTmdbAvg]: "TMDB Avg",
-	[Key.animeDualSynced]: "Dual Synced",
 	[Key.animeNoOverview]: "No synopsis available",
 	[Key.animeClose]: "Close",
 	[Key.animeSynopsis]: "Synopsis",
 	[Key.animeWatchNow]: "Watch Now",
-	[Key.animeViewTmdb]: "View TMDB Details",
 	[Key.animeAllWithCount]: "All ({count})",
 	[Key.animeTVWithCount]: "TV ({count})",
 	[Key.animeMovieWithCount]: "Movie ({count})",
@@ -249,6 +254,36 @@ export const en: Translation = {
 	[Key.animeTypeChinese]: "Chinese Animation",
 	[Key.animeTypeDrama]: "Drama",
 	[Key.animeTypeConcert]: "Concert",
+
+	// MyAnimeList
+	[Key.mal]: "MyAnimeList",
+	[Key.malSubtitle]: "My anime and manga lists from MyAnimeList",
+	[Key.malCategoryAnime]: "Anime",
+	[Key.malCategoryManga]: "Manga",
+	[Key.malFilterAll]: "All",
+	[Key.malStatusWatching]: "Watching",
+	[Key.malStatusReading]: "Reading",
+	[Key.malStatusCompleted]: "Completed",
+	[Key.malStatusOnHold]: "On Hold",
+	[Key.malStatusDropped]: "Dropped",
+	[Key.malStatusPlanToWatch]: "Plan to Watch",
+	[Key.malStatusPlanToRead]: "Plan to Read",
+	[Key.malNoData]: "No Data",
+	[Key.malNoDataDescription]: "No items in this category",
+	[Key.malEmpty]: "No Data",
+	[Key.malEmptyReason]:
+		"Possible reasons: username does not exist, list is private, invalid Client ID, or network issue",
+	[Key.malFetchError]: "MyAnimeList Data Fetch Failed",
+	[Key.malFetchErrorDesc]:
+		"Failed to fetch data from MyAnimeList API during build. Please check the username and Client ID, and make sure the list is public.",
+	[Key.malNotConfigured]: "MyAnimeList Not Configured",
+	[Key.malNotConfiguredDesc]:
+		"Please configure your MyAnimeList username and Client ID in src/config/siteConfig.ts. The list must be public.",
+	[Key.malLastUpdated]: "Data updated at",
+	[Key.malSeasonWinter]: "Winter",
+	[Key.malSeasonSpring]: "Spring",
+	[Key.malSeasonSummer]: "Summer",
+	[Key.malSeasonFall]: "Fall",
 
 	// Pagination
 	[Key.paginationFirst]: "First",

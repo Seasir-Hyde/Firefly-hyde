@@ -300,8 +300,8 @@ export const friendsConfig: FriendLink[] = [
 	{
 		title: "石猫博客",
 		desc: "就叫石猫好啦...",
-		siteurl: "https://blog.imshimao.comm",
-		imgurl: "https://img.cdn1.vip/i/6a1ad021e2d4c_1780142113.jpeg",
+		siteurl: "https://blog.imshimao.com",
+		imgurl: "https://img.cdn1.vip/i/6a811517810a6_1786844439.jpg",
 		tags: ["Blog"],
 		weight: 0,
 		enabled: true,

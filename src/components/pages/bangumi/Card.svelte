@@ -2,6 +2,7 @@
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { UserSubjectCollection } from "@/types/bangumi";
+import { getFailedCovers, markCoverFailed } from "@/utils/failed-covers";
 
 interface Props {
 	item: UserSubjectCollection;
@@ -55,29 +56,10 @@ const tags = $derived(
 		? item.tags
 		: (item.subject?.tags || []).map((t) => t.name).slice(0, 5),
 );
-const visibleTags = $derived(tags.slice(0, 3));
+const visibleTags = $derived(tags.slice(0, 2));
 const hiddenTagCount = $derived(Math.max(tags.length - visibleTags.length, 0));
 
 const FAILED_COVERS_KEY = "bangumi-failed-covers";
-
-function getFailedCovers(): Set<string> {
-	try {
-		return new Set(JSON.parse(localStorage.getItem(FAILED_COVERS_KEY) || "[]"));
-	} catch {
-		return new Set();
-	}
-}
-
-function markCoverFailed(url: string) {
-	try {
-		const failed = getFailedCovers();
-		failed.add(url);
-		const arr = [...failed];
-		localStorage.setItem(FAILED_COVERS_KEY, JSON.stringify(arr.slice(-200)));
-	} catch {
-		// localStorage 不可用时静默忽略
-	}
-}
 
 const images = $derived(item.subject?.images);
 const coverFallbacks = $derived(
@@ -99,7 +81,7 @@ $effect(() => {
 	const srcs = coverFallbacks;
 	initialSrc = srcs[0] || "";
 	if (typeof window === "undefined" || srcs.length === 0) return;
-	const failed = getFailedCovers();
+	const failed = getFailedCovers(FAILED_COVERS_KEY);
 	const firstGood = srcs.find((url) => !failed.has(url));
 	if (firstGood) initialSrc = firstGood;
 });
@@ -114,7 +96,7 @@ function handleLoad(e: Event) {
 function handleError(e: Event) {
 	const img = e.currentTarget as HTMLImageElement;
 	const current = img.src;
-	markCoverFailed(current);
+	markCoverFailed(current, FAILED_COVERS_KEY);
 	const idx = coverFallbacks.indexOf(current);
 	if (idx >= 0 && idx < coverFallbacks.length - 1) {
 		img.src = coverFallbacks[idx + 1];

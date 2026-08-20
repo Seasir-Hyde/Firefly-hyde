@@ -76,25 +76,25 @@ async function fetchBangumiData(username: string, subjectType: number) {
 	const maxPages = isDev ? 1 : 0; // 0 表示不限制
 
 	console.log(
-		`[Bangumi] ${isDev ? "🔧 开发模式" : "🌐 生产模式"} - 开始获取用户 ${username} 的 subjectType ${subjectType} 数据...`,
+		`[Bangumi] ${isDev ? "🔧 Dev mode" : "🌐 Prod mode"} - fetching subjectType ${subjectType} data for user ${username}...`,
 	);
 
 	while (hasMore) {
 		// 开发模式限制：只获取一页
 		if (isDev && maxPages > 0 && allData.length >= limit * maxPages) {
-			console.log(`[Bangumi] 开发模式：已获取 ${maxPages} 页数据，停止获取`);
+			console.log(`[Bangumi] Dev mode: fetched ${maxPages} page(s), stopping`);
 			break;
 		}
 
 		// 检查是否超过最大获取限制
 		if (maxTotal > 0 && allData.length >= maxTotal) {
-			console.log(`[Bangumi] 已达到最大获取限制 ${maxTotal}，停止获取`);
+			console.log(`[Bangumi] Reached max fetch limit ${maxTotal}, stopping`);
 			break;
 		}
 
 		const url = `${bangumiConfig.apiUrl}/v0/users/${username}/collections?subject_type=${subjectType}&limit=${limit}&offset=${offset}`;
 
-		console.log(`[Bangumi] 正在获取数据: ${url} (已获取: ${allData.length})`);
+		console.log(`[Bangumi] Fetching data: ${url} (fetched: ${allData.length})`);
 
 		const response = await fetch(url, {
 			headers: {
@@ -105,7 +105,7 @@ async function fetchBangumiData(username: string, subjectType: number) {
 
 		if (!response.ok) {
 			throw new Error(
-				`[Bangumi] 无法获取数据 (状态码: ${response.status}): ${url}`,
+				`[Bangumi] Failed to fetch data (status: ${response.status}): ${url}`,
 			);
 		}
 
@@ -130,7 +130,7 @@ async function fetchBangumiData(username: string, subjectType: number) {
 		}
 	}
 
-	console.log(`[Bangumi] 总共获取到 ${allData.length} 条数据`);
+	console.log(`[Bangumi] Fetched ${allData.length} items in total`);
 	return allData;
 }
 
@@ -146,9 +146,9 @@ const isUserIdConfigured =
 	bangumiConfig.username.trim() !== "";
 
 if (!isUserIdConfigured) {
-	console.log("[Bangumi] ⚠️ 未配置 Bangumi 用户ID，跳过数据获取");
+	console.log("[Bangumi] ⚠️ Bangumi user ID not configured, skipping fetch");
 } else if (!isDynamic) {
-	console.log("[Bangumi] 🌐 从 API 获取数据（static 模式）");
+	console.log("[Bangumi] 🌐 Fetching data from API (static mode)");
 }
 
 if (!isDynamic) {
@@ -174,7 +174,10 @@ if (!isDynamic) {
 					count: data.length,
 				});
 			} catch (error) {
-				console.error(`[Bangumi] 获取 ${categoryInfo.name} 数据失败:`, error);
+				console.error(
+					`[Bangumi] Failed to fetch ${categoryInfo.name} data:`,
+					error,
+				);
 				fetchFailed = true;
 				break;
 			}

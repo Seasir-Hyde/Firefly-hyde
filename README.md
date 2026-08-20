@@ -7,7 +7,7 @@
 > 一款清新美观的 Astro 静态博客主题模板
 > 
 > ![Node.js >= 22](https://img.shields.io/badge/node.js-%3E%3D22-brightgreen) 
-![pnpm >= 9](https://img.shields.io/badge/pnpm-%3E%3D9-blue)
+![pnpm >= 11](https://img.shields.io/badge/pnpm-%3E%3D9-blue)
 ![Astro](https://img.shields.io/badge/Astro-7.2.0-orange)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6.0.3-blue)
 >
@@ -97,7 +97,7 @@
 ### 环境要求
 
 - Node.js ≥ 22
-- pnpm ≥ 9
+- pnpm ≥ 11
 
 ### 本地开发部署
 

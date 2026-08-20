@@ -1,2 +1,9 @@
+packages:
+  - '.'
+# 临时兼容CNB无交互构建：放开所有依赖构建脚本
 dangerouslyAllowAllBuilds: true
+# 临时关闭新版本包24小时冷却校验，适配私有包高频迭代
 minimumReleaseAge: 0
+allowBuilds:
+  esbuild: true
+  workerd: true

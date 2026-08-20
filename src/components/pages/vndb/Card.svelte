@@ -2,6 +2,7 @@
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { VndbUlistEntry } from "@/types/vndb";
+import { getFailedCovers, markCoverFailed } from "@/utils/failed-covers";
 import {
 	formatVndbLength,
 	getVndbStatusText,
@@ -94,32 +95,13 @@ const playRange = $derived(
 	[item.started, item.finished].filter(Boolean).join(" ~ "),
 );
 const tags = $derived((item.vn?.tags || []).map((tag) => tag.name));
-const visibleTags = $derived(tags.slice(0, 3));
+const visibleTags = $derived(tags.slice(0, 2));
 const hiddenTagCount = $derived(
 	Math.max((item.vn?.tagCount ?? tags.length) - visibleTags.length, 0),
 );
 const link = $derived(`${vnBaseUrl}${item.vn?.id || item.id}`);
 
 const FAILED_COVERS_KEY = "vndb-failed-covers";
-
-function getFailedCovers(): Set<string> {
-	try {
-		return new Set(JSON.parse(localStorage.getItem(FAILED_COVERS_KEY) || "[]"));
-	} catch {
-		return new Set();
-	}
-}
-
-function markCoverFailed(url: string) {
-	try {
-		const failed = getFailedCovers();
-		failed.add(url);
-		const arr = [...failed];
-		localStorage.setItem(FAILED_COVERS_KEY, JSON.stringify(arr.slice(-200)));
-	} catch {
-		// localStorage 不可用时静默忽略
-	}
-}
 
 const srcs = $derived(imageUrl ? [imageUrl] : []);
 let initialSrc = $state("");
@@ -128,7 +110,7 @@ $effect(() => {
 	const sources = srcs;
 	initialSrc = sources[0] || "";
 	if (typeof window === "undefined" || sources.length === 0) return;
-	const failed = getFailedCovers();
+	const failed = getFailedCovers(FAILED_COVERS_KEY);
 	const firstGood = sources.find((url) => !failed.has(url));
 	if (firstGood) initialSrc = firstGood;
 });
@@ -142,7 +124,7 @@ function handleLoad(e: Event) {
 
 function handleError(e: Event) {
 	const img = e.currentTarget as HTMLImageElement;
-	markCoverFailed(img.src);
+	markCoverFailed(img.src, FAILED_COVERS_KEY);
 	img.style.display = "none";
 }
 </script>

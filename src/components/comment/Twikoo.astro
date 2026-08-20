@@ -49,15 +49,15 @@ const config = {
         commentEl.innerHTML = "";
 
         const dynamicConfig = createTwikooConfig();
-        console.log("[Twikoo] 初始化配置:", dynamicConfig);
+        console.log("[Twikoo] Init config:", dynamicConfig);
 
         twikoo
           .init(dynamicConfig)
           .then(() => {
-            console.log("[Twikoo] 初始化完成");
+            console.log("[Twikoo] Init complete");
           })
           .catch((error) => {
-            console.error("[Twikoo] 初始化失败:", error);
+            console.error("[Twikoo] Init failed:", error);
           });
       }
     } else {
@@ -88,7 +88,7 @@ const config = {
   document.addEventListener("firefly:page:loaded", function () {
     const commentEl = document.getElementById("tcomment");
     if (commentEl) {
-      console.log("[Twikoo] 通过自定义事件重新初始化");
+      console.log("[Twikoo] Re-initializing via custom event");
       initTwikoo();
     }
   });

@@ -107,10 +107,10 @@ export function rehypeMermaid(options = {}) {
 						? `${mermaidCode.slice(0, 200)}…[truncated]`
 						: mermaidCode;
 				if (process.env.NODE_ENV === "development") {
-					console.error("[rehype-mermaid] 渲染失败:", e, preview);
+					console.error("[rehype-mermaid] Render failed:", e, preview);
 				} else {
 					console.error(
-						"[rehype-mermaid] 渲染失败:",
+						"[rehype-mermaid] Render failed:",
 						e instanceof Error ? e.message : String(e),
 					);
 				}

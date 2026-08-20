@@ -1,5 +1,7 @@
 <script lang="ts">
 import { onMount } from "svelte";
+import GridSkeleton from "@/components/common/GridSkeleton.svelte";
+import TabNav from "@/components/common/TabNav.svelte";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { VndbUlistEntry } from "@/types/vndb";
@@ -9,7 +11,6 @@ import {
 	getVndbItemsForTab,
 	type VndbTab,
 } from "@/utils/vndb-utils";
-import TabNav from "./TabNav.svelte";
 import VndbSection from "./VndbSection.svelte";
 
 interface Props {
@@ -103,7 +104,7 @@ async function loadDynamicData() {
 		activeTab = newTabs[0]?.id || "all";
 		fetchLoading = false;
 	} catch (e) {
-		console.error("[VNDB] 获取数据失败:", e);
+		console.error("[VNDB] Failed to fetch data:", e);
 		fetchLoading = false;
 		error = true;
 		errorTitle = i18n(I18nKey.vndbFetchError);
@@ -119,30 +120,7 @@ onMount(async () => {
 </script>
 
 {#if isDynamic && fetchLoading}
-  <div class="border-b border-(--line-divider) mb-3">
-    <div class="flex min-w-max space-x-8">
-      {#each [1, 2, 3, 4] as _}
-        <div class="h-10 w-20 bg-(--btn-regular-bg) rounded animate-pulse"></div>
-      {/each}
-    </div>
-  </div>
-  <div class="flex flex-wrap gap-1.5 mb-4">
-    {#each [1, 2, 3, 4] as _}
-      <div class="h-7 w-16 bg-(--btn-regular-bg) rounded-full animate-pulse"></div>
-    {/each}
-  </div>
-  <div class="bangumi-masonry grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-    {#each [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as _}
-      <div class="rounded-xl overflow-hidden">
-        <div class="aspect-2/3 bg-(--btn-regular-bg) animate-pulse"></div>
-      </div>
-    {/each}
-  </div>
-  <div class="mt-6 flex items-center justify-center gap-3">
-    <div class="w-11 h-11 bg-(--btn-regular-bg) rounded-lg animate-pulse"></div>
-    <div class="w-16 h-8 bg-(--btn-regular-bg) rounded animate-pulse"></div>
-    <div class="w-11 h-11 bg-(--btn-regular-bg) rounded-lg animate-pulse"></div>
-  </div>
+  <GridSkeleton />
 {:else if isDynamic && error}
   <div class="text-center py-16">
     <div class="inline-flex items-center justify-center w-16 h-16 bg-(--btn-regular-bg) rounded-full mb-6 border border-(--line-divider)">

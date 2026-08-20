@@ -61,11 +61,13 @@ async function main() {
 	const spineEnabled = spineModelConfig.enable;
 
 	if (live2dEnabled && spineEnabled) {
-		console.log("🎎 Live2D + Spine 看板娘均已启用，保留全部 pio 资源");
+		console.log(
+			"🎎 Live2D + Spine models are both enabled, keeping all pio assets",
+		);
 		return;
 	}
 
-	console.log("🎎 Pruning unused 看板娘 assets in dist/...");
+	console.log("🎎 Pruning unused mascot assets in dist/...");
 
 	const targets: string[] = [];
 	if (!live2dEnabled && !spineEnabled) {
@@ -87,15 +89,15 @@ async function main() {
 	}
 
 	if (removedCount === 0) {
-		console.log("✨ 没有需要清理的看板娘资源");
+		console.log("✨ No mascot assets to prune");
 		return;
 	}
 	console.log(
-		`✨ Pruned ${removedCount} 项看板娘资源, freed ${(freed / 1024 / 1024).toFixed(2)} MiB`,
+		`✨ Pruned ${removedCount} mascot assets, freed ${(freed / 1024 / 1024).toFixed(2)} MiB`,
 	);
 }
 
 main().catch((err) => {
-	console.error("❌ 看板娘资源裁剪失败:", err);
+	console.error("❌ Failed to prune mascot assets:", err);
 	process.exit(1);
 });

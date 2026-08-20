@@ -19,6 +19,7 @@ import { i18n } from "@/i18n/translation";
 import type { NavBarLink } from "@/types/config";
 import { getFallbackFormat, getImageFormats } from "@/utils/image-utils";
 import { isHomePage } from "@/utils/layout-utils";
+import { resolveNavbarLinks } from "@/utils/navbar-i18n";
 import { url } from "@/utils/url-utils";
 import DropdownMenu from "./DropdownMenu.astro";
 import NavMenuPanel from "./NavMenuPanel.astro";
@@ -76,9 +77,11 @@ function filterLinks(link: NavBarLink): NavBarLink | null {
 	return { ...link, children: filteredChildren };
 }
 
-let links: NavBarLink[] = navBarConfig.links
-	.map(filterLinks)
-	.filter((link): link is NavBarLink => link !== null);
+let links: NavBarLink[] = resolveNavbarLinks(
+	navBarConfig.links
+		.map(filterLinks)
+		.filter((link): link is NavBarLink => link !== null),
+);
 
 // 处理导航栏 Logo 图片，image / url 类型支持亮暗色分别设置
 const logoConfig = siteConfig.navbar.logo;

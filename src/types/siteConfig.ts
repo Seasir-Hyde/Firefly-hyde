@@ -93,6 +93,8 @@ export type SiteConfig = {
 		timeline: boolean;
 		skills: boolean;
 		anime: boolean; // 追番页面开关
+		mal: boolean; // MyAnimeList 页面开关
+		bilibili: boolean; // 哔哩哔哩追番页面开关
 		dynamic: boolean; // 动态页面开关
 		music: boolean;
 		// 足迹地图页面开关
@@ -222,15 +224,18 @@ export type SiteConfig = {
 		blurNsfw?: boolean; // 对Nsfw的游戏封面模糊化，默认为true
 	};
 
-	// 追番配置（Bilibili + TMDB）
-	anime?: {
-		bilibili?: {
-			uid: string; // Bilibili 用户 UID
-		};
-		tmdb?: {
-			apiKey: string; // TMDB API Key
-			listId: string; // TMDB 列表 ID
-		};
+	// MyAnimeList 配置
+	mal?: {
+		username?: string; // MyAnimeList 用户名，列表需为公开状态
+		clientId?: string; // MyAnimeList Client ID，从 https://myanimelist.net/apiconfig 注册免费应用后获取
+		apiUrl?: string; // MAL API 地址
+		animeBaseUrl?: string; // 动画条目详情页地址，末尾需要带 /
+		mangaBaseUrl?: string; // 漫画条目详情页地址，末尾需要带 /
+	};
+
+	// Bilibili 配置
+	bilibili?: {
+		uid?: string; // Bilibili 用户 UID
 	};
 
 	// 分页配置

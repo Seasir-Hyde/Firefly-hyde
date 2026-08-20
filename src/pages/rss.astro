@@ -131,7 +131,7 @@ const recentPosts = posts.slice(0, 6);
                         btn.style.backgroundColor = '';
                     }, 2000);
                 } catch (err) {
-                    console.error('复制失败:', err);
+                    console.error("Copy failed:", err);
                     const originalText = btn.textContent;
                     btn.textContent = btn.getAttribute('data-failed-text') || '';
                     setTimeout(() => {

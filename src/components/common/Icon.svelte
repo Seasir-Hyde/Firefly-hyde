@@ -24,9 +24,22 @@ interface Props {
 	icon: string;
 	class?: string;
 	style?: string;
+	size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 }
 
-let { icon, class: className = "", style = "" }: Props = $props();
+let { icon, class: className = "", style = "", size = "md" }: Props = $props();
+
+const sizeMap: Record<NonNullable<Props["size"]>, string> = {
+	sm: "0.875rem",
+	md: "1rem",
+	lg: "1.25rem",
+	xl: "1.5rem",
+	"2xl": "2rem",
+	"3xl": "2.75rem",
+};
+
+const sizeFontSize = sizeMap[size] ?? sizeMap.md;
+const mergedStyle = `font-size: ${sizeFontSize}; width: ${sizeFontSize}; height: ${sizeFontSize}; ${style ?? ""}`;
 
 // 检测图标是否存在
 const iconExists = $derived(() => {
@@ -43,12 +56,12 @@ const iconExists = $derived(() => {
 	<Iconify
 		{icon}
 		class="inline-icon inline-flex items-center justify-center {className}"
-		style={style}
+		style={mergedStyle}
 	/>
 {:else}
 	<span
 		class="inline-icon inline-flex items-center justify-center {className}"
-		style={style}
+		style={mergedStyle}
 		aria-hidden="true"
 		title="Icon not found: {icon}"
 	>

@@ -13,6 +13,13 @@ export const ko: Translation = {
 	[Key.searchContent]: "내용",
 	[Key.searchViewMore]: "더 많은 결과 보기 ({count}개 더)",
 	[Key.other]: "기타",
+
+	// 네비게이션 메뉴 그룹
+	[Key.navArticles]: "글",
+	[Key.navSocial]: "소셜",
+	[Key.navMine]: "마이",
+	[Key.navAbout]: "소개",
+	[Key.navLinks]: "링크",
 	[Key.all]: "전체",
 	[Key.friendsFilterAll]: "전체",
 
@@ -116,7 +123,7 @@ export const ko: Translation = {
 	[Key.moments]: "모먼트",
 
 	// Bangumi Filter and Status Text
-	[Key.bangumiTitle]: "나의 반구미",
+	[Key.bangumiTitle]: "나의 Bangumi",
 	[Key.bangumiSubtitle]: "나의 ACG 기록",
 	[Key.bangumiFilterAll]: "전체",
 	[Key.bangumiFilterWatched]: "시청 완료",
@@ -210,9 +217,14 @@ export const ko: Translation = {
 	[Key.vndbLengthLong]: "김",
 	[Key.vndbLengthVeryLong]: "매우 김",
 
-	// Anime Tracking
-	[Key.anime]: "애니메이션",
-	[Key.animeSubtitle]: "저의 애니메이션 시청 기록, Bilibili와 TMDB 데이터 기반",
+	// Anime Tracking - Bilibili
+	[Key.bilibili]: "Bilibili",
+	[Key.bilibiliSubtitle]: "저의 Bilibili 시청 목록 (애니메이션 + 드라마)",
+	[Key.bilibiliNotConfigured]: "Bilibili 데이터 소스가 설정되지 않았습니다",
+	[Key.bilibiliNotConfiguredDesc]:
+		"src/config/siteConfig.ts에서 bilibili.uid를 설정하세요",
+
+	// Anime Tracking - Shared components
 	[Key.animeTotal]: "총계",
 	[Key.animeAverageRating]: "평균 평점",
 	[Key.animeSearch]: "애니메이션 검색...",
@@ -225,20 +237,13 @@ export const ko: Translation = {
 	[Key.animeDateAsc]: "오래된 순",
 	[Key.animeNoResults]: "일치하는 애니메이션이 없습니다",
 	[Key.animeLastUpdated]: "데이터 업데이트 시각",
-	[Key.animeSource]: "출처",
 	[Key.animeEpStatus]: "진행 상황",
 	[Key.animeViewDetails]: "상세 보기",
-	[Key.animeNotConfigured]: "애니메이션 데이터 소스가 설정되지 않았습니다",
-	[Key.animeNotConfiguredDesc]:
-		"src/config/siteConfig.ts에서 Bilibili UID 또는 TMDB API 키를 설정하세요",
 	[Key.animeBilibiliAvg]: "Bilibili 평균",
-	[Key.animeTmdbAvg]: "TMDB 평균",
-	[Key.animeDualSynced]: "이중 동기화됨",
 	[Key.animeNoOverview]: "줄거리 정보 없음",
 	[Key.animeClose]: "닫기",
 	[Key.animeSynopsis]: "줄거리",
 	[Key.animeWatchNow]: "지금 시청하기",
-	[Key.animeViewTmdb]: "TMDB 상세 정보 보기",
 	[Key.animeAllWithCount]: "전체 ({count})",
 	[Key.animeTVWithCount]: "TV ({count})",
 	[Key.animeMovieWithCount]: "극장판 ({count})",
@@ -248,6 +253,36 @@ export const ko: Translation = {
 	[Key.animeTypeChinese]: "중국 애니메이션",
 	[Key.animeTypeDrama]: "드라마",
 	[Key.animeTypeConcert]: "콘서트",
+
+	// MyAnimeList
+	[Key.mal]: "MyAnimeList",
+	[Key.malSubtitle]: "MyAnimeList 애니메이션 및 만화 목록",
+	[Key.malCategoryAnime]: "애니메이션",
+	[Key.malCategoryManga]: "만화",
+	[Key.malFilterAll]: "전체",
+	[Key.malStatusWatching]: "시청 중",
+	[Key.malStatusReading]: "읽는 중",
+	[Key.malStatusCompleted]: "시청 완료",
+	[Key.malStatusOnHold]: "보류",
+	[Key.malStatusDropped]: "중단",
+	[Key.malStatusPlanToWatch]: "보고 싶음",
+	[Key.malStatusPlanToRead]: "읽고 싶음",
+	[Key.malNoData]: "데이터 없음",
+	[Key.malNoDataDescription]: "이 카테고리에는 항목이 없습니다",
+	[Key.malEmpty]: "데이터 없음",
+	[Key.malEmptyReason]:
+		"가능한 원인: 사용자 이름이 존재하지 않음, 목록이 비공개, Client ID가 유효하지 않음, 또는 네트워크 연결 문제",
+	[Key.malFetchError]: "MyAnimeList 데이터 가져오기 실패",
+	[Key.malFetchErrorDesc]:
+		"빌드 중 MyAnimeList API에서 데이터를 가져오지 못했습니다. 사용자 이름과 Client ID를 확인하고 목록이 공개인지 확인하세요.",
+	[Key.malNotConfigured]: "MyAnimeList가 설정되지 않았습니다",
+	[Key.malNotConfiguredDesc]:
+		"src/config/siteConfig.ts에서 MyAnimeList 사용자 이름과 Client ID를 설정하세요 (목록은 공개여야 합니다)",
+	[Key.malLastUpdated]: "데이터 업데이트 시각",
+	[Key.malSeasonWinter]: "겨울",
+	[Key.malSeasonSpring]: "봄",
+	[Key.malSeasonSummer]: "여름",
+	[Key.malSeasonFall]: "가을",
 
 	// Pagination
 	[Key.paginationFirst]: "처음",

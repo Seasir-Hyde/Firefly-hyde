@@ -237,28 +237,33 @@ export default defineConfig({
 				if (pathname === "/dynamic/" && !siteConfig.pages.dynamic) {
 					return false;
 				}
+				if (pathname === "/gallery/" && !siteConfig.pages.gallery) {
+					return false;
+				}
 				if (pathname === "/friends/" && !siteConfig.pages.friends) {
-					return false;
-				}
-				if (pathname === "/booknav/" && !siteConfig.pages.booknav) {
-					return false;
-				}
-				if (pathname === "/sponsor/" && !siteConfig.pages.sponsor) {
 					return false;
 				}
 				if (pathname === "/guestbook/" && !siteConfig.pages.guestbook) {
 					return false;
 				}
+				if (pathname === "/booknav/" && !siteConfig.pages.booknav) {
+					return false;
+				}
+				if (pathname === "/bilibili/" && !siteConfig.pages.bilibili) {
+					return false;
+				}
 				if (pathname === "/bangumi/" && !siteConfig.pages.bangumi) {
 					return false;
 				}
-				if (pathname === "/gallery/" && !siteConfig.pages.gallery) {
+				if (pathname === "/vndb/" && !siteConfig.pages.vndb) {
 					return false;
 				}
-				if (pathname === "/anime/" && !siteConfig.pages.anime) {
+				if (pathname === "/mal/" && !siteConfig.pages.mal) {
 					return false;
 				}
-
+				if (pathname === "/sponsor/" && !siteConfig.pages.sponsor) {
+					return false;
+				}
 				return true;
 			},
 		}),

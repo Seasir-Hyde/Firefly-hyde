@@ -81,6 +81,14 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 					"http://p1.music.126.net/b1eSBbx2Yia0k89ocfOnjQ==/18677404023325159.jpg?param=130y130",
 				lrc: "/assets/music/lrc/迷途羔羊.lrc",
 			},
+			{
+				name: "Shots (Broiler Remix)",
+				artist: "Imagine Dragons、Broiler",
+				url: "/assets/music/Imagine Dragons、Broiler - Shots (Broiler Remix).mp3",
+				cover:
+					"https://163.hyc.moe/?server=netease&type=pic&id=2942293116060555",
+				lrc: "/assets/music/lrc/Shots (Broiler Remix).lrc",
+			},
 		],
 	},
 };
