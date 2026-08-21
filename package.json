@@ -50,7 +50,7 @@
     "@tailwindcss/typography": "^0.5.20",
     "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
-    "astro": "7.2.0",
+    "astro": "7.2.3",
     "astro-expressive-code": "^0.44.1",
     "astro-icon": "^1.1.5",
     "ci-info": "^4.4.0",
@@ -93,7 +93,7 @@
   },
   "devDependencies": {
     "@astrojs/ts-plugin": "^1.10.10",
-    "@biomejs/biome": "2.5.7",
+    "@biomejs/biome": "2.5.9",
     "@iconify-json/mdi": "^1.2.3",
     "@iconify-json/mi": "^1.2.2",
     "@iconify-json/svg-spinners": "^1.2.4",
