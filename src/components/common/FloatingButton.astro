@@ -35,8 +35,8 @@ const {
     aria-label={ariaLabel}
     class:list={["h-full w-full rounded-2xl", toggleIcon && "has-toggle-icon"]}
   >
-    <Icon is:inline name={icon} class:list={["mx-auto", toggleIcon && "icon-default"]} />
-    {toggleIcon && <Icon is:inline name={toggleIcon} class="icon-toggled" />}
+    <Icon name={icon} class:list={["mx-auto", toggleIcon && "icon-default"]} />
+    {toggleIcon && <Icon name={toggleIcon} class="icon-toggled" />}
   </button>
 </div>
 

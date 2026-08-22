@@ -22,7 +22,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
   {/* 左栏：相关文章（静态） */}
   <div class="card-base p-5 md:p-6 flex flex-col">
     <div class="flex items-center gap-2 pb-3 mb-1 border-b border-(--line-divider)">
-      <Icon is:inline
+      <Icon
         name="material-symbols:signpost"
         class="text-xl text-(--primary)"
       />
@@ -59,7 +59,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
               <span class="truncate">{post.data.description || formatDateToYYYYMMDD(post.data.published)}</span>
             </div>
           </div>
-          <Icon is:inline
+          <Icon
             name="material-symbols:chevron-right-rounded"
             class="shrink-0 text-xl text-black/15 dark:text-white/15 transition group-hover:text-(--primary) group-hover:translate-x-0.5"
           />
@@ -67,7 +67,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
       ))
     ) : (
       <div class="flex-1 flex flex-col items-center justify-center min-h-40 text-black/30 dark:text-white/30 transition">
-        <Icon is:inline name="material-symbols:article-outline" class="text-4xl mb-3 opacity-50" />
+        <Icon name="material-symbols:article-outline" class="text-4xl mb-3 opacity-50" />
         <span class="text-sm">{noRelatedPostsText}</span>
       </div>
     )}
@@ -76,7 +76,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
   {/* 右栏：随机文章（客户端 fetch 渲染） */}
   <div class="card-base p-5 md:p-6 flex flex-col">
     <div class="flex items-center gap-2 pb-3 mb-1 border-b border-(--line-divider)">
-      <Icon is:inline
+      <Icon
         name="material-symbols:recommend"
         class="text-xl text-(--primary)"
       />
@@ -95,7 +95,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
       data-related-ids={relatedIds}
     >
       <div id="random-posts-empty" style="display:none" class="flex flex-col items-center text-black/30 dark:text-white/30 transition">
-        <Icon is:inline name="material-symbols:article-outline" class="text-4xl mb-3 opacity-50" />
+        <Icon name="material-symbols:article-outline" class="text-4xl mb-3 opacity-50" />
         <span class="text-sm">{noRandomPostsText}</span>
       </div>
     </div>
@@ -224,5 +224,9 @@ function renderRandomPosts() {
 }
 
 renderRandomPosts();
-document.addEventListener('swup:contentReplaced', renderRandomPosts);
+// 防止 Swup 切页重跑脚本时重复注册监听器（renderRandomPosts 每次切页仍需立即执行以渲染新页面）
+if (!window.__recommendedPostInit) {
+  window.__recommendedPostInit = true;
+  document.addEventListener('swup:contentReplaced', renderRandomPosts);
+}
 </script>

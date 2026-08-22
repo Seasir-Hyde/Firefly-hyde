@@ -4,11 +4,13 @@ import FilterControls from "@/components/common/FilterControls.svelte";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { MalListItem } from "@/types/mal";
+import type { NsfwMode } from "@/types/nsfw";
 import {
 	getMalStatusOrder,
 	getMalStatusText,
 	type MalListKind,
 } from "@/utils/mal-utils";
+import { filterNsfw, isMalNsfw } from "@/utils/nsfw-utils";
 import Card from "./Card.svelte";
 
 interface Props {
@@ -18,6 +20,7 @@ interface Props {
 	itemsPerPage?: number;
 	kind?: MalListKind;
 	baseUrl?: string;
+	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
 const {
@@ -27,12 +30,16 @@ const {
 	itemsPerPage = 24,
 	kind = "anime",
 	baseUrl = "https://myanimelist.net/anime/",
+	nsfw = "off",
 }: Props = $props();
+
+// NSFW 拦截：mode === "hide" 时过滤掉命中条目
+const safeItems = $derived(filterNsfw(items, nsfw, isMalNsfw));
 
 // 状态胶囊：全部 + 各观看/阅读状态（只显示有条目的）
 const filters = $derived.by(() => {
 	const counts: Record<string, number> = {};
-	for (const item of items) {
+	for (const item of safeItems) {
 		const status = item.list_status?.status || "unknown";
 		counts[status] = (counts[status] || 0) + 1;
 	}
@@ -40,7 +47,7 @@ const filters = $derived.by(() => {
 		{
 			value: "all",
 			label: i18n(I18nKey.malFilterAll),
-			count: items.length,
+			count: safeItems.length,
 		},
 		...getMalStatusOrder(kind)
 			.filter((status) => counts[status])
@@ -56,8 +63,8 @@ let activeFilter = $state("all");
 let currentPage = $state(1);
 
 const filteredItems = $derived.by(() => {
-	if (activeFilter === "all") return items;
-	return items.filter(
+	if (activeFilter === "all") return safeItems;
+	return safeItems.filter(
 		(item) => (item.list_status?.status || "unknown") === activeFilter,
 	);
 });
@@ -86,7 +93,7 @@ function goToPage(page: number) {
 </script>
 
 <div class="media-section" class:hidden={!isActive} data-section={sectionId}>
-  {#if items.length > 0}
+  {#if safeItems.length > 0}
     <FilterControls
       filters={filters}
       activeFilter={activeFilter}
@@ -100,7 +107,7 @@ function goToPage(page: number) {
           data-item-section={sectionId}
           data-item-status={item.list_status?.status || "unknown"}
         >
-          <Card item={item} loadImage={isActive} {kind} {baseUrl}/>
+          <Card item={item} loadImage={isActive} {kind} {baseUrl} {nsfw}/>
         </div>
       {/each}
     </div>

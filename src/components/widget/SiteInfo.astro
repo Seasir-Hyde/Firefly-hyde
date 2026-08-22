@@ -175,7 +175,7 @@ const detailItems: {
           <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-neutral-100/60 dark:bg-neutral-800/50">
             <div class="flex items-center gap-2.5">
               <div class="text-(--primary) text-lg">
-                <Icon is:inline name={item.icon} />
+                <Icon name={item.icon} />
               </div>
               <span class="text-neutral-700 dark:text-neutral-300 font-medium text-sm">
                 {item.label}
@@ -219,7 +219,7 @@ const detailItems: {
                   { "col-span-2": item.fullWidth }
                 ]}>
                   <div class="text-(--primary) text-lg">
-                    <Icon is:inline name={item.icon} />
+                    <Icon name={item.icon} />
                   </div>
                   <span class="text-xs text-neutral-500 dark:text-neutral-400">
                     {item.label}
@@ -243,7 +243,7 @@ const detailItems: {
         class="site-info-toggle-btn btn-plain rounded-lg w-full h-8 flex items-center justify-center gap-1.5 mt-1 text-(--primary) text-sm cursor-pointer"
       >
         <Icon
-          name="material-symbols:keyboard-arrow-down-rounded" is:inline
+          name="material-symbols:keyboard-arrow-down-rounded"
           class="site-info-toggle-icon w-6 h-6 transition-transform duration-200"
         />
         <span class="site-info-toggle-text"></span>

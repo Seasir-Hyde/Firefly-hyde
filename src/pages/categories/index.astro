@@ -30,7 +30,7 @@ const totalPosts = categories.reduce((sum, cat) => sum + cat.count, 0);
                     style={`animation-delay: calc(var(--content-delay) + ${index * 50}ms);`}
                 >
                     <div class="shrink-0 w-14 h-14 rounded-full bg-(--primary)/10 group-hover:bg-(--primary)/20 flex items-center justify-center transition-colors">
-                        <Icon is:inline
+                        <Icon
                             name="material-symbols:folder-open"
                             class="text-3xl text-(--primary)"
                         />
@@ -44,7 +44,7 @@ const totalPosts = categories.reduce((sum, cat) => sum + cat.count, 0);
                         </p>
                     </div>
                     <div class="shrink-0">
-                        <Icon is:inline
+                        <Icon
                             name="material-symbols:chevron-right-rounded"
                             class="text-2xl text-30 group-hover:text-(--primary) transition-colors "
                         />
@@ -58,7 +58,7 @@ const totalPosts = categories.reduce((sum, cat) => sum + cat.count, 0);
     {
         categories.length === 0 && (
             <div class="card-base px-8 py-12 text-center">
-                <Icon is:inline
+                <Icon
                     name="material-symbols:folder-off"
                     class="text-5xl text-30 mx-auto mb-4"
                 />

@@ -193,7 +193,11 @@ const hideSidebarOnPostPage =
 
   // 设置自动关闭功能
   function setupAutoClose() {
-    // 监听页面卸载和隐藏 - 使用 pagehide 替代已废弃的 unload
+    // 防止 Swup 切页重跑脚本时重复注册监听器
+    if (window.__floatingTOCAutoCloseInit) return;
+    window.__floatingTOCAutoCloseInit = true;
+    // 监听页面卸载和隐藏
+    window.addEventListener("beforeunload", closeTOC);
     window.addEventListener("pagehide", closeTOC);
     window.addEventListener("popstate", closeTOC);
     

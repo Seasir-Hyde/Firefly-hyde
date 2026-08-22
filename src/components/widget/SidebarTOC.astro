@@ -122,39 +122,44 @@ const items = encrypted ? [] : computeTocItems(headings, { maxLevel: 3 });
     }
   }
 
-  // 初始化
-  // 确保 DOM 准备好后再执行
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSidebarTOC);
-  } else {
-    initSidebarTOC();
-  }
+  // 防止 Swup 切页重跑脚本时重复注册监听器（initSidebarTOC 由下方一次性监听器在切页时触发）
+  if (!window.__sidebarTOCInit) {
+    window.__sidebarTOCInit = true;
 
-  // 页面切换时重新初始化
-  document.addEventListener("swup:contentReplaced", () => {
-    setTimeout(initSidebarTOC, 100);
-  });
-
-  // Astro 页面切换事件
-  document.addEventListener("astro:page-load", () => {
-    setTimeout(initSidebarTOC, 100);
-  });
-
-  // 浏览器导航事件
-  window.addEventListener("popstate", () => {
-    setTimeout(initSidebarTOC, 200);
-  });
-
-  // 监听 hashchange（但排除 TOC 内部导航）
-  window.addEventListener("hashchange", () => {
-    if (!window.tocInternalNavigation) {
-      setTimeout(initSidebarTOC, 100);
+    // 初始化
+    // 确保 DOM 准备好后再执行
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initSidebarTOC);
+    } else {
+      initSidebarTOC();
     }
-    window.tocInternalNavigation = false;
-  });
 
-  // 密码解密后重新初始化 TOC（需 DOM 遍历重建）
-  document.addEventListener("password:decrypted", () => {
-    setTimeout(initSidebarTOC, 200);
-  });
+    // 页面切换时重新初始化
+    document.addEventListener("swup:contentReplaced", () => {
+      setTimeout(initSidebarTOC, 100);
+    });
+
+    // Astro 页面切换事件
+    document.addEventListener("astro:page-load", () => {
+      setTimeout(initSidebarTOC, 100);
+    });
+
+    // 浏览器导航事件
+    window.addEventListener("popstate", () => {
+      setTimeout(initSidebarTOC, 200);
+    });
+
+    // 监听 hashchange（但排除 TOC 内部导航）
+    window.addEventListener("hashchange", () => {
+      if (!window.tocInternalNavigation) {
+        setTimeout(initSidebarTOC, 100);
+      }
+      window.tocInternalNavigation = false;
+    });
+
+    // 密码解密后重新初始化 TOC（需 DOM 遍历重建）
+    document.addEventListener("password:decrypted", () => {
+      setTimeout(initSidebarTOC, 200);
+    });
+  }
 </script>

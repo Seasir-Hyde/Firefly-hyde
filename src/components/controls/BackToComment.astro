@@ -41,7 +41,11 @@ import FloatingButton from "@/components/common/FloatingButton.astro";
   setTimeout(updateCommentButtonVisibility, 0);
   requestAnimationFrame(updateCommentButtonVisibility);
 
-  document.addEventListener("astro:page-load", updateCommentButtonVisibility);
-  document.addEventListener("swup:contentReplaced", updateCommentButtonVisibility);
-  document.addEventListener("swup:enable", updateCommentButtonVisibility);
+  // 防止 Swup 切页重跑脚本时重复注册监听器（上面每次重跑仍需刷新当前页面状态）
+  if (!window.__backToCommentInit) {
+    window.__backToCommentInit = true;
+    document.addEventListener("astro:page-load", updateCommentButtonVisibility);
+    document.addEventListener("swup:contentReplaced", updateCommentButtonVisibility);
+    document.addEventListener("swup:enable", updateCommentButtonVisibility);
+  }
 </script>

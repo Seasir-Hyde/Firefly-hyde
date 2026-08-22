@@ -1,5 +1,7 @@
 ---
 import { Icon } from "astro-icon/components";
+import "@/styles/markdown.css";
+import "@/styles/markdown-extend.styl";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import DynamicGallery from "@/components/pages/dynamic/DynamicGallery.astro";
 import DynamicInlineComments from "@/components/pages/dynamic/DynamicInlineComments.astro";
@@ -38,17 +40,17 @@ const profileUrl = url(dynamicConfig.profileUrl || "/about/");
 							<time data-dynamic-time></time>
 						</a>
 						<span class="dynamic-location" data-dynamic-location hidden>
-							<Icon is:inline name="material-symbols:location-on-rounded" />
+							<Icon name="material-symbols:location-on-rounded" />
 							<span data-dynamic-location-text></span>
 						</span>
 					</div>
 				</div>
 				<span class="dynamic-pinned-badge" data-dynamic-pinned hidden>
-	<Icon is:inline name="material-symbols:push-pin" class="size-3" />
+	<Icon name="material-symbols:push-pin" class="size-3" />
 	{i18n(I18nKey.pinned)}
 </span>
 				<span class="dynamic-entry-decoration" aria-hidden="true">
-					<Icon is:inline name="material-symbols:format-quote-rounded" />
+					<Icon name="material-symbols:format-quote-rounded" />
 				</span>
 			</header>
 

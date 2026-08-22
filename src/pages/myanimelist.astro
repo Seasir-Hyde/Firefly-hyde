@@ -12,6 +12,7 @@ import {
 	type MalCategory,
 	type MalListKind,
 } from "@/utils/mal-utils";
+import { filterNsfw, isMalNsfw } from "@/utils/nsfw-utils";
 
 // 检查页面是否启用
 if (!siteConfig.pages.mal) {
@@ -36,6 +37,8 @@ const malConfig = {
 		delay: 100, // 请求间隔毫秒数，避免频率限制
 		maxTotal: 1000, // 最大获取总数，防止无限循环（0=无限制）
 	},
+	// NSFW 处理："off" | "blur" | "hide"
+	nsfw: siteConfig.mal?.nsfw ?? "off",
 };
 //////////////////////////////////////////////////
 
@@ -116,6 +119,10 @@ if (isConfigured) {
 // 两个列表都获取失败才视为整体失败
 const fetchFailed = animeFailed && mangaFailed;
 
+// NSFW 拦截：hide 模式下过滤掉 NSFW 条目，保持分类计数一致
+animeItems = filterNsfw(animeItems, malConfig.nsfw, isMalNsfw);
+mangaItems = filterNsfw(mangaItems, malConfig.nsfw, isMalNsfw);
+
 // 构建分类（空列表的分类不显示）
 const categories: MalCategory[] = [];
 if (animeItems.length > 0) {
@@ -146,7 +153,7 @@ const activeCategory = categories[0]?.id || "anime";
         <div class="mb-6">
           <div class="flex items-center gap-3 mb-3">
             <div class="h-8 w-8 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70">
-              <Icon is:inline name="material-symbols:menu-book" class="text-[1.5rem]"></Icon>
+              <Icon name="material-symbols:menu-book" class="text-[1.5rem]"></Icon>
             </div>
             <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
               {i18n(I18nKey.mal)}
@@ -164,7 +171,7 @@ const activeCategory = categories[0]?.id || "anime";
           /* 未配置提示 */
           <div class="text-center py-16">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-(--btn-regular-bg) rounded-full mb-6 border border-(--line-divider)">
-              <Icon is:inline name="material-symbols:settings" class="text-[2rem] text-(--btn-content)" />
+              <Icon name="material-symbols:settings" class="text-[2rem] text-(--btn-content)" />
             </div>
             <h2 class="text-xl font-semibold text-black/80 dark:text-white/80 mb-3">
               {i18n(I18nKey.malNotConfigured)}
@@ -177,7 +184,7 @@ const activeCategory = categories[0]?.id || "anime";
           /* 获取失败提示 */
           <div class="text-center py-16">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-(--btn-regular-bg) rounded-full mb-6 border border-(--line-divider)">
-              <Icon is:inline name="material-symbols:error-outline" class="text-[2rem] text-red-500" />
+              <Icon name="material-symbols:error-outline" class="text-[2rem] text-red-500" />
             </div>
             <h2 class="text-xl font-semibold text-black/80 dark:text-white/80 mb-3">
               {i18n(I18nKey.malFetchError)}
@@ -194,12 +201,13 @@ const activeCategory = categories[0]?.id || "anime";
             initialActiveCategory={activeCategory}
             animeBaseUrl={malConfig.animeBaseUrl}
             mangaBaseUrl={malConfig.mangaBaseUrl}
+            nsfw={malConfig.nsfw}
           />
         ) : (
           /* 空列表提示 */
           <div class="text-center py-16">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-(--btn-regular-bg) rounded-full mb-6 border border-(--line-divider)">
-              <Icon is:inline name="material-symbols:settings" class="text-[2rem] text-(--btn-content)" />
+              <Icon name="material-symbols:settings" class="text-[2rem] text-(--btn-content)" />
             </div>
             <h2 class="text-xl font-semibold text-black/80 dark:text-white/80 mb-3">
               {isConfigured ? i18n(I18nKey.malEmpty) : i18n(I18nKey.malNotConfigured)}

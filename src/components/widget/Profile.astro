@@ -2,6 +2,7 @@
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import { profileConfig } from "@/config/profileConfig";
+import { encodeMailto, MAILTO_ONCLICK_SCRIPT } from "@/utils/email-utils";
 import { url } from "@/utils/url-utils";
 
 interface Props {
@@ -23,7 +24,7 @@ const className = Astro.props.class;
       class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50
         w-full h-full z-50 flex items-center justify-center"
     >
-      <Icon is:inline
+      <Icon
         name="fa7-regular:address-card"
         class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl"
       />
@@ -60,26 +61,15 @@ const className = Astro.props.class;
                         : "btn-regular rounded-lg h-10 w-10 active:scale-90";
 
                     if (item.url.startsWith("mailto:")) {
-                        const encodedEmail = Buffer.from(item.url.replace("mailto:", "")).toString("base64");
-                        return <a rel="me" aria-label={item.name} href="#" data-encoded-email={encodedEmail} onclick={`
-                                            (function() {
-                                                const encodedEmail = this.getAttribute('data-encoded-email');
-                                                const decodedEmail = atob(encodedEmail);
-                                                this.href = 'mailto:' + decodedEmail;
-                                                this.removeAttribute('data-encoded-email');
-                                                this.removeAttribute('onclick');
-                                                this.click();
-                                                return false;
-                                            }).call(this);
-                                        `.replace(/\s+/g, " ").trim()
-                                    },
+                        const encodedEmail = encodeMailto(item.url);
+                        return <a rel="me" aria-label={item.name} href="#" data-encoded-email={encodedEmail} onclick={MAILTO_ONCLICK_SCRIPT},
                                     class={className}>
-                            <Icon is:inline name={item.icon} class="text-[1.5rem]"></Icon>
+                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
                             {showName && item.name}
                         </a>
                     } else {
                         return <a rel="me" aria-label={item.name} href={item.url} target="_blank" class={className}>
-                            <Icon is:inline name={item.icon} class="text-[1.5rem]"></Icon>
+                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
                             {showName && item.name}
                         </a>
                     }
@@ -87,27 +77,16 @@ const className = Astro.props.class;
             )}
             {profileConfig.links.length == 1 && (function(item){
                 if (item.url.startsWith("mailto:")) {
-                        const encodedEmail = Buffer.from(item.url.replace("mailto:", "")).toString("base64");
-                        return <a rel="me" aria-label={item.name} href="#" data-encoded-email={encodedEmail} onclick={`
-                                            (function() {
-                                                const encodedEmail = this.getAttribute('data-encoded-email');
-                                                const decodedEmail = atob(encodedEmail);
-                                                this.href = 'mailto:' + decodedEmail;
-                                                this.removeAttribute('data-encoded-email');
-                                                this.removeAttribute('onclick');
-                                                this.click();
-                                                return false;
-                                            }).call(this);
-                                        `.replace(/\s+/g, " ").trim()
-                                    },
+                        const encodedEmail = encodeMailto(item.url);
+                        return <a rel="me" aria-label={item.name} href="#" data-encoded-email={encodedEmail} onclick={MAILTO_ONCLICK_SCRIPT},
                                     class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95">
-                            <Icon is:inline name={item.icon} class="text-[1.5rem]"></Icon>
+                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
                             {item.name}
                         </a>
                     } else {
                         return <a rel="me" aria-label={item.name} href={item.url} target="_blank"
                                             class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95">
-                                <Icon is:inline name={item.icon} class="text-[1.5rem]"></Icon>
+                                <Icon name={item.icon} class="text-[1.5rem]"></Icon>
                                 {item.name}
                             </a>
                     }

@@ -5,6 +5,8 @@ import TabNav from "@/components/common/TabNav.svelte";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { UserSubjectCollection } from "@/types/bangumi";
+import type { NsfwMode } from "@/types/nsfw";
+import { filterNsfw, isBangumiNsfw } from "@/utils/nsfw-utils";
 import BangumiSection from "./BangumiSection.svelte";
 
 interface Props {
@@ -20,7 +22,9 @@ interface Props {
 		categories: Record<string, boolean>;
 		categoryOrder: string[];
 		pagination: { limit: number; delay: number; maxTotal: number };
+		nsfw?: NsfwMode;
 	};
+	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
 const {
@@ -29,7 +33,10 @@ const {
 	bangumiData: staticData,
 	subjectBaseUrl,
 	fetchConfig,
+	nsfw,
 }: Props = $props();
+
+const nsfwMode = $derived(nsfw ?? fetchConfig?.nsfw ?? "off");
 
 const isDynamic = $derived(!!fetchConfig);
 
@@ -137,8 +144,10 @@ async function loadDynamicData() {
 				info.subjectType,
 				pagination,
 			);
-			newData[catKey] = data;
-			newTabs.push({ id: catKey, name: info.name, count: data.length });
+			// NSFW 拦截：hide 模式下过滤掉 NSFW 条目，保持标签页计数一致
+			const filtered = filterNsfw(data, nsfwMode, isBangumiNsfw);
+			newData[catKey] = filtered;
+			newTabs.push({ id: catKey, name: info.name, count: filtered.length });
 		} catch (e) {
 			console.error(`[Bangumi] Failed to fetch ${catKey} data:`, e);
 			fetchLoading = false;
@@ -210,6 +219,7 @@ onMount(async () => {
       isActive={tab.id === activeTab}
       itemsPerPage={24}
       {subjectBaseUrl}
+      nsfw={nsfwMode}
     />
   {/each}
 {/if}

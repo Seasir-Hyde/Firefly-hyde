@@ -2,18 +2,22 @@
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { UserSubjectCollection } from "@/types/bangumi";
+import type { NsfwMode } from "@/types/nsfw";
 import { getFailedCovers, markCoverFailed } from "@/utils/failed-covers";
+import { isBangumiNsfw } from "@/utils/nsfw-utils";
 
 interface Props {
 	item: UserSubjectCollection;
 	loadImage?: boolean;
 	subjectBaseUrl?: string;
+	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
 const {
 	item,
 	loadImage = false,
 	subjectBaseUrl = "https://bangumi.one/subject/",
+	nsfw = "off",
 }: Props = $props();
 
 const STATUS_COLORS: Record<number, string> = {
@@ -74,6 +78,9 @@ const year = $derived(
 const statusColor = $derived(STATUS_COLORS[item.type] || "bg-gray-500");
 const score = $derived(item.subject?.score || 0);
 
+// NSFW 封面模糊：mode === "blur" 且命中时模糊封面
+const imageNsfw = $derived(nsfw === "blur" && isBangumiNsfw(item));
+
 // SSR 阶段用第一个 URL，客户端挂载后跳过已知失败的 URL
 let initialSrc = $state("");
 
@@ -120,6 +127,7 @@ function handleError(e: Event) {
         data-src={loadImage ? undefined : initialSrc}
         alt={title}
         class="w-full h-full object-cover pointer-events-none opacity-0 transition-all duration-500 ease-out group-hover:scale-105"
+        style={imageNsfw ? "filter: blur(20px)" : undefined}
         loading="lazy"
         decoding="async"
         onload={handleLoad}

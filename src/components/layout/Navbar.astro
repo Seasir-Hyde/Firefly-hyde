@@ -26,16 +26,26 @@ import NavMenuPanel from "./NavMenuPanel.astro";
 
 const className = Astro.props.class;
 
-// 获取导航栏透明模式配置
+// 检查是否为首页
+const isHomePageCheck = isHomePage(Astro.url.pathname);
+
+// 获取导航栏透明模式配置：
+// banner 模式用 banner.navbar 配置；fullscreen 模式用 fullscreen.navbar，
+// 首页开启动态透明时用 semifull（顶部透明、下滑不透明），否则完全透明
 const navbarTransparentMode =
 	backgroundWallpaper.mode === "banner"
-		? backgroundWallpaper.common?.navbar?.transparentMode || "semi"
-		: "semi";
+		? backgroundWallpaper.banner?.navbar?.transparentMode || "semi"
+		: backgroundWallpaper.mode === "fullscreen"
+			? isHomePageCheck &&
+				(backgroundWallpaper.fullscreen?.navbar?.dynamicTransparent ?? false)
+				? "semifull"
+				: "none"
+			: "semi";
 
 // 获取导航栏模糊度（0 即关闭导航栏毛玻璃）
 const navbarBlur =
 	backgroundWallpaper.mode === "banner"
-		? (backgroundWallpaper.common?.navbar?.blur ?? 20)
+		? (backgroundWallpaper.banner?.navbar?.blur ?? 20)
 		: 0;
 
 // 获取导航栏标题，如果没有设置则使用 siteConfig.title
@@ -45,9 +55,6 @@ const navbarTitle = siteConfig.navbar.title || siteConfig.title;
 const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
 const navbarMenuAlign = siteConfig.navbar.menuAlign ?? "center";
 const isNavbarMenuCentered = navbarMenuAlign === "center";
-
-// 检查是否为首页
-const isHomePageCheck = isHomePage(Astro.url.pathname);
 
 // 检查是否有任何显示设置可用（总开关关闭时下方各项均为 false）
 const isDisplaySettingsEnabled = displaySettingsConfig.enable;
@@ -139,6 +146,36 @@ const logoVariants = await Promise.all(
 );
 ---
 <div id="navbar" class="z-50" style={`--navbar-glass-blur: ${navbarBlur}px;`} data-transparent-mode={navbarTransparentMode} data-is-home={isHomePageCheck} data-full-width={navbarWidthFull}>
+    <script is:inline define:vars={{
+      bannerTMode: backgroundWallpaper.banner?.navbar?.transparentMode || "semi",
+      bannerBlur: backgroundWallpaper.banner?.navbar?.blur ?? 20,
+      fsDynamic: backgroundWallpaper.fullscreen?.navbar?.dynamicTransparent ?? false,
+    }}>
+      // 首帧前按运行时壁纸模式修正导航栏透明模式：SSR 的 data-transparent-mode 按 config 设置，
+      // 与运行时模式不一致时（如 config fullscreen + 存储 banner）会先按错误模式渲染闪烁，
+      // 这里在解析期同步按 data-wallpaper-mode 修正（早于 rAF/DOMContentLoaded）
+      (function () {
+        const wm = document.documentElement.getAttribute("data-wallpaper-mode");
+        const navbar = document.getElementById("navbar");
+        if (!wm || !navbar) return;
+        const isHome = navbar.getAttribute("data-is-home") === "true";
+        let mode;
+        let blur;
+        if (wm === "fullscreen") {
+          mode = isHome && fsDynamic ? "semifull" : "none";
+          blur = 0;
+        } else if (wm === "banner") {
+          mode = bannerTMode;
+          blur = bannerBlur;
+        } else {
+          // overlay / none
+          mode = "none";
+          blur = 0;
+        }
+        navbar.setAttribute("data-transparent-mode", mode);
+        navbar.style.setProperty("--navbar-glass-blur", `${blur}px`);
+      })();
+    </script>
     <div class:list={[
         className,
         "overflow-visible! h-18 px-4"
@@ -150,7 +187,7 @@ const logoVariants = await Promise.all(
                     siteConfig.navbar.followTheme ? "text-(--primary)" : "dark:text-white text-black"
                 ]} style="font-family: var(--font-navbar-title, inherit)">
                                     {logoConfig?.type === "icon" ? (
-                                        <Icon is:inline name={logoConfig.value || "material-symbols:home-pin-outline"} class="navbar-logo text-[1.75rem] mb-1 mr-2" />
+                                        <Icon name={logoConfig.value || "material-symbols:home-pin-outline"} class="navbar-logo text-[1.75rem] mb-1 mr-2" />
                                     ) : logoIsImage && logoVariants.length > 0 ? (
                                         logoVariants.map((variant) => variant.image ? (
                                             <Picture
@@ -168,7 +205,7 @@ const logoVariants = await Promise.all(
                                             <img src={variant.src} alt={logoAlt} class={variant.class} data-logo-theme={variant.theme} fetchpriority="high" />
                                         ))
                                     ) : (
-                                        <Icon is:inline name="material-symbols:home-pin-outline" class="navbar-logo text-[1.75rem] mb-1 mr-2" />
+                                        <Icon name="material-symbols:home-pin-outline" class="navbar-logo text-[1.75rem] mb-1 mr-2" />
                                     )}
                     {navbarTitle}
                 </div>
@@ -190,7 +227,7 @@ const logoVariants = await Promise.all(
                 />
                 {musicPlayerConfig.showInNavbar && (
                     <button aria-label={i18n(I18nKey.music)} aria-controls="music-nav-panel" aria-expanded="false" class="btn-plain scale-animation rounded-lg h-9 w-9 md:h-11 md:w-11 active:scale-90" id="music-player-switch">
-                        <Icon is:inline name="material-symbols:music-note-rounded" class="text-[1.25rem]"></Icon>
+                        <Icon name="material-symbols:music-note-rounded" class="text-[1.25rem]"></Icon>
                     </button>
                 )}
                 {backgroundWallpaper.playerEnable && backgroundWallpaper.mode !== "none" && (
@@ -201,22 +238,19 @@ const logoVariants = await Promise.all(
                         data-i18n-play={i18n(I18nKey.videoPlay)}
                         data-i18n-pause={i18n(I18nKey.videoPause)}
                     >
-                        <span class="bg-player-icon-play"><Icon is:inline name="material-symbols:play-arrow-rounded" class="text-[1.5rem]" /></span>
-                        <span class="bg-player-icon-pause hidden"><Icon is:inline name="material-symbols:pause-rounded" class="text-[1.5rem]" /></span>
+                        <span class="bg-player-icon-play"><Icon name="material-symbols:play-arrow-rounded" class="text-[1.5rem]" /></span>
+                        <span class="bg-player-icon-pause hidden"><Icon name="material-symbols:pause-rounded" class="text-[1.5rem]" /></span>
                     </button>
                 )}
                 {hasDisplaySettings && (
                         <button aria-label="Display Settings" aria-controls="display-setting" aria-expanded="false" class="btn-plain scale-animation rounded-lg h-9 w-9 md:h-11 md:w-11 active:scale-90" id="display-settings-switch">
-                            <Icon is:inline name="material-symbols:palette-outline" class="text-[1.25rem]"></Icon>
+                            <Icon name="material-symbols:palette-outline" class="text-[1.25rem]"></Icon>
                         </button>
                 )}
                 {/* @ts-ignore */}
                 <LightDarkSwitch client:load></LightDarkSwitch>
-                <a aria-label="Admin" href="/admin/" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90">
-                    <Icon is:inline name="material-symbols:account-circle" class="text-[1.25rem]"></Icon>
-                </a>
-                <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-9 h-9 md:w-11 md:h-11 active:scale-90 lg:hidden!" id="nav-menu-switch">
-                    <Icon is:inline name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
+                <button aria-label="Menu" aria-controls="nav-menu-panel" aria-expanded="false" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-9 h-9 md:w-11 md:h-11 active:scale-90 lg:hidden!" id="nav-menu-switch">
+                    <Icon name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
                 </button>
             </div>
         </div>
@@ -356,7 +390,14 @@ function initSemifullScrollDetection() {
 
     function updateNavbarState() {
         if (document.documentElement.classList.contains('is-page-transitioning')) {
-            navbar!.classList.remove('scrolled');
+            // 全屏壁纸模式：切换期间保持当前 scrolled 状态，避免点击瞬间导航栏背景突然消失
+            // （否则导航栏会闪一下透明、切完又恢复成卡片底色）；其他模式沿用旧的强制透明逻辑
+            if (
+                document.documentElement.getAttribute('data-wallpaper-mode') !==
+                'fullscreen'
+            ) {
+                navbar!.classList.remove('scrolled');
+            }
             ticking = false;
             return;
         }

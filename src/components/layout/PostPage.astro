@@ -261,69 +261,74 @@ const coverPositionClass =
     container.style.height = `${Math.max(...colHeights)}px`;
   }
 
-  // 页面加载时初始化布局
-  document.addEventListener("DOMContentLoaded", function () {
-    // 延迟一点确保DOM完全加载
-    setTimeout(initLayout, 50);
+  // 防止 Swup 切页重跑脚本时重复注册监听器（initLayout 由下方一次性监听器在切页时触发）
+  if (!window.__postPageInit) {
+    window.__postPageInit = true;
 
-    // 监听图片加载以重新计算布局
-    const imgs = document.querySelectorAll('#post-list-container img');
-    imgs.forEach(img => {
-        // @ts-ignore
-        if(img.complete) return;
-        img.addEventListener('load', () => {
-            applyMasonryLayout();
-        });
+    // 页面加载时初始化布局
+    document.addEventListener("DOMContentLoaded", function () {
+      // 延迟一点确保DOM完全加载
+      setTimeout(initLayout, 50);
+
+      // 监听图片加载以重新计算布局
+      const imgs = document.querySelectorAll('#post-list-container img');
+      imgs.forEach(img => {
+          // @ts-ignore
+          if(img.complete) return;
+          img.addEventListener('load', () => {
+              applyMasonryLayout();
+          });
+      });
     });
-  });
 
-  // 页面显示时也初始化布局（处理页面切换）
-  document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) {
-      setTimeout(initLayout, 100);
-    }
-  });
-
-  // 监听布局变化事件
-  window.addEventListener("layoutChange", function (event) {
-    // @ts-ignore
-    const newLayout = event.detail.layout;
-    const postListContainer = document.getElementById("post-list-container");
-    if (!postListContainer) return;
-
-    updatePostListLayout(newLayout);
-  });
-
-  // 监听窗口大小变化
-  let resizeTimeout: any;
-  window.addEventListener("resize", function () {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(function () {
-      initLayout();
-    }, 250);
-  });
-
-  // 监听页面导航事件（Astro的客户端路由）
-  document.addEventListener("astro:page-load", function () {
-    setTimeout(initLayout, 50);
-
-    // 监听图片加载
-    const imgs = document.querySelectorAll('#post-list-container img');
-    imgs.forEach(img => {
-        // @ts-ignore
-        if(img.complete) return;
-        img.addEventListener('load', () => {
-            applyMasonryLayout();
-        });
+    // 页面显示时也初始化布局（处理页面切换）
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) {
+        setTimeout(initLayout, 100);
+      }
     });
-  });
 
-  document.addEventListener("astro:after-swap", function () {
-    setTimeout(initLayout, 50);
-  });
+    // 监听布局变化事件
+    window.addEventListener("layoutChange", function (event) {
+      // @ts-ignore
+      const newLayout = event.detail.layout;
+      const postListContainer = document.getElementById("post-list-container");
+      if (!postListContainer) return;
 
-  // 立即执行一次（处理页面刷新）
-  setTimeout(initLayout, 0);
+      updatePostListLayout(newLayout);
+    });
+
+    // 监听窗口大小变化
+    let resizeTimeout: any;
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(function () {
+        initLayout();
+      }, 250);
+    });
+
+    // 监听页面导航事件（Astro的客户端路由）
+    document.addEventListener("astro:page-load", function () {
+      setTimeout(initLayout, 50);
+
+      // 监听图片加载
+      const imgs = document.querySelectorAll('#post-list-container img');
+      imgs.forEach(img => {
+          // @ts-ignore
+          if(img.complete) return;
+          img.addEventListener('load', () => {
+              applyMasonryLayout();
+          });
+      });
+    });
+
+    document.addEventListener("astro:after-swap", function () {
+      setTimeout(initLayout, 50);
+    });
+
+    // 立即执行一次（处理页面刷新）
+    setTimeout(initLayout, 0);
+  }
 </script>
 
 <style is:global>

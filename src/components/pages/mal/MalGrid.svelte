@@ -1,5 +1,6 @@
 <script lang="ts">
 import TabNav from "@/components/common/TabNav.svelte";
+import type { NsfwMode } from "@/types/nsfw";
 import type { MalCategory } from "@/utils/mal-utils";
 import MalSection from "./MalSection.svelte";
 
@@ -8,6 +9,7 @@ interface Props {
 	initialActiveCategory?: string;
 	animeBaseUrl?: string;
 	mangaBaseUrl?: string;
+	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
 const {
@@ -15,6 +17,7 @@ const {
 	initialActiveCategory,
 	animeBaseUrl = "https://myanimelist.net/anime/",
 	mangaBaseUrl = "https://myanimelist.net/manga/",
+	nsfw = "off",
 }: Props = $props();
 
 let activeCategory = $state("");
@@ -44,6 +47,7 @@ function handleCategoryChange(categoryId: string) {
       itemsPerPage={24}
       kind={category.id}
       baseUrl={category.id === "manga" ? mangaBaseUrl : animeBaseUrl}
+      {nsfw}
     />
   {/each}
 {/if}

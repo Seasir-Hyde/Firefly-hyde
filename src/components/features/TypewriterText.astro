@@ -160,21 +160,25 @@ const textData = Array.isArray(text) ? JSON.stringify(text) : text;
     setTimeout(initTypewriterElements, 220);
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", runInitWithDelay);
-  } else {
-    runInitWithDelay();
-  }
+  // 防止 Swup 切页重跑脚本时重复注册监听器/hooks（runInitWithDelay 由下方一次性监听器在切页时触发）
+  if (!window.__typewriterTextInit) {
+    window.__typewriterTextInit = true;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", runInitWithDelay);
+    } else {
+      runInitWithDelay();
+    }
 
-  // 支持页面切换时重新初始化（兼容不同 swup 事件名）
-  document.addEventListener("swup:contentReplaced", runInitWithDelay);
-  document.addEventListener("swup:content:replace", runInitWithDelay);
-  document.addEventListener("swup:page:view", runInitWithDelay);
+    // 支持页面切换时重新初始化（兼容不同 swup 事件名）
+    document.addEventListener("swup:contentReplaced", runInitWithDelay);
+    document.addEventListener("swup:content:replace", runInitWithDelay);
+    document.addEventListener("swup:page:view", runInitWithDelay);
 
-  // swup hooks（若可用）
-  if (typeof window !== "undefined" && window.swup?.hooks) {
-    window.swup.hooks.on("content:replace", runInitWithDelay);
-    window.swup.hooks.on("page:view", runInitWithDelay);
+    // swup hooks（若可用）
+    if (typeof window !== "undefined" && window.swup?.hooks) {
+      window.swup.hooks.on("content:replace", runInitWithDelay);
+      window.swup.hooks.on("page:view", runInitWithDelay);
+    }
   }
 </script>
 

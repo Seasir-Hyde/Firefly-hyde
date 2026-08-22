@@ -34,14 +34,13 @@ const memos = dynamicConfig.memos;
 			class={className}
 			style={style}
 		>
-			<DynamicSidebar client:load apiUrl={apiUrl} limit={limit} {memos} />
+			<DynamicSidebar client:visible apiUrl={apiUrl} limit={limit} {memos} />
 			<a
 				class="btn-plain mt-2 flex items-center justify-center gap-1 rounded-lg p-1.5
 					text-sm text-(--primary)"
 				href={url("/dynamic/")}
 			>
 				<Icon
-					is:inline
 					name="material-symbols:dynamic-feed-rounded"
 					class="size-4.5"
 					aria-hidden="true"

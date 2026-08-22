@@ -24,7 +24,7 @@ const widgetId =
     <!-- Circular Cover -->
     <div class="relative shrink-0 w-14 h-14 group">
             <div class="w-full h-full rounded-full overflow-hidden shadow-lg border-2 border-white dark:border-neutral-700 relative z-10 bg-(--primary)/10 flex items-center justify-center">
-            <Icon is:inline name="material-symbols:music-note-rounded" class="text-2xl text-(--primary) opacity-40 absolute" aria-hidden="true" />
+            <Icon name="material-symbols:music-note-rounded" class="text-2xl text-(--primary) opacity-40 absolute" aria-hidden="true" />
             <img class="music-cover w-full h-full object-cover animate-spin-slow relative z-10 opacity-0 transition-opacity duration-300" src="" alt={i18n(I18nKey.musicCover)} style="animation-play-state: paused;" />
             </div>
     </div>
@@ -39,8 +39,8 @@ const widgetId =
             </div>
             <!-- Top Right: Lyric Toggle -->
             <button class={`btn-lrc-toggle hover:text-(--primary) transition-all duration-300 p-0.5 pr-2 transform active:scale-95 text-neutral-400 shrink-0 ${!config.showLyrics ? 'hidden' : ''}`} title={i18n(I18nKey.musicLyrics)} aria-label={i18n(I18nKey.musicLyrics)}>
-                <Icon is:inline name="material-symbols:subtitles-off-outline-rounded" class="icon-lrc-off text-xl" aria-hidden="true" />
-                <Icon is:inline name="material-symbols:subtitles-outline-rounded" class="icon-lrc-on text-xl hidden" aria-hidden="true" />
+                <Icon name="material-symbols:subtitles-off-outline-rounded" class="icon-lrc-off text-xl" aria-hidden="true" />
+                <Icon name="material-symbols:subtitles-outline-rounded" class="icon-lrc-on text-xl hidden" aria-hidden="true" />
             </button>
         </div>
 
@@ -61,8 +61,8 @@ const widgetId =
             <!-- Volume (Always visible) -->
             <div class="flex items-center gap-1 bg-transparent h-full ml-auto">
                 <button class="btn-mute hover:text-(--primary) transition-colors p-0.5 rounded-md flex items-center" title={i18n(I18nKey.musicVolume)} aria-label={i18n(I18nKey.musicVolume)}>
-                    <Icon is:inline name="material-symbols:volume-up-rounded" class=" icon-vol-high text-lg" aria-hidden="true" />
-                    <Icon is:inline name="material-symbols:volume-off-rounded" class="icon-vol-mute text-lg hidden" aria-hidden="true" />
+                    <Icon name="material-symbols:volume-up-rounded" class=" icon-vol-high text-lg" aria-hidden="true" />
+                    <Icon name="material-symbols:volume-off-rounded" class="icon-vol-mute text-lg hidden" aria-hidden="true" />
                 </button>
                 <div class="w-16 transition-all duration-300 ease-out flex items-center">
                     <div class="vol-container h-1 w-16 bg-neutral-300/50 dark:bg-neutral-500/40 rounded-full cursor-pointer relative ml-1" role="slider" aria-label={i18n(I18nKey.musicVolume)} aria-valuemin="0" aria-valuemax="100" aria-valuenow="70">
@@ -87,30 +87,30 @@ const widgetId =
 <div class="flex items-center justify-between px-1 select-none">
     <!-- Repeat Mode -->
     <button class="btn-repeat text-neutral-300 dark:text-neutral-600 hover:text-(--primary) transition-colors p-2 active:scale-95" title={i18n(I18nKey.musicPlayMode)} aria-label={i18n(I18nKey.musicPlayMode)}>
-        <Icon is:inline name="material-symbols:repeat-rounded" class="icon-repeat text-xl" aria-hidden="true" />
-        <Icon is:inline name="material-symbols:repeat-one-rounded" class="icon-repeat-one text-xl hidden" aria-hidden="true" />
-        <Icon is:inline name="material-symbols:shuffle-rounded" class="icon-shuffle text-xl hidden" aria-hidden="true" />
+        <Icon name="material-symbols:repeat-rounded" class="icon-repeat text-xl" aria-hidden="true" />
+        <Icon name="material-symbols:repeat-one-rounded" class="icon-repeat-one text-xl hidden" aria-hidden="true" />
+        <Icon name="material-symbols:shuffle-rounded" class="icon-shuffle text-xl hidden" aria-hidden="true" />
     </button>
 
     <!-- Prev -->
     <button class="btn-prev text-neutral-600 dark:text-neutral-300 hover:text-(--primary) transition-colors p-2 active:scale-95" title={i18n(I18nKey.musicPrev)} aria-label={i18n(I18nKey.musicPrev)}>
-        <Icon is:inline name="material-symbols:skip-previous-rounded" class="text-3xl" aria-hidden="true" />
+        <Icon name="material-symbols:skip-previous-rounded" class="text-3xl" aria-hidden="true" />
     </button>
 
     <!-- Play/Pause (Feature) -->
     <button class="btn-play w-12 h-12 bg-(--btn-regular-bg) hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active) text-(--primary) rounded-full flex items-center justify-center transition-all duration-300" title={i18n(I18nKey.musicPlay)} aria-label={i18n(I18nKey.musicPlay)}>
-        <Icon is:inline name="material-symbols:play-arrow-rounded" class="icon-play text-3xl ml-0.5" aria-hidden="true" />
-        <Icon is:inline name="material-symbols:pause-rounded" class="icon-pause text-3xl hidden" aria-hidden="true" />
+        <Icon name="material-symbols:play-arrow-rounded" class="icon-play text-3xl ml-0.5" aria-hidden="true" />
+        <Icon name="material-symbols:pause-rounded" class="icon-pause text-3xl hidden" aria-hidden="true" />
     </button>
 
     <!-- Next -->
     <button class="btn-next text-neutral-600 dark:text-neutral-300 hover:text-(--primary) transition-colors p-2 active:scale-95" title={i18n(I18nKey.musicNext)} aria-label={i18n(I18nKey.musicNext)}>
-        <Icon is:inline name="material-symbols:skip-next-rounded" class="text-3xl" aria-hidden="true" />
+        <Icon name="material-symbols:skip-next-rounded" class="text-3xl" aria-hidden="true" />
     </button>
 
     <!-- Playlist Toggle Arrow -->
     <button class="btn-drawer-toggle text-neutral-400 hover:text-(--primary) transition-all duration-300 p-2 transform active:scale-95" title={i18n(I18nKey.musicPlaylist)} aria-label={i18n(I18nKey.musicPlaylist)}>
-        <Icon is:inline name="mdi:playlist-music" class="text-xl" aria-hidden="true" />
+        <Icon name="mdi:playlist-music" class="text-xl" aria-hidden="true" />
     </button>
 </div>
 
@@ -139,7 +139,7 @@ const widgetId =
 <!-- Loading Overlay -->
     <div class="music-loading absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/60 dark:bg-[#1e1e1e]/60 backdrop-blur-[2px] transition-opacity duration-300 opacity-0 pointer-events-none rounded-xl" aria-busy="true" aria-hidden="true">
     <div class="w-8 h-8 text-(--primary) animate-spin">
-        <Icon is:inline name="material-symbols:sync-rounded" class="text-3xl" aria-hidden="true" />
+        <Icon name="material-symbols:sync-rounded" class="text-3xl" aria-hidden="true" />
     </div>
 </div>
 </div>

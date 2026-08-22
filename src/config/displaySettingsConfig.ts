@@ -54,7 +54,7 @@ export const displaySettingsConfig: DisplaySettingsConfig =
 		// 壁纸轮播开关
 		bannerCarouselSwitchable: true,
 
-		// 全屏透明模式参数调节开关
+		// 全屏壁纸/透明覆盖模式参数调节开关
 		// 设为 false 关闭所有滑块，或用对象形式单独控制每个滑块
 		overlaySwitchable: {
 			opacity: true,

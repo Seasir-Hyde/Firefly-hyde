@@ -1,5 +1,4 @@
 <script lang="ts">
-import QRCode from "qrcode";
 import { onMount } from "svelte";
 import Icon from "@/components/common/Icon.svelte";
 import { siteConfig } from "@/config";
@@ -213,6 +212,8 @@ async function generatePoster() {
 
 	generating = true;
 	try {
+		// 按需加载 qrcode（仅生成分享海报时才需要），避免拖慢每篇博文的首屏 JS
+		const { default: QRCode } = await import("qrcode");
 		const scale = 2;
 		const width = 425 * scale;
 		const padding = 24 * scale;

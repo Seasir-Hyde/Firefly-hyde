@@ -54,7 +54,7 @@ const className = Astro.props.class;
                 title={i18n(I18nKey.more)}
             >
                 <div class="text-(--primary) flex items-center justify-center gap-2 -translate-x-2">
-                    <Icon is:inline name="material-symbols:more-horiz" class="text-[1.75rem]" aria-hidden="true"></Icon>
+                    <Icon name="material-symbols:more-horiz" class="text-[1.75rem]" aria-hidden="true"></Icon>
                     <span>{i18n(I18nKey.more)}</span>
                 </div>
             </a>
@@ -68,8 +68,8 @@ const className = Astro.props.class;
                 data-expanded="false"
             >
                 <div class="text-(--primary) flex items-center justify-center gap-2 -translate-x-2">
-                    <Icon is:inline name="material-symbols:more-horiz" class="toggle-icon-more text-[1.75rem]" aria-hidden="true"></Icon>
-                    <Icon is:inline name="material-symbols:keyboard-arrow-up-rounded" class="toggle-icon-less hidden text-[1.75rem]" aria-hidden="true"></Icon>
+                    <Icon name="material-symbols:more-horiz" class="toggle-icon-more text-[1.75rem]" aria-hidden="true"></Icon>
+                    <Icon name="material-symbols:keyboard-arrow-up-rounded" class="toggle-icon-less hidden text-[1.75rem]" aria-hidden="true"></Icon>
                     <span class="toggle-text">{i18n(I18nKey.more)}</span>
                 </div>
             </button>

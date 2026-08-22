@@ -350,7 +350,7 @@ export const zh_CN: Translation = {
 	[Key.wallpaperMode]: "壁纸模式",
 	[Key.wallpaperBannerMode]: "横幅壁纸",
 	[Key.wallpaperFullscreenMode]: "全屏壁纸",
-	[Key.wallpaperOverlayMode]: "全屏透明",
+	[Key.wallpaperOverlayMode]: "覆盖透明",
 	[Key.wallpaperNoneMode]: "纯色背景",
 
 	// 壁纸设置

@@ -7,6 +7,7 @@ import type {
 	WALLPAPER_NONE,
 	WALLPAPER_OVERLAY,
 } from "../constants/constants";
+import type { NsfwMode } from "./nsfw";
 
 export type LIGHT_DARK_MODE =
 	| typeof LIGHT_MODE
@@ -132,8 +133,8 @@ export type SiteConfig = {
 	// 分类导航栏按钮样式："pill"=胶囊，"rectangle"=矩形（配色同胶囊）
 	categoryStyle?: "pill" | "rectangle";
 
-	// 标签样式："pill"=胶囊，"rectangle"=主题色矩形
-	tagStyle?: "pill" | "rectangle";
+	// 标签样式："pill"=主题色胶囊，"pill-gray"=中性灰胶囊，"rectangle"=主题色矩形
+	tagStyle?: "pill" | "pill-gray" | "rectangle";
 
 	// 归档页是否折叠非最新年份文章
 	foldArticle?: boolean;
@@ -211,6 +212,7 @@ export type SiteConfig = {
 			game?: boolean;
 			real?: boolean;
 		};
+		nsfw?: NsfwMode; // NSFW 处理："off" 不过滤 | "blur" 仅模糊封面 | "hide" 隐藏条目
 	};
 
 	// VNDB 配置
@@ -221,7 +223,7 @@ export type SiteConfig = {
 		apiUrl?: string; // VNDB API 地址
 		vnBaseUrl?: string; // VNDB 条目详情页地址，末尾需要带 /
 		apiToken?: string; // 私密列表访问令牌，仅 static 模式下使用
-		blurNsfw?: boolean; // 对Nsfw的游戏封面模糊化，默认为true
+		nsfw?: NsfwMode; // NSFW 处理："off" 不过滤 | "blur" 仅模糊封面 | "hide" 隐藏条目
 	};
 
 	// MyAnimeList 配置
@@ -231,6 +233,7 @@ export type SiteConfig = {
 		apiUrl?: string; // MAL API 地址
 		animeBaseUrl?: string; // 动画条目详情页地址，末尾需要带 /
 		mangaBaseUrl?: string; // 漫画条目详情页地址，末尾需要带 /
+		nsfw?: NsfwMode; // NSFW 处理："off" 不过滤 | "blur" 仅模糊封面 | "hide" 隐藏条目
 	};
 
 	// Bilibili 配置

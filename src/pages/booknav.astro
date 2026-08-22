@@ -49,7 +49,7 @@ const description =
           <div
             class="h-8 w-8 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70"
           >
-            <Icon is:inline name="material-symbols:bookmarks" class="text-[1.5rem]" />
+            <Icon name="material-symbols:bookmarks" class="text-[1.5rem]" />
           </div>
           <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
             {title}
@@ -69,7 +69,7 @@ const description =
           <booknav-list>
             {/* 搜索框 */}
             <div class="relative mb-3">
-              <Icon is:inline
+              <Icon
                 name="material-symbols:search"
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-lg pointer-events-none"
               />
@@ -89,7 +89,7 @@ const description =
                   class="category-pill px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 inline-flex items-center"
                 >
                   {group.icon && (
-                    <Icon is:inline name={group.icon} class="text-base" />
+                    <Icon name={group.icon} class="text-base" />
                   )}
                   {group.name}
                   <span class="pill-count">{group.items.length}</span>
@@ -109,12 +109,11 @@ const description =
                   <div class="booknav-group-heading flex items-center gap-2 mb-3 pb-2 border-b border-(--line-divider)">
                     {group.icon && (
                       <Icon
-                        is:inline
                         name={group.icon}
                         class="text-(--primary) text-xl shrink-0"
                       />
                     )}
-                    <div class="flex items-center gap-2 min-w-0">
+                    <div class="flex items-baseline gap-2 min-w-0">
                       <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-100 shrink-0">
                         {group.name}
                       </h2>
@@ -137,21 +136,20 @@ const description =
                         data-title={item.title.toLowerCase()}
                         data-desc={(item.desc || "").toLowerCase()}
                         data-domain={item.domain.toLowerCase()}
-                        class="booknav-card group flex items-center gap-2.5 p-2.5 rounded-xl border border-(--line-divider) hover:border-(--primary) hover:bg-(--card-bg) transition-all duration-300 hover:shadow-lg relative overflow-hidden"
+                        class="booknav-card group flex items-center gap-3 p-3 rounded-xl border border-(--line-divider) hover:border-(--primary) hover:bg-(--card-bg) transition-all duration-300 hover:shadow-lg relative overflow-hidden"
                       >
                         {/* 背景装饰 - 仅悬停显示 */}
-                        <div class="absolute inset-0 bg-(--primary) opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none" />
+                        <div class="absolute inset-0 bg-(--primary) opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"></div>
 
                         {/* 图标 */}
                         <div
-                          class="booknav-icon relative w-9 h-9 shrink-0 rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
+                          class="booknav-icon relative w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
                           data-letter={item.letter}
                         >
                           {item.resolvedIcon.kind === "icon" && (
                             <Icon
-                              is:inline
                               name={item.resolvedIcon.value}
-                              class="text-xl text-neutral-700 dark:text-neutral-200"
+                              class="text-6xl text-neutral-700 dark:text-neutral-200"
                             />
                           )}
                           {item.resolvedIcon.kind === "image" && (
@@ -169,20 +167,18 @@ const description =
                           )}
                         </div>
 
+                        {/* 外部链接图标 - 固定在卡片右上角 */}
+                        <Icon
+                          name="material-symbols:arrow-outward-rounded"
+                          class="absolute top-3 right-3 text-(--primary) text-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+                        />
+
                         {/* 内容 */}
                         <div class="grow min-w-0 flex flex-col justify-center">
-                          <div class="flex items-center justify-between gap-1">
-                            <div class="font-semibold text-sm text-neutral-900 dark:text-neutral-100 group-hover:text-(--primary) transition-colors truncate">
-                              {item.title}
-                            </div>
-                            {/* 外部链接图标 */}
-                            <Icon
-                              is:inline
-                              name="material-symbols:arrow-outward-rounded"
-                              class="text-(--primary) text-base shrink-0 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-                            />
+                          <div class="font-bold text-base text-neutral-900 dark:text-neutral-100 group-hover:text-(--primary) transition-colors truncate pr-4">
+                            {item.title}
                           </div>
-                          <div class="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                          <div class="text-sm text-neutral-500 dark:text-neutral-400 truncate">
                             {item.desc || item.domain}
                           </div>
                         </div>
@@ -195,13 +191,13 @@ const description =
 
             {/* 搜索无结果提示 */}
             <div class="booknav-empty hidden flex-col items-center justify-center py-12 text-neutral-400 dark:text-neutral-500">
-              <Icon is:inline name="material-symbols:search-off-rounded" class="text-4xl mb-3" />
+              <Icon name="material-symbols:search-off-rounded" class="text-4xl mb-3" />
               <div class="text-sm">{i18n(I18nKey.searchNoResults)}</div>
             </div>
           </booknav-list>
         ) : (
           <div class="flex flex-col items-center justify-center py-16 text-neutral-400 dark:text-neutral-500">
-            <Icon is:inline name="material-symbols:bookmarks" class="text-6xl mb-4 opacity-50" />
+            <Icon name="material-symbols:bookmarks" class="text-6xl mb-4 opacity-50" />
             <p class="text-lg">{i18n(I18nKey.booknavEmpty)}</p>
           </div>
         )
@@ -318,7 +314,7 @@ const description =
 
     .booknav-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 0.75rem;
     }
 
@@ -329,7 +325,7 @@ const description =
 
     /* 图标缺失时的首字母兜底样式 */
     .booknav-letter {
-      font-size: 1rem;
+      font-size: 1.25rem;
       font-weight: 700;
       line-height: 1;
       color: var(--primary);

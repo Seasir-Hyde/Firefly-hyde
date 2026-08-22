@@ -74,7 +74,7 @@ const visibleTags =
   {
     pinned && (
       <div class="pinned-btn flex items-center gap-1 bg-(--btn-regular-bg) text-(--btn-content) rounded-md px-2 py-1.5 font-bold">
-        <Icon is:inline name="material-symbols:pinboard" class="text-xl" />
+        <Icon name="material-symbols:pinboard" class="text-xl" />
         <span class="text-sm">{i18n(I18nKey.pinned)}</span>
       </div>
     )
@@ -85,7 +85,6 @@ const visibleTags =
       <div class="flex items-center">
         <div class="meta-icon">
           <Icon
-            is:inline
             name="material-symbols:calendar-today-outline-rounded"
             class="text-xl"
           />
@@ -105,7 +104,6 @@ const visibleTags =
         <div class="flex items-center">
           <div class="meta-icon">
             <Icon
-              is:inline
               name="material-symbols:edit-calendar-outline-rounded"
               class="text-xl"
             />
@@ -121,7 +119,7 @@ const visibleTags =
     showCategory && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon is:inline name="material-symbols:book-2-outline-rounded" class="text-xl" />
+          <Icon name="material-symbols:book-2-outline-rounded" class="text-xl" />
         </div>
         <div class="flex flex-row flex-nowrap items-center">
           <a
@@ -146,7 +144,7 @@ const visibleTags =
         ]}
       >
         <div class="meta-icon">
-          <Icon is:inline name="material-symbols:tag-rounded" class="text-xl" />
+          <Icon name="material-symbols:tag-rounded" class="text-xl" />
         </div>
         <div class="flex flex-row flex-nowrap items-center">
           {visibleTags &&
@@ -189,7 +187,6 @@ const visibleTags =
         <div class="flex items-center">
           <div class="meta-icon">
             <Icon
-              is:inline
               name="material-symbols:visibility-outline-rounded"
               class="text-xl"
             />
@@ -212,7 +209,6 @@ const visibleTags =
         <div class="flex items-center">
           <div class="meta-icon">
             <Icon
-              is:inline
               name="material-symbols:visibility-outline-rounded"
               class="text-xl"
             />
@@ -238,7 +234,6 @@ const visibleTags =
         <div class="flex items-center">
           <div class="meta-icon">
             <Icon
-              is:inline
               name="material-symbols:visibility-outline-rounded"
               class="text-xl"
             />
@@ -260,7 +255,7 @@ const visibleTags =
     showWords && typeof words === "number" && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon is:inline name="material-symbols:notes-rounded" class="text-xl" />
+          <Icon name="material-symbols:notes-rounded" class="text-xl" />
         </div>
         <span class="text-50 text-sm font-medium">
           {words} {i18n(words === 1 ? I18nKey.wordCount : I18nKey.wordsCount)}
@@ -273,7 +268,7 @@ const visibleTags =
     showReadingTime && typeof minutes === "number" && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon is:inline name="material-symbols:schedule-outline-rounded" class="text-xl" />
+          <Icon name="material-symbols:schedule-outline-rounded" class="text-xl" />
         </div>
         <span class="text-50 text-sm font-medium">
           {minutes} {i18n(minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}
@@ -286,7 +281,7 @@ const visibleTags =
     password && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon is:inline name="material-symbols:lock-outline" class="text-xl" />
+          <Icon name="material-symbols:lock-outline" class="text-xl" />
         </div>
         <span class="text-50 text-sm font-medium">
           {i18n(I18nKey.postEncrypted)}

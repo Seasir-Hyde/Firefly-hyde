@@ -54,7 +54,7 @@ if (footerConfig.enable) {
 >
   <div class="transition text-50 text-sm text-center wrap">
     <div class="mb-2">
-      {customFooterHtml && <div set:html={customFooterHtml} />}
+      {customFooterHtml && <div set:html={customFooterHtml}></div>}
     </div>
     <div class="mx-0.5 my-2.5 flex gap-x-2 gap-y-2.5 justify-center flex-wrap">
       &copy; <span id="copyright-year">{currentYear}</span>

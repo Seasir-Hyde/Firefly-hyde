@@ -25,31 +25,14 @@ export type BackgroundWallpaperConfig = {
 				deleteSpeed: number; // 删除速度（毫秒）
 				pauseTime: number; // 完整显示后的暂停时间（毫秒）
 			};
-		};
-		postInfo?: {
-			mode: "description" | "meta";
-		};
-		navbar?: {
-			transparentMode?: "semi" | "full" | "semifull"; // 导航栏透明模式
-			blur?: number; // 毛玻璃模糊度，0 即关闭导航栏毛玻璃
-		};
-		waves?: {
-			enable:
-				| boolean
-				| {
-						desktop: boolean; // 桌面端是否启用水波纹动画效果
-						mobile: boolean; // 移动端是否启用水波纹动画效果
-				  }; // 是否启用水波纹动画效果，支持布尔值或分别设置桌面端和移动端
-		};
-		// 渐变过渡效果配置，当水波纹关闭时自动启用，提供壁纸底部到背景色的平滑过渡
-		gradient?: {
-			enable:
-				| boolean
-				| {
-						desktop: boolean; // 桌面端是否启用渐变过渡
-						mobile: boolean; // 移动端是否启用渐变过渡
-				  }; // 是否启用渐变过渡，支持布尔值或分别设置桌面端和移动端，默认true（水波纹关闭时自动生效）
-			height?: string; // 渐变高度，默认 "30vh"
+			// 首页横幅标题下方的链接图标（可选）
+			linksEnable?: boolean; // 是否显示标题下方的链接图标（默认 true）
+			links?: {
+				name: string; // 名称（用于 aria-label / title / 可选 showName 显示）
+				url: string; // 链接地址
+				icon: string; // Iconify 图标，如 "fa7-brands:github"
+				showName?: boolean; // 是否显示文字（默认 false）
+			}[];
 		};
 		// 壁纸轮播配置，横幅壁纸和全屏壁纸共享
 		carousel?: {
@@ -81,6 +64,32 @@ export type BackgroundWallpaperConfig = {
 			| "right center"
 			| "right bottom"
 			| string; // 壁纸位置，支持CSS object-position的所有值，包括百分比和像素值
+		// 文章横幅信息："description" 显示描述，"meta" 显示日期、字数和阅读时长
+		postInfo?: {
+			mode: "description" | "meta";
+		};
+		navbar?: {
+			transparentMode?: "semi" | "full" | "semifull"; // 导航栏透明模式
+			blur?: number; // 毛玻璃模糊度，0 即关闭导航栏毛玻璃
+		};
+		waves?: {
+			enable:
+				| boolean
+				| {
+						desktop: boolean; // 桌面端是否启用水波纹动画效果
+						mobile: boolean; // 移动端是否启用水波纹动画效果
+				  }; // 是否启用水波纹动画效果，支持布尔值或分别设置桌面端和移动端
+		};
+		// 渐变过渡效果配置，当水波纹关闭时自动启用，提供壁纸底部到背景色的平滑过渡
+		gradient?: {
+			enable:
+				| boolean
+				| {
+						desktop: boolean; // 桌面端是否启用渐变过渡
+						mobile: boolean; // 移动端是否启用渐变过渡
+				  }; // 是否启用渐变过渡，支持布尔值或分别设置桌面端和移动端，默认true（水波纹关闭时自动生效）
+			height?: string; // 渐变高度，默认 "30vh"
+		};
 	};
 	// 全屏透明覆盖模式特有配置
 	overlay?: {
@@ -96,6 +105,19 @@ export type BackgroundWallpaperConfig = {
 			enable: boolean; // 是否启用全屏图片轮播
 			interval?: number; // 轮播切换间隔（毫秒）
 			switchable?: boolean; // 是否允许用户通过控制面板切换全屏轮播
+		};
+		// 全屏壁纸模式的导航栏配置（动态透明仅首页生效）
+		navbar?: {
+			dynamicTransparent?: boolean; // 是否开启动态透明：开启后首页顶部导航栏透明，下滑后变不透明
+		};
+		// 首页下滑时壁纸模糊渐变开关（从 0 渐变为 overlay.blur 的最大模糊）
+		blurRamp?: {
+			enable:
+				| boolean
+				| {
+						desktop: boolean; // 桌面端是否启用模糊渐变
+						mobile: boolean; // 移动端是否启用模糊渐变
+				  }; // 是否启用模糊渐变，支持布尔值或分别设置桌面端和移动端，默认 true
 		};
 	};
 };

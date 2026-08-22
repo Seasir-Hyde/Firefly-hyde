@@ -19,7 +19,7 @@ const config = {
 ---
 
 <div id="tcomment"></div>
-<script is:inline src={jsUrl}></script>
+<script is:inline src={jsUrl} defer></script>
 {cssUrl && <link rel="stylesheet" href={cssUrl.startsWith("http") ? cssUrl : url(cssUrl)} />}
 <script is:inline define:vars={{ config }}>
   // 获取当前页面路径

@@ -1,8 +1,10 @@
 <script lang="ts">
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
+import type { NsfwMode } from "@/types/nsfw";
 import type { VndbUlistEntry } from "@/types/vndb";
 import { getFailedCovers, markCoverFailed } from "@/utils/failed-covers";
+import { isVndbNsfw } from "@/utils/nsfw-utils";
 import {
 	formatVndbLength,
 	getVndbStatusText,
@@ -13,14 +15,14 @@ interface Props {
 	item: VndbUlistEntry;
 	loadImage?: boolean;
 	vnBaseUrl?: string;
-	blurNsfw: boolean;
+	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
 const {
 	item,
 	loadImage = false,
 	vnBaseUrl = "https://vndb.org/",
-	blurNsfw,
+	nsfw = "off",
 }: Props = $props();
 
 const STATUS_COLORS: Record<string, string> = {
@@ -59,10 +61,7 @@ const year = $derived(
 const imageUrl = $derived(
 	item.vn?.image?.url || item.vn?.image?.thumbnail || "",
 );
-const imageNsfw = $derived(
-	((item.vn?.image?.sexual ?? 0) > 1 || (item.vn?.image?.violence ?? 0) > 1) &&
-		blurNsfw,
-);
+const imageNsfw = $derived(nsfw === "blur" && isVndbNsfw(item));
 const userVote = $derived(item.vote);
 const rating = $derived(item.vn?.rating);
 const voteCount = $derived(item.vn?.votecount);

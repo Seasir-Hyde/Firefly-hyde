@@ -2,18 +2,21 @@
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { MalListItem } from "@/types/mal";
+import type { NsfwMode } from "@/types/nsfw";
 import { getFailedCovers, markCoverFailed } from "@/utils/failed-covers";
 import {
 	getMalSeasonText,
 	getMalStatusText,
 	type MalListKind,
 } from "@/utils/mal-utils";
+import { isMalNsfw } from "@/utils/nsfw-utils";
 
 interface Props {
 	item: MalListItem;
 	loadImage?: boolean;
 	kind?: MalListKind;
 	baseUrl?: string;
+	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
 const {
@@ -21,6 +24,7 @@ const {
 	loadImage = false,
 	kind = "anime",
 	baseUrl = "https://myanimelist.net/anime/",
+	nsfw = "off",
 }: Props = $props();
 
 const STATUS_COLORS: Record<string, string> = {
@@ -53,6 +57,9 @@ const coverUrl = $derived(
 );
 const userScore = $derived(item.list_status?.score || 0);
 const meanScore = $derived(node.mean || 0);
+
+// NSFW 封面模糊：mode === "blur" 且命中时模糊封面
+const imageNsfw = $derived(nsfw === "blur" && isMalNsfw(item));
 
 // 日期：动画用季度+年份，漫画用起始日期年份
 const seasonText = $derived(
@@ -149,6 +156,7 @@ function handleError(e: Event) {
         data-src={loadImage ? undefined : initialSrc}
         alt={title}
         class="w-full h-full object-cover pointer-events-none opacity-0 transition-all duration-500 ease-out group-hover:scale-105"
+        style={imageNsfw ? "filter: blur(20px)" : undefined}
         loading="lazy"
         decoding="async"
         onload={handleLoad}

@@ -202,7 +202,8 @@ export const siteConfig: SiteConfig = {
 	categoryStyle: "rectangle",
 
 	// 标签样式，作用于文章列表底部标签、标签页和侧边栏标签
-	// "pill"：胶囊，中性灰底圆角
+	// "pill"：胶囊，主题色底圆角
+	// "pill-gray"：胶囊，中性灰底圆角
 	// "rectangle"：矩形，主题色底小圆角
 	tagStyle: "pill",
 
@@ -310,9 +311,9 @@ export const siteConfig: SiteConfig = {
 		// dynamic 模式在浏览器中实时请求 API，始终显示最新数据
 		mode: "dynamic",
 		// Bangumi API 地址
-		apiUrl: "https://bgmapi.anibt.net",
+		apiUrl: "https://api.bangumi.pro",
 		// 详情页地址
-		subjectBaseUrl: "https://bgmmi.anibt.net/subject/",
+		subjectBaseUrl: "https://api.bangumi.pro/subject/",
 		// 条目类型排序，数组中的类型将按顺序优先展示
 		// 可选值: "anime" | "book" | "music" | "game" | "real" (暂不支持"real"类型)
 		// 未列出的类型将按默认顺序排在后面
@@ -321,6 +322,8 @@ export const siteConfig: SiteConfig = {
 		// categories: {
 		// 	game: false, // 禁用游戏分类显示
 		// },
+		// NSFW 处理："off" 不过滤 | "blur" 仅模糊封面 | "hide" 隐藏条目
+		nsfw: "hide",
 	},
 
 	// ── VNDB配置 ──────────────────────────────────
@@ -339,8 +342,8 @@ export const siteConfig: SiteConfig = {
 		vnBaseUrl: "https://vndb.org/",
 		// 私密列表访问令牌，仅 static 模式下使用；不要把真实令牌提交到公开仓库！
 		apiToken: "",
-		// 对Nsfw的游戏封面模糊化
-		blurNsfw: true,
+		// NSFW 处理："off" 不过滤 | "blur" 仅模糊封面 | "hide" 隐藏条目
+		nsfw: "hide",
 	},
 
 	// ── MyAnimeList配置 ──────────────────────────────────
@@ -355,6 +358,8 @@ export const siteConfig: SiteConfig = {
 		animeBaseUrl: "https://myanimelist.net/anime/",
 		// 漫画条目详情页地址，末尾需要带 /
 		mangaBaseUrl: "https://myanimelist.net/manga/",
+		// NSFW 处理："off" 不过滤 | "blur" 仅模糊封面 | "hide" 隐藏条目
+		nsfw: "hide",
 	},
 
 	// 音乐配置

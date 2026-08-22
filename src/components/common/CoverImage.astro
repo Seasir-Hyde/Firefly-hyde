@@ -255,6 +255,10 @@ const remoteReferrerPolicy =
 		});
 	}
 
-	initCoverImages();
-	document.addEventListener('astro:page-load', initCoverImages);
+	// 防止 Swup 切页重跑脚本时重复注册监听器（initCoverImages 由一次性 astro:page-load 监听器在切页时触发）
+	if (!window.__coverImageInit) {
+		window.__coverImageInit = true;
+		initCoverImages();
+		document.addEventListener('astro:page-load', initCoverImages);
+	}
 </script>

@@ -16,7 +16,7 @@ import { url } from "@/utils/url-utils";
             
             <!-- 404 图标 -->
             <div class="mb-6">
-                <Icon is:inline name="material-symbols:error-outline" class="text-6xl text-(--primary)" />
+                <Icon name="material-symbols:error-outline" class="text-6xl text-(--primary)" />
             </div>
             
             <!-- 标题 -->
@@ -34,16 +34,16 @@ import { url } from "@/utils/url-utils";
                 href={url("/")}
                 class="inline-flex items-center gap-2 px-6 py-3 bg-(--primary) text-white rounded-(--radius-large) hover:bg-(--btn-content) transition-colors duration-200 font-medium"
             >
-                <Icon is:inline name="material-symbols:home" class="text-xl" />
+                <Icon name="material-symbols:home" class="text-xl" />
                 {i18n(I18nKey.backToHome)}
             </a>
             
             <!-- 装饰性元素 -->
             <div class="absolute top-4 left-4 opacity-10">
-                <Icon is:inline name="material-symbols:sentiment-sad" class="text-4xl text-(--primary)" />
+                <Icon name="material-symbols:sentiment-sad" class="text-4xl text-(--primary)" />
             </div>
             <div class="absolute bottom-4 right-4 opacity-10">
-                <Icon is:inline name="material-symbols:search-off" class="text-4xl text-(--primary)" />
+                <Icon name="material-symbols:search-off" class="text-4xl text-(--primary)" />
             </div>
         </div>
     </div>

@@ -90,6 +90,9 @@ let isSmallScreen = $state(
 let isMobileWidth = $state(
 	typeof window !== "undefined" ? window.innerWidth < 780 : false,
 );
+let isMobileViewport = $state(
+	typeof window !== "undefined" ? window.innerWidth < 1024 : false,
+);
 let isSwitching = $state(false);
 let wavesEnabled = $state(true);
 const defaultWavesEnabled = getDefaultWavesEnabled();
@@ -168,6 +171,13 @@ const hasOverlaySettings =
 	(isOverlayOpacitySwitchable ||
 		isOverlayBlurSwitchable ||
 		isOverlayCardOpacitySwitchable);
+// 全屏壁纸模式的模糊渐变是否启用（按当前设备读取 fullscreen.blurRamp 配置，未配置默认开启）
+const isFullscreenBlurRampEnabled = $derived.by(() => {
+	const enable = backgroundWallpaper.fullscreen?.blurRamp?.enable;
+	if (typeof enable === "boolean") return enable;
+	if (!enable) return true;
+	return isMobileViewport ? enable.mobile : enable.desktop;
+});
 let overlaySettingsIsDefault = $derived(
 	(!isOverlayOpacitySwitchable || overlayOpacity === defaultOverlayOpacity) &&
 		(!isOverlayBlurSwitchable || overlayBlur === defaultOverlayBlur) &&
@@ -208,7 +218,9 @@ const hasAppearanceTab = $derived(
 );
 const hasWallpaperTab = $derived(
 	isWallpaperSwitchable ||
-		(wallpaperMode === WALLPAPER_OVERLAY && hasOverlaySettings) ||
+		((wallpaperMode === WALLPAPER_OVERLAY ||
+			wallpaperMode === WALLPAPER_FULLSCREEN) &&
+			hasOverlaySettings) ||
 		((wallpaperMode === WALLPAPER_BANNER ||
 			wallpaperMode === WALLPAPER_FULLSCREEN) &&
 			hasBannerSettings),
@@ -248,9 +260,13 @@ $effect(() => {
 	}
 });
 
-// Auto-switch to wallpaper tab when entering overlay mode
+// Auto-switch to wallpaper tab when entering overlay/fullscreen mode
 $effect(() => {
-	if (wallpaperMode === WALLPAPER_OVERLAY && hasOverlaySettings) {
+	if (
+		(wallpaperMode === WALLPAPER_OVERLAY ||
+			wallpaperMode === WALLPAPER_FULLSCREEN) &&
+		hasOverlaySettings
+	) {
 		activeTab = "wallpaper";
 	}
 });
@@ -258,7 +274,9 @@ $effect(() => {
 let overlaySliderItems = $derived<OverlaySliderItem[]>([
 	{
 		key: "opacity",
-		enabled: isOverlayOpacitySwitchable,
+		// 全屏壁纸模式不需要背景透明度，隐藏该滑块（仍显示模糊与卡片透明度）
+		enabled:
+			isOverlayOpacitySwitchable && wallpaperMode !== WALLPAPER_FULLSCREEN,
 		label: i18n(I18nKey.overlayOpacity),
 		displayValue: `${Math.round(overlayOpacity * 100)}%`,
 		ariaLabel: i18n(I18nKey.overlayOpacity),
@@ -272,7 +290,10 @@ let overlaySliderItems = $derived<OverlaySliderItem[]>([
 	},
 	{
 		key: "blur",
-		enabled: isOverlayBlurSwitchable,
+		// 全屏壁纸模式关闭模糊渐变时隐藏模糊滑块（overlay 模式不受影响）
+		enabled:
+			isOverlayBlurSwitchable &&
+			!(wallpaperMode === WALLPAPER_FULLSCREEN && !isFullscreenBlurRampEnabled),
 		label: i18n(I18nKey.overlayBlur),
 		displayValue: `${overlayBlur.toFixed(1)}px`,
 		ariaLabel: i18n(I18nKey.overlayBlur),
@@ -299,6 +320,10 @@ let overlaySliderItems = $derived<OverlaySliderItem[]>([
 		},
 	},
 ]);
+// 当前模式下是否有任何 overlay 滑块实际可见（模糊滑块可能因关闭模糊渐变而隐藏）
+let hasVisibleOverlaySlider = $derived(
+	overlaySliderItems.some((item) => item.enabled),
+);
 
 function resetHue() {
 	hue = getDefaultHue();
@@ -450,7 +475,7 @@ function switchWallpaperMode(newMode: WALLPAPER_MODE) {
 	setWallpaperMode(newMode);
 	window.scrollTo({ top: 0 });
 
-	if (newMode === WALLPAPER_OVERLAY) {
+	if (newMode === WALLPAPER_OVERLAY || newMode === WALLPAPER_FULLSCREEN) {
 		requestAnimationFrame(refreshAllRangeProgress);
 	}
 }
@@ -458,6 +483,7 @@ function switchWallpaperMode(newMode: WALLPAPER_MODE) {
 function checkScreenSize() {
 	isSmallScreen = window.innerWidth < 1200;
 	isMobileWidth = window.innerWidth < 780;
+	isMobileViewport = window.innerWidth < 1024;
 	// 低于380px强制网格模式
 	if (window.innerWidth < 380 && currentLayout === "list") {
 		currentLayout = "grid";
@@ -626,6 +652,14 @@ $effect(() => {
 		if (isOverlayOpacitySwitchable) {
 			setOverlayOpacity(overlayOpacity);
 		}
+		if (isOverlayBlurSwitchable) {
+			setOverlayBlur(overlayBlur);
+		}
+		if (isOverlayCardOpacitySwitchable) {
+			setOverlayCardOpacity(overlayCardOpacity);
+		}
+	} else if (wallpaperMode === WALLPAPER_FULLSCREEN) {
+		// 全屏壁纸不透明，只应用模糊与卡片透明度
 		if (isOverlayBlurSwitchable) {
 			setOverlayBlur(overlayBlur);
 		}
@@ -954,90 +988,8 @@ $effect(() => {
 		</div>
 		{/if}
 
-    <!-- Layout Switch Section -->
-    {#if allowLayoutSwitch}
-        <div class="mt-2 mb-2">
-            <div class="flex gap-2 font-bold text-lg text-neutral-900 dark:text-neutral-100 transition relative ml-3 mb-2
-                before:w-1 before:h-4 before:rounded-md before:bg-(--primary)
-                before:absolute before:-left-3 before:top-1/2 before:-translate-y-1/2"
-            >
-                {i18n(I18nKey.postListLayout)}
-                <button aria-label="Reset to Default" class="btn-regular w-7 h-7 rounded-md  active:scale-90"
-                        class:opacity-0={currentLayout === effectiveDefaultLayout} class:pointer-events-none={currentLayout === effectiveDefaultLayout} onclick={resetLayout}>
-                    <div class="text-(--btn-content)">
-                        <Icon icon="fa7-solid:arrow-rotate-left" class="text-[0.875rem]"></Icon>
-                    </div>
-                </button>
-            </div>
-            <div class="flex gap-2">
-                <button
-                    aria-label={i18n(I18nKey.postListLayoutList)}
-                    class="flex-1 btn-regular rounded-md py-2 px-3 flex items-center justify-center gap-2 active:scale-95 transition-all relative overflow-hidden"
-                    class:opacity-60={currentLayout !== 'list'}
-                    class:bg-(--btn-regular-bg-hover)={currentLayout === 'list'}
-                    disabled={isSwitching}
-                    onclick={switchLayout}
-                    title={i18n(I18nKey.postListLayoutList)}
-                >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-                    </svg>
-                    <span class="text-xs font-medium">{i18n(I18nKey.postListLayoutList)}</span>
-                </button>
-                <button
-                    aria-label={i18n(I18nKey.postListLayoutGrid)}
-                    class="flex-1 btn-regular rounded-md py-2 px-3 flex items-center justify-center gap-2 active:scale-95 transition-all relative overflow-hidden"
-                    class:opacity-60={currentLayout !== 'grid'}
-                    class:bg-(--btn-regular-bg-hover)={currentLayout === 'grid'}
-                    disabled={isSwitching}
-                    onclick={switchLayout}
-                    title={i18n(I18nKey.postListLayoutGrid)}
-                >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z"/>
-                    </svg>
-                    <span class="text-xs font-medium">{i18n(I18nKey.postListLayoutGrid)}</span>
-                </button>
-            </div>
-        </div>
-    {/if}
-
-    <!-- Post Cover Image Switch Section -->
-    {#if isPostCoverImageSwitchable}
-        <div class="mt-2 mb-2">
-            <div class="flex gap-2 font-bold text-lg text-neutral-900 dark:text-neutral-100 transition relative ml-3 mb-2
-                before:w-1 before:h-4 before:rounded-md before:bg-(--primary)
-                before:absolute before:-left-3 before:top-1/2 before:-translate-y-1/2"
-            >
-                {i18n(I18nKey.postCoverImage)}
-                <button aria-label="Reset to Default" class="btn-regular w-7 h-7 rounded-md  active:scale-90"
-                        class:opacity-0={postCoverImageEnabled === defaultPostCoverImageEnabled} class:pointer-events-none={postCoverImageEnabled === defaultPostCoverImageEnabled} onclick={() => { postCoverImageEnabled = defaultPostCoverImageEnabled; setPostCoverImageEnabled(defaultPostCoverImageEnabled); }}>
-                    <div class="text-(--btn-content)">
-                        <Icon icon="fa7-solid:arrow-rotate-left" class="text-[0.875rem]"></Icon>
-                    </div>
-                </button>
-            </div>
-            <div class="space-y-1">
-                <button
-                    class="w-full btn-regular rounded-md py-2 px-3 flex items-center gap-3 text-left active:scale-95 transition-all relative overflow-hidden"
-                    class:bg-(--btn-regular-bg-hover)={postCoverImageEnabled}
-                    onclick={togglePostCoverImageEnabled}
-                >
-                    <Icon icon="material-symbols:image" class="text-[1.25rem] shrink-0"></Icon>
-                    <span class="text-sm flex-1">{i18n(I18nKey.postCoverImage)}</span>
-                    <div class="w-10 h-5 rounded-full transition-all duration-200 relative"
-                         class:bg-(--primary)={postCoverImageEnabled}
-                         class:bg-(--btn-regular-bg-active)={!postCoverImageEnabled}>
-                        <div class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-200"
-                             class:left-0.5={!postCoverImageEnabled}
-                             class:left-5={postCoverImageEnabled}></div>
-                    </div>
-                </button>
-            </div>
-        </div>
-    {/if}
-		<!-- Overlay Settings Section -->
-		{#if wallpaperMode === WALLPAPER_OVERLAY && hasOverlaySettings}
+		<!-- Overlay Settings Section（全屏壁纸模式也复用 overlay 的透明/模糊/卡片透明度设置） -->
+		{#if (wallpaperMode === WALLPAPER_OVERLAY || wallpaperMode === WALLPAPER_FULLSCREEN) && hasOverlaySettings && hasVisibleOverlaySlider}
 		<div class="">
 			<div class="section-title">
 				{i18n(I18nKey.overlaySettings)}
@@ -1124,8 +1076,8 @@ $effect(() => {
 					</div>
 				</button>
 				{/if}
-				<!-- Waves Animation Switch -->
-				{#if isWavesSwitchable}
+				<!-- Waves Animation Switch（仅横幅模式，全屏壁纸无水波纹） -->
+				{#if isWavesSwitchable && wallpaperMode === WALLPAPER_BANNER}
 				<button
 					class="w-full btn-regular rounded-md py-2 px-3 flex items-center gap-3 text-left active:scale-95 transition-all relative overflow-hidden"
 					class:bg-(--btn-regular-bg-hover)={wavesEnabled}
@@ -1142,8 +1094,8 @@ $effect(() => {
 					</div>
 				</button>
 				{/if}
-				<!-- Gradient Transition Switch -->
-				{#if isGradientSwitchable}
+				<!-- Gradient Transition Switch（仅横幅模式，全屏壁纸无渐变过渡） -->
+				{#if isGradientSwitchable && wallpaperMode === WALLPAPER_BANNER}
 				<button
 					class="w-full btn-regular rounded-md py-2 px-3 flex items-center gap-3 text-left active:scale-95 transition-all relative overflow-hidden"
 					class:bg-(--btn-regular-bg-hover)={gradientEnabled}

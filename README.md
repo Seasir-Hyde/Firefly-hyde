@@ -28,7 +28,7 @@
 
 ---
 📖 README：
-**[简体中文](README.md)** | **[繁體中文](docs/README.zh-TW.md)** | **[English](README.en.md)** | **[日本語](docs/README.ja.md)** 
+**[简体中文](README.md)** | **[繁體中文](docs/README.zh-TW.md)** | **[English](README.en.md)** | **[日本語](docs/README.ja.md)** | **[한국어](docs/README.ko.md)**
 
 🚀 快速指南：
 [**🖥️在线预览**](https://firefly.cuteleaf.cn/) /
@@ -51,7 +51,7 @@
     </td>
   </tr>
   <tr>
-    <td align="center"><img src="./docs/images/3.webp" width="300"><br>透明模式</td>
+    <td align="center"><img src="./docs/images/3.webp" width="300"><br>透明覆盖模式</td>
     <td align="center"><img src="./docs/images/2.webp" width="300"><br>全屏壁纸模式</td>
     <td align="center"><img src="./docs/images/4.webp" width="300"><br>纯色模式</td>
   </tr>

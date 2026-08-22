@@ -125,3 +125,20 @@ export function initializeFloatingPanels(root: ParentNode = document): void {
 		escapeListenerAttached = true;
 	}
 }
+
+/** 点击指定面板及其忽略元素之外时，将其关闭（从 Layout.astro 迁出） */
+export function setClickOutsideToClose(panel: string, ignores: string[]): void {
+	document.addEventListener("click", (event) => {
+		const panelDom = document.getElementById(panel);
+		if (!panelDom) return;
+		const tDom = event.target;
+		if (!(tDom instanceof Node)) return; // Ensure the event target is an HTML Node
+		for (const ig of ignores) {
+			const ie = document.getElementById(ig);
+			if (ie === tDom || ie?.contains(tDom)) {
+				return;
+			}
+		}
+		panelDom.classList.add("float-panel-closed");
+	});
+}

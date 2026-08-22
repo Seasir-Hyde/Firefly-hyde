@@ -22,7 +22,7 @@ const { sourceId } = Astro.props;
 	<div class="dynamic-gallery-viewer" data-gallery-viewer hidden>
 		<div class="dynamic-gallery-toolbar">
 			<button type="button" class="btn-plain dynamic-gallery-action" data-gallery-collapse>
-				<Icon is:inline name="material-symbols:close-fullscreen-rounded" />
+				<Icon name="material-symbols:close-fullscreen-rounded" />
 				<span>{i18n(I18nKey.dynamicCollapseGallery)}</span>
 			</button>
 			<button
@@ -32,7 +32,7 @@ const { sourceId } = Astro.props;
 				data-gallery-lightbox
 				data-type="image"
 			>
-				<Icon is:inline name="material-symbols:zoom-in-rounded" />
+				<Icon name="material-symbols:zoom-in-rounded" />
 				<span>{i18n(I18nKey.dynamicViewOriginal)}</span>
 			</button>
 			<span class="dynamic-gallery-counter" data-gallery-counter aria-live="polite"></span>
@@ -46,7 +46,7 @@ const { sourceId } = Astro.props;
 				aria-label={i18n(I18nKey.dynamicPreviousImage)}
 				title={i18n(I18nKey.dynamicPreviousImage)}
 			>
-				<Icon is:inline name="material-symbols:chevron-left-rounded" />
+				<Icon name="material-symbols:chevron-left-rounded" />
 			</button>
 			<img class="dynamic-gallery-main-image" data-gallery-main alt="" />
 			<button
@@ -56,7 +56,7 @@ const { sourceId } = Astro.props;
 				aria-label={i18n(I18nKey.dynamicNextImage)}
 				title={i18n(I18nKey.dynamicNextImage)}
 			>
-				<Icon is:inline name="material-symbols:chevron-right-rounded" />
+				<Icon name="material-symbols:chevron-right-rounded" />
 			</button>
 		</div>
 

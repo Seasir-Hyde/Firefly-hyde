@@ -16,7 +16,7 @@ const recentPosts = posts.slice(0, 6);
         <div class="card-base rounded-(--radius-large) p-8 mb-6">
             <div class="text-center">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-(--primary) rounded-2xl mb-4">
-                    <Icon is:inline name="material-symbols:rss-feed" class="text-white text-3xl" />
+                    <Icon name="material-symbols:rss-feed" class="text-white text-3xl" />
                 </div>
                 <div class="text-3xl font-bold text-(--primary) mb-3">{i18n(I18nKey.rss)}</div>
                 <p class="text-75 max-w-2xl mx-auto">
@@ -30,7 +30,7 @@ const recentPosts = posts.slice(0, 6);
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-(--primary) rounded-xl flex items-center justify-center mr-4">
-                        <Icon is:inline name="material-symbols:link" class="text-white text-xl" />
+                        <Icon name="material-symbols:link" class="text-white text-xl" />
                     </div>
                     <div>
                         <h3 class="font-semibold text-90 mb-1">{i18n(I18nKey.rssLink)}</h3>
@@ -57,7 +57,7 @@ const recentPosts = posts.slice(0, 6);
         <!-- 最新文章预览 -->
         <div class="card-base rounded-(--radius-large) p-6 mb-6">
             <h2 class="text-xl font-bold text-90 mb-4 flex items-center">
-                <Icon is:inline name="material-symbols:article" class="mr-2 text-(--primary)" />
+                <Icon name="material-symbols:article" class="mr-2 text-(--primary)" />
                 {i18n(I18nKey.rssLatestPosts)}
             </h2>
             <div class="space-y-4">
@@ -86,7 +86,7 @@ const recentPosts = posts.slice(0, 6);
         <!-- RSS 说明 -->
         <div class="card-base rounded-(--radius-large) p-6">
             <h2 class="text-xl font-bold text-90 mb-4 flex items-center">
-                <Icon is:inline name="material-symbols:help-outline" class="mr-2 text-(--primary)" />
+                <Icon name="material-symbols:help-outline" class="mr-2 text-(--primary)" />
                 {i18n(I18nKey.rssWhatIsRSS)}
             </h2>
             <div class="text-75 space-y-3">
