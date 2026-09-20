@@ -61,10 +61,13 @@ const codeFontFamily = codeFontVar
 ---
 
 <!-- Astro Font API: 自动下载、缓存并生成优化的 @font-face -->
+<!-- 性能优化：关闭字体 preload。345KB 级别的中文字体若预加载会阻塞首屏关键路径；
+     改用 font-display:swap（Astro Font 默认），文字先用系统字体渲染，字体到位后无感替换，
+     首屏 FCP/LCP 不再被巨量字体下载拖慢。 -->
 {Array.from(allCssVars).map((cssVar) => (
   <Font
     cssVariable={cssVar as any}
-    preload={selectedFontVars.includes(cssVar)}
+    preload={false}
   />
 ))}
 
