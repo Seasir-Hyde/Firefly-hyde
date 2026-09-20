@@ -9,6 +9,7 @@ import {
 } from "@/utils/image-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
 import { url } from "@/utils/url-utils";
+import { getImage } from "astro:assets";
 
 interface Props {
 	id?: string;
@@ -84,6 +85,42 @@ const remoteReferrerPolicy =
 	!isLocal && shouldAddNoReferrer(isPublic ? url(src) : src)
 		? "no-referrer"
 		: undefined;
+
+// 构建期远程封面优化：把随机封面 API 返回的原始大图（t.alcy.cc 全分辨率、dmoe.cc 高达 1.66MB、uapis.cn ~537KB）
+// 在构建期用 sharp 重采样为 828 webp，真正削减体积、修复 LCP。优化后的本地产物同时写入 data-api-urls 重试链，
+// 使“主封面 + 全部备选封面”都变成小体积本地 webp，彻底消除首屏 4K 远程图。
+// 仅对博客封面所用的三个已知图源做优化；公开资源(/...)与未知主机保持原样，避免误优化 public 文件或对任意 URL 发起请求（SSRF 风险）。
+// 若构建期无法拉取/优化（图源不可达等），回退到原始远程 URL，保证构建不失败，且客户端重试逻辑仍可用。
+const COVER_REMOTE_HOSTS = ["t.alcy.cc", "www.dmoe.cc", "uapis.cn"];
+
+let primaryOptimizedSrc: string | undefined;
+
+if (!isLocal && !isPublic) {
+	let host = "";
+	try {
+		host = new URL(src).hostname;
+	} catch {
+		host = "";
+	}
+	if (COVER_REMOTE_HOSTS.includes(host)) {
+		try {
+			const optimized = await getImage({
+				src,
+				width: 828,
+				format: "webp",
+				quality,
+				// 固定 2:1 裁切（与 PostCard 封面容器一致）；详情页自然高度模式不裁上下，仅限宽
+				...(naturalHeight ? {} : { height: 414, fit: "cover" }),
+			});
+			primaryOptimizedSrc = optimized.src;
+		} catch (e) {
+			if (import.meta.env.DEV) {
+				console.warn("[CoverImage] 远程封面优化失败，回退原始 URL:", src, (e as Error)?.message);
+			}
+			primaryOptimizedSrc = undefined;
+		}
+	}
+}
 ---
 
 <div
@@ -131,20 +168,36 @@ const remoteReferrerPolicy =
 
 	<!-- 远程图片 -->
 	{!isLocal && (
-		<img
-			src={isPublic ? url(src) : src}
-			alt={alt || ""}
-			class={imageClass}
-			style={imageStyle}
-			width={coverWidth}
-			height={coverHeight}
-			loading={loading}
-			decoding="async"
-			fetchpriority={loading === "eager" ? "high" : "auto"}
-			data-cover-img
-			data-remote="true"
-			referrerpolicy={remoteReferrerPolicy}
-		/>
+		primaryOptimizedSrc ? (
+			<img
+				src={primaryOptimizedSrc}
+				alt={alt || ""}
+				class={imageClass}
+				style={imageStyle}
+				width={coverWidth}
+				height={coverHeight}
+				loading={loading}
+				decoding="async"
+				fetchpriority={loading === "eager" ? "high" : "auto"}
+				data-cover-img
+				data-remote="true"
+			/>
+		) : (
+			<img
+				src={isPublic ? url(src) : src}
+				alt={alt || ""}
+				class={imageClass}
+				style={imageStyle}
+				width={coverWidth}
+				height={coverHeight}
+				loading={loading}
+				decoding="async"
+				fetchpriority={loading === "eager" ? "high" : "auto"}
+				data-cover-img
+				data-remote="true"
+				referrerpolicy={remoteReferrerPolicy}
+			/>
+		)
 	)}
 </div>
 

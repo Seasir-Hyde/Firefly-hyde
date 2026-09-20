@@ -114,6 +114,13 @@ export default defineConfig({
 	image: {
 		// 组件可自行传入 layout/widths；这里只控制 Markdown 正文图片
 		layout: "none",
+		// 允许构建期拉取并优化随机封面 API 的远程图片（CoverImage 远程分支在构建期重采样为 828 webp，真正削减体积、修复 LCP）。
+		// 仅放开博客封面所用的三个随机图源；未知主机不在此列，避免构建期对任意 URL 发起请求（SSRF 风险）。
+		remotePatterns: [
+			{ protocol: "https", hostname: "t.alcy.cc" },
+			{ protocol: "https", hostname: "www.dmoe.cc" },
+			{ protocol: "https", hostname: "uapis.cn" },
+		],
 	},
 
 	integrations: [
