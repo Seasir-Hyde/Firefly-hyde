@@ -322,7 +322,19 @@
 		}
 		const manager = new WavesManager();
 		window.wavesManager = manager;
-		void manager.init();
+		// 水波纹是纯装饰特效：延迟到 load 之后(首访)或空闲(切页)再初始化，
+		// 避免 canvas 首帧绘制 + 持续 rAF 动画抢占首屏加载(load 事件)的关键路径。
+		// 首访 document.readyState 在模块执行时为 interactive → 监听 load 后再跑；
+		// Swup 切页时 readyState 已 complete → 直接用 requestIdleCallback。
+		const start = () => {
+			void manager.init();
+		};
+		const ric = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1));
+		if (document.readyState === "complete") {
+			ric(start);
+		} else {
+			window.addEventListener("load", () => ric(start), { once: true });
+		}
 	}
 
 	// ===========================================================================

@@ -509,27 +509,39 @@
 	let globalSakuraManager: SakuraManagerLike | null = null;
 
 	function initSakura(cfg: SakuraConfig) {
-		if (globalSakuraManager) {
-			// 已存在管理器,更新配置(先停再启)
-			const wasRunning = globalSakuraManager.isRunning;
-			if (wasRunning) {
-				globalSakuraManager.stop();
-			}
-			globalSakuraManager.config = cfg;
-			if (cfg.enable) {
-				void globalSakuraManager.init();
-			}
-		} else {
-			// 首次创建:根据特性检测选择实现
-			if (supportsWorkerSakura()) {
-				globalSakuraManager = new WorkerSakuraManager(cfg);
+		const ric = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1));
+		const start = () => {
+			if (globalSakuraManager) {
+				// 已存在管理器,更新配置(先停再启)
+				const wasRunning = globalSakuraManager.isRunning;
+				if (wasRunning) {
+					globalSakuraManager.stop();
+				}
+				globalSakuraManager.config = cfg;
+				if (cfg.enable) {
+					void globalSakuraManager.init();
+				}
 			} else {
-				globalSakuraManager = new MainThreadSakuraManager(cfg);
+				// 首次创建:根据特性检测选择实现
+				if (supportsWorkerSakura()) {
+					globalSakuraManager = new WorkerSakuraManager(cfg);
+				} else {
+					globalSakuraManager = new MainThreadSakuraManager(cfg);
+				}
+				window.sakuraManager = globalSakuraManager;
+				if (cfg.enable) {
+					void globalSakuraManager.init();
+				}
 			}
-			window.sakuraManager = globalSakuraManager;
-			if (cfg.enable) {
-				void globalSakuraManager.init();
-			}
+		};
+		// 樱花特效是纯装饰：延迟到 load 之后(首访)或空闲(切页)再初始化，
+		// 避免 Worker/canvas 创建与首屏加载(load 事件)关键路径竞争主线程。
+		// 首访 readyState 为 interactive → 监听 load 后再跑；Swup 切页 readyState
+		// 已 complete → 直接用 requestIdleCallback。
+		if (document.readyState === "complete") {
+			ric(start);
+		} else {
+			window.addEventListener("load", () => ric(start), { once: true });
 		}
 	}
 

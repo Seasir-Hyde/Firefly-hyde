@@ -74,6 +74,11 @@ const quality = configQuality;
 // 是否显示加载动画
 const showLoading = coverImageConfig.showLoading ?? true;
 
+// 显式宽高：为封面图建立固有宽高比，消除布局偏移（CLS），并满足 Lighthouse “设置显式宽高”审计。
+// 默认值 2:1 与文章卡片封面容器（PostCard 的 aspect-ratio: 2/1）一致；详情页自然高度模式不设固定宽高，避免比例冲突导致 CLS。
+const coverWidth = 828;
+const coverHeight = naturalHeight ? undefined : 414;
+
 // 检查远程图片是否需要 referrerpolicy
 const remoteReferrerPolicy =
 	!isLocal && shouldAddNoReferrer(isPublic ? url(src) : src)
@@ -131,8 +136,11 @@ const remoteReferrerPolicy =
 			alt={alt || ""}
 			class={imageClass}
 			style={imageStyle}
+			width={coverWidth}
+			height={coverHeight}
 			loading={loading}
 			decoding="async"
+			fetchpriority={loading === "eager" ? "high" : "auto"}
 			data-cover-img
 			data-remote="true"
 			referrerpolicy={remoteReferrerPolicy}

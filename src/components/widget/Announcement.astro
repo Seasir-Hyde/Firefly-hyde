@@ -64,7 +64,7 @@ const showTitle = widgetConfig?.showTitle !== false;
        去重说明：左右两个侧栏各渲染一份组件，会产生 2 个实例与 2 份内联脚本。
        用「本次导航进行中」标志保证每个页面加载（含 swup 站内导航）只拉取一次接口，
        并渲染到所有 .announcement-content 实例；请求结束后重置标志，下一次导航可再次刷新。 -->
-  <script is:inline>
+  <script>
     (function() {
       function loadAnnouncements() {
         if (window.__announcementFetching) return;
