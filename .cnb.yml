@@ -8,7 +8,7 @@ $:
         # 自定义开发环境
         build:
           # 指定构建镜像的 Dockerfile 文件
-          dockerfile: .ide/Dockerfile
+          #dockerfile: .ide/Dockerfile
       services:
         # 声明使用 vscode 服务
         - vscode
