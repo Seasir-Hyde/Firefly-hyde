@@ -1,329 +1,330 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-22T04:49:11.210Z",
+  "generatedAt": "2026-10-22T17:11:48.779Z",
   "timezone": "Asia/Shanghai",
   "slot": "08:17",
   "results": {
     "seasir.top": {
       "state": "slow",
-      "milliseconds": 1862,
-      "checkedAt": "2026-10-22T04:48:42.502Z",
-      "clicks": 4
-    },
-    "image.js.cn": {
-      "state": "slow",
-      "milliseconds": 2160,
-      "checkedAt": "2026-10-22T04:48:42.505Z",
+      "milliseconds": 1694,
+      "checkedAt": "2026-10-22T17:11:17.539Z",
       "clicks": 4
     },
     "docs-firefly.cuteleaf.cn": {
       "state": "slow",
-      "milliseconds": 2232,
-      "checkedAt": "2026-10-22T04:48:42.504Z",
+      "milliseconds": 2167,
+      "checkedAt": "2026-10-22T17:11:17.541Z",
       "clicks": 51
     },
-    "liuyuyang.net": {
+    "image.js.cn": {
       "state": "slow",
-      "milliseconds": 2301,
-      "checkedAt": "2026-10-22T04:48:42.505Z",
-      "clicks": 1
+      "milliseconds": 2211,
+      "checkedAt": "2026-10-22T17:11:17.544Z",
+      "clicks": 4
     },
     "onedayxyy.cn": {
       "state": "slow",
-      "milliseconds": 1135,
-      "checkedAt": "2026-10-22T04:48:44.364Z",
+      "milliseconds": 1091,
+      "checkedAt": "2026-10-22T17:11:19.233Z",
       "clicks": 13
     },
-    "astro.cchaoka.cn": {
+    "liuyuyang.net": {
       "state": "slow",
-      "milliseconds": 1546,
-      "checkedAt": "2026-10-22T04:48:44.736Z",
+      "milliseconds": 3401,
+      "checkedAt": "2026-10-22T17:11:17.542Z",
+      "clicks": 1
+    },
+    "blog.nw177.cn": {
+      "state": "slow",
+      "milliseconds": 1999,
+      "checkedAt": "2026-10-22T17:11:19.708Z",
       "clicks": 2
     },
     "blog.542000.xyz": {
       "state": "fast",
-      "milliseconds": 192,
-      "checkedAt": "2026-10-22T04:48:46.282Z"
+      "milliseconds": 91,
+      "checkedAt": "2026-10-22T17:11:21.707Z"
     },
     "nannax.top": {
       "state": "down",
-      "checkedAt": "2026-10-22T04:48:44.806Z",
+      "checkedAt": "2026-10-22T17:11:20.324Z",
       "clicks": 14
     },
-    "blog.nw177.cn": {
+    "astro.cchaoka.cn": {
       "state": "slow",
-      "milliseconds": 2751,
-      "checkedAt": "2026-10-22T04:48:44.665Z",
+      "milliseconds": 2649,
+      "checkedAt": "2026-10-22T17:11:19.755Z",
       "clicks": 2
+    },
+    "blog.casto.top": {
+      "state": "slow",
+      "milliseconds": 1732,
+      "checkedAt": "2026-10-22T17:11:21.798Z",
+      "clicks": 7
     },
     "yubendan.com": {
       "state": "slow",
-      "milliseconds": 2275,
-      "checkedAt": "2026-10-22T04:48:45.499Z",
+      "milliseconds": 2854,
+      "checkedAt": "2026-10-22T17:11:20.943Z",
       "clicks": 6
     },
     "mizuki.mysqil.com": {
       "state": "slow",
-      "milliseconds": 2143,
-      "checkedAt": "2026-10-22T04:48:47.374Z",
+      "milliseconds": 2025,
+      "checkedAt": "2026-10-22T17:11:21.947Z",
       "clicks": 4
-    },
-    "blog.tsh520.cn": {
-      "state": "slow",
-      "milliseconds": 1999,
-      "checkedAt": "2026-10-22T04:48:47.774Z",
-      "clicks": 6
-    },
-    "blog.casto.top": {
-      "state": "slow",
-      "milliseconds": 3443,
-      "checkedAt": "2026-10-22T04:48:46.474Z",
-      "clicks": 7
     },
     "docs.mizuki.mysqil.com": {
       "state": "slow",
-      "milliseconds": 2711,
-      "checkedAt": "2026-10-22T04:48:47.416Z",
+      "milliseconds": 1749,
+      "checkedAt": "2026-10-22T17:11:22.404Z",
       "clicks": 3
     },
     "blog.520781.xyz": {
-      "state": "normal",
-      "milliseconds": 954,
-      "checkedAt": "2026-10-22T04:48:49.517Z",
+      "state": "fast",
+      "milliseconds": 430,
+      "checkedAt": "2026-10-22T17:11:23.797Z",
       "clicks": 1
     },
     "blog.7003410.xyz": {
       "state": "fast",
-      "milliseconds": 367,
-      "checkedAt": "2026-10-22T04:48:50.127Z"
+      "milliseconds": 380,
+      "checkedAt": "2026-10-22T17:11:24.227Z"
     },
     "fqzlr.com": {
       "state": "normal",
-      "milliseconds": 634,
-      "checkedAt": "2026-10-22T04:48:49.917Z"
+      "milliseconds": 582,
+      "checkedAt": "2026-10-22T17:11:24.153Z"
     },
     "blog.huhaha.vip": {
       "state": "fast",
-      "milliseconds": 171,
-      "checkedAt": "2026-10-22T04:48:50.471Z"
+      "milliseconds": 131,
+      "checkedAt": "2026-10-22T17:11:24.607Z"
     },
     "qwq.sigrika.cc": {
       "state": "fast",
-      "milliseconds": 288,
-      "checkedAt": "2026-10-22T04:48:50.494Z"
-    },
-    "blog.eysnter.cn": {
-      "state": "down",
-      "checkedAt": "2026-10-22T04:48:50.782Z"
+      "milliseconds": 156,
+      "checkedAt": "2026-10-22T17:11:24.735Z"
     },
     "tbmiao.dpdns.org": {
       "state": "normal",
-      "milliseconds": 668,
-      "checkedAt": "2026-10-22T04:48:50.551Z"
+      "milliseconds": 600,
+      "checkedAt": "2026-10-22T17:11:24.738Z"
     },
-    "zsso.cn": {
+    "blog.eysnter.cn": {
       "state": "down",
-      "checkedAt": "2026-10-22T04:48:51.098Z",
-      "clicks": 3
+      "checkedAt": "2026-10-22T17:11:25.338Z"
     },
-    "blog.imshimao.com": {
-      "state": "fast",
-      "milliseconds": 215,
-      "checkedAt": "2026-10-22T04:48:51.354Z",
-      "clicks": 1
-    },
-    "ttquk.github.io": {
-      "state": "fast",
-      "milliseconds": 143,
-      "checkedAt": "2026-10-22T04:48:51.569Z"
+    "blog.tsh520.cn": {
+      "state": "slow",
+      "milliseconds": 2349,
+      "checkedAt": "2026-10-22T17:11:23.530Z",
+      "clicks": 6
     },
     "blog.tianhw.top": {
       "state": "slow",
-      "milliseconds": 2189,
-      "checkedAt": "2026-10-22T04:48:49.773Z"
+      "milliseconds": 2112,
+      "checkedAt": "2026-10-22T17:11:23.972Z"
+    },
+    "blog.imshimao.com": {
+      "state": "normal",
+      "milliseconds": 981,
+      "checkedAt": "2026-10-22T17:11:26.084Z",
+      "clicks": 1
+    },
+    "ttquk.github.io": {
+      "state": "normal",
+      "milliseconds": 576,
+      "checkedAt": "2026-10-22T17:11:27.065Z"
     },
     "blog.xrbk.cn": {
       "state": "slow",
-      "milliseconds": 2144,
-      "checkedAt": "2026-10-22T04:48:50.642Z"
+      "milliseconds": 2777,
+      "checkedAt": "2026-10-22T17:11:24.892Z"
+    },
+    "zsso.cn": {
+      "state": "slow",
+      "milliseconds": 2293,
+      "checkedAt": "2026-10-22T17:11:25.574Z",
+      "clicks": 3
     },
     "aifiee.cn": {
-      "state": "slow",
-      "milliseconds": 1008,
-      "checkedAt": "2026-10-22T04:48:51.962Z",
+      "state": "normal",
+      "milliseconds": 915,
+      "checkedAt": "2026-10-22T17:11:27.669Z",
       "clicks": 2
     },
     "blog.huchao.vip": {
-      "state": "normal",
-      "milliseconds": 525,
-      "checkedAt": "2026-10-22T04:48:52.786Z"
+      "state": "slow",
+      "milliseconds": 1040,
+      "checkedAt": "2026-10-22T17:11:27.867Z"
     },
     "jerry-nis.top": {
       "state": "slow",
-      "milliseconds": 1881,
-      "checkedAt": "2026-10-22T04:48:51.712Z"
-    },
-    "blog.xuwupiaomiao.cn": {
-      "state": "down",
-      "checkedAt": "2026-10-22T04:48:52.970Z",
-      "clicks": 1
+      "milliseconds": 1410,
+      "checkedAt": "2026-10-22T17:11:27.641Z"
     },
     "blog.seln.cn": {
       "state": "slow",
-      "milliseconds": 2600,
-      "checkedAt": "2026-10-22T04:48:51.219Z"
+      "milliseconds": 3358,
+      "checkedAt": "2026-10-22T17:11:25.879Z"
+    },
+    "blog.xuwupiaomiao.cn": {
+      "state": "down",
+      "checkedAt": "2026-10-22T17:11:28.584Z",
+      "clicks": 1
     },
     "justpureh2o.cn": {
-      "state": "normal",
-      "milliseconds": 584,
-      "checkedAt": "2026-10-22T04:48:53.311Z"
+      "state": "fast",
+      "milliseconds": 446,
+      "checkedAt": "2026-10-22T17:11:28.907Z"
     },
     "sunlight.kejk.cn": {
-      "state": "fast",
-      "milliseconds": 361,
-      "checkedAt": "2026-10-22T04:48:53.593Z"
+      "state": "normal",
+      "milliseconds": 546,
+      "checkedAt": "2026-10-22T17:11:29.051Z"
     },
     "naixv.netlify.app": {
       "state": "normal",
-      "milliseconds": 658,
-      "checkedAt": "2026-10-22T04:48:53.819Z",
+      "milliseconds": 972,
+      "checkedAt": "2026-10-22T17:11:29.249Z",
       "clicks": 1
     },
     "qcqx.cn": {
       "state": "normal",
-      "milliseconds": 879,
-      "checkedAt": "2026-10-22T04:48:53.895Z",
+      "milliseconds": 881,
+      "checkedAt": "2026-10-22T17:11:29.353Z",
       "clicks": 2
     },
     "ryu-chan.vercel.app": {
       "state": "fast",
-      "milliseconds": 450,
-      "checkedAt": "2026-10-22T04:48:54.477Z",
+      "milliseconds": 178,
+      "checkedAt": "2026-10-22T17:11:30.221Z",
       "clicks": 6
     },
     "zzyang.top": {
-      "state": "slow",
-      "milliseconds": 1318,
-      "checkedAt": "2026-10-22T04:48:53.954Z"
-    },
-    "nanzhiy.cn": {
-      "state": "down",
-      "checkedAt": "2026-10-22T04:48:55.272Z"
+      "state": "normal",
+      "milliseconds": 991,
+      "checkedAt": "2026-10-22T17:11:29.597Z"
     },
     "secretblog.my.id": {
       "state": "normal",
-      "milliseconds": 718,
-      "checkedAt": "2026-10-22T04:48:54.927Z"
+      "milliseconds": 613,
+      "checkedAt": "2026-10-22T17:11:30.399Z"
     },
-    "linlog.top": {
-      "state": "fast",
-      "milliseconds": 444,
-      "checkedAt": "2026-10-22T04:48:55.495Z"
-    },
-    "xixmu.top": {
-      "state": "slow",
-      "milliseconds": 1318,
-      "checkedAt": "2026-10-22T04:48:54.774Z"
+    "nanzhiy.cn": {
+      "state": "down",
+      "checkedAt": "2026-10-22T17:11:30.588Z"
     },
     "blog.elykia.cn": {
       "state": "slow",
-      "milliseconds": 2469,
-      "checkedAt": "2026-10-22T04:48:53.803Z",
+      "milliseconds": 2301,
+      "checkedAt": "2026-10-22T17:11:29.237Z",
       "clicks": 2
+    },
+    "linlog.top": {
+      "state": "normal",
+      "milliseconds": 899,
+      "checkedAt": "2026-10-22T17:11:31.012Z"
+    },
+    "xixmu.top": {
+      "state": "slow",
+      "milliseconds": 2000,
+      "checkedAt": "2026-10-22T17:11:30.234Z"
     },
     "clannad.top": {
       "state": "fast",
-      "milliseconds": 424,
-      "checkedAt": "2026-10-22T04:48:56.272Z"
-    },
-    "lonelybing.top": {
-      "state": "down",
-      "checkedAt": "2026-10-22T04:48:56.093Z"
+      "milliseconds": 117,
+      "checkedAt": "2026-10-22T17:11:32.234Z"
     },
     "wutongyu.site": {
       "state": "fast",
-      "milliseconds": 347,
-      "checkedAt": "2026-10-22T04:48:56.696Z"
+      "milliseconds": 134,
+      "checkedAt": "2026-10-22T17:11:32.351Z"
+    },
+    "lonelybing.top": {
+      "state": "down",
+      "checkedAt": "2026-10-22T17:11:31.911Z"
     },
     "bk.zhaozhiqiang.pw": {
       "state": "slow",
-      "milliseconds": 2231,
-      "checkedAt": "2026-10-22T04:48:55.645Z"
+      "milliseconds": 1766,
+      "checkedAt": "2026-10-22T17:11:31.228Z"
     },
     "blog.ksah.cn": {
       "state": "down",
-      "checkedAt": "2026-10-22T04:48:57.043Z"
+      "checkedAt": "2026-10-22T17:11:32.860Z"
     },
     "white-festa.net": {
       "state": "fast",
-      "milliseconds": 195,
-      "checkedAt": "2026-10-22T04:48:57.933Z"
+      "milliseconds": 261,
+      "checkedAt": "2026-10-22T17:11:33.499Z"
+    },
+    "eliauk312.top": {
+      "state": "normal",
+      "milliseconds": 921,
+      "checkedAt": "2026-10-22T17:11:32.994Z"
     },
     "blog.srebro.cn": {
       "state": "down",
-      "checkedAt": "2026-10-22T04:48:58.128Z"
-    },
-    "eliauk312.top": {
-      "state": "slow",
-      "milliseconds": 1032,
-      "checkedAt": "2026-10-22T04:48:57.876Z"
-    },
-    "gl.baimu.live": {
-      "state": "slow",
-      "milliseconds": 2230,
-      "checkedAt": "2026-10-22T04:48:56.738Z"
+      "checkedAt": "2026-10-22T17:11:33.760Z"
     },
     "blog.oldwang.site": {
       "state": "fast",
-      "milliseconds": 364,
-      "checkedAt": "2026-10-22T04:48:58.908Z"
-    },
-    "xiaodaidai.site": {
-      "state": "fast",
-      "milliseconds": 419,
-      "checkedAt": "2026-10-22T04:48:59.272Z"
-    },
-    "ffaff.fun": {
-      "state": "normal",
-      "milliseconds": 858,
-      "checkedAt": "2026-10-22T04:48:58.969Z"
-    },
-    "blog.liushen.fun": {
-      "state": "fast",
-      "milliseconds": 422,
-      "checkedAt": "2026-10-22T04:48:59.827Z"
-    },
-    "monkeyke.com": {
-      "state": "slow",
-      "milliseconds": 1742,
-      "checkedAt": "2026-10-22T04:48:58.651Z"
-    },
-    "devcoding.me": {
-      "state": "normal",
-      "milliseconds": 749,
-      "checkedAt": "2026-10-22T04:48:59.691Z"
-    },
-    "hqxiaozou.top": {
-      "state": "normal",
-      "milliseconds": 831,
-      "checkedAt": "2026-10-22T04:49:00.393Z"
+      "milliseconds": 330,
+      "checkedAt": "2026-10-22T17:11:34.310Z"
     },
     "sanshijiu.cn": {
       "state": "slow",
-      "milliseconds": 5441,
-      "checkedAt": "2026-10-22T04:48:55.939Z"
+      "milliseconds": 3130,
+      "checkedAt": "2026-10-22T17:11:31.538Z"
     },
-    "rainzt.cn": {
+    "xiaodaidai.site": {
+      "state": "fast",
+      "milliseconds": 334,
+      "checkedAt": "2026-10-22T17:11:34.668Z"
+    },
+    "ffaff.fun": {
+      "state": "normal",
+      "milliseconds": 738,
+      "checkedAt": "2026-10-22T17:11:34.640Z"
+    },
+    "gl.baimu.live": {
       "state": "slow",
-      "milliseconds": 2695,
-      "checkedAt": "2026-10-22T04:49:00.440Z",
-      "clicks": 2
+      "milliseconds": 2932,
+      "checkedAt": "2026-10-22T17:11:32.485Z"
+    },
+    "monkeyke.com": {
+      "state": "slow",
+      "milliseconds": 1829,
+      "checkedAt": "2026-10-22T17:11:33.915Z"
+    },
+    "devcoding.me": {
+      "state": "normal",
+      "milliseconds": 803,
+      "checkedAt": "2026-10-22T17:11:35.002Z"
+    },
+    "blog.liushen.fun": {
+      "state": "normal",
+      "milliseconds": 696,
+      "checkedAt": "2026-10-22T17:11:35.378Z"
+    },
+    "hqxiaozou.top": {
+      "state": "normal",
+      "milliseconds": 987,
+      "checkedAt": "2026-10-22T17:11:35.745Z"
     },
     "yrajsh.cn": {
       "state": "slow",
-      "milliseconds": 3200,
-      "checkedAt": "2026-10-22T04:49:00.249Z",
+      "milliseconds": 2972,
+      "checkedAt": "2026-10-22T17:11:35.417Z",
       "clicks": 1
+    },
+    "rainzt.cn": {
+      "state": "slow",
+      "milliseconds": 5439,
+      "checkedAt": "2026-10-22T17:11:35.805Z",
+      "clicks": 2
     }
   }
 }
