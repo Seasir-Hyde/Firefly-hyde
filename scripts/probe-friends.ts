@@ -69,16 +69,20 @@ const measureFriend = async (siteUrl: string) => {
 				failureReason: `不支持的协议 ${pingUrl.protocol}`,
 			};
 		}
-		pingUrl.searchParams.set(
-			"_friend_ping",
-			`${Date.now()}-${Math.random().toString(36).slice(2)}`,
-		);
 
+		// 用干净 URL 探测：真实访客访问的就是这个地址。
+		// 若追加随机 query（_friend_ping=...）并配合 cache:"no-store"，
+		// CDN 每次都必然回源，测出的是"源站裸响应"而非"访客实际体验"，
+		// 对已开启边缘缓存的站点会严重高估耗时（实测同一站点差 1~4 秒）。
 		const response = await fetch(pingUrl, {
 			method: "GET",
-			cache: "no-store",
 			redirect: "follow",
-			headers: { "user-agent": "rainzt.cn-friend-latency-probe/1.0" },
+			headers: {
+				"user-agent":
+					"Mozilla/5.0 (compatible; FriendLatencyProbe/1.0; +https://seasir.top/)",
+				accept: "text/html,application/xhtml+xml,*/*;q=0.8",
+				"accept-language": "zh-CN,zh;q=0.9",
+			},
 			signal: controller.signal,
 		});
 		await response.body?.cancel();

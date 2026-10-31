@@ -15,63 +15,93 @@
     {
       "source": "/",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" }
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
       ]
     },
     {
       "source": "/blog/*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" }
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    },
+    {
+      "source": "/posts/*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
       ]
     },
     {
       "source": "/_astro/*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
       "source": "/assets/*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
       "source": "/images/*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
       "source": "/music/*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
       "source": "/favicon/*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=604800" }
+        { "key": "Cache-Control", "value": "public, max-age=604800" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=604800" }
       ]
     },
     {
       "source": "/robots.txt",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=604800" }
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=604800" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=604800" }
       ]
     },
     {
       "source": "/sitemap-index.xml",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400" }
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
+      "source": "/llms.txt",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=86400" }
       ]
     }
   ],
   "caches": [
     { "source": "/", "cacheTtl": 86400 },
     { "source": "/blog/*", "cacheTtl": 86400 },
+    { "source": "/posts/*", "cacheTtl": 86400 },
     { "source": "/robots.txt", "cacheTtl": 604800 },
     { "source": "/sitemap-index.xml", "cacheTtl": 86400 },
+    { "source": "/llms.txt", "cacheTtl": 86400 },
+    { "source": "/_astro/*", "cacheTtl": 31536000 },
+    { "source": "/assets/*", "cacheTtl": 31536000 },
+    { "source": "/images/*", "cacheTtl": 31536000 },
+    { "source": "/music/*", "cacheTtl": 31536000 },
+    { "source": "/favicon/*", "cacheTtl": 604800 },
     { "source": "/*", "cacheTtl": 3600 }
   ]
 }
