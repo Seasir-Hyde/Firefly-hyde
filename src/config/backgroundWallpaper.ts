@@ -42,11 +42,13 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 		// 桌面背景图片（支持单张或多张随机）
 		// desktop: "assets/images/DesktopWallpaper/d1.avif",
 		desktop: [
+			"assets/images/DesktopWallpaper/XxSAVD9aTQoQ0bM.webp",
 			"assets/images/DesktopWallpaper/xueshan.webp",
-			"assets/images/DesktopWallpaper/拾光_Windows聚焦_c71ded2207c5c403.webp",
-			"assets/images/DesktopWallpaper/拾光_Windows聚焦_044bdf8a23f7808d.webp",
-			"assets/images/DesktopWallpaper/拾光_Windows聚焦_b1d8c2ec7ddde10a.webp",
-
+			"assets/images/DesktopWallpaper/c71ded2207c5c403.webp",
+			"assets/images/DesktopWallpaper/044bdf8a23f7808d.webp",
+			"assets/images/DesktopWallpaper/b1d8c2ec7ddde10a.webp",
+			"assets/images/DesktopWallpaper/28b4291225cba0bd.webp",
+			"assets/images/DesktopWallpaper/e9152079b9e95845.webp",
 		],
 		// 移动背景图片（支持单张或多张随机）
 		// mobile: "assets/images/MobileWallpaper/m1.avif",

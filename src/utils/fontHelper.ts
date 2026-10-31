@@ -4,7 +4,10 @@
  * 提供字体配置相关的共享逻辑，用于 astro.config.mjs 和 scripts/subset-fonts.ts。
  */
 
-import type { FontSelectionConfig } from "../types/fontConfig";
+import type {
+	FontSelectionConfig,
+	FontSwitchOption,
+} from "../types/fontConfig";
 
 /**
  * 从 fontConfig 中收集所有实际使用的字体 CSS 变量名。
@@ -36,6 +39,42 @@ export function collectUsedFontCssVars(
 	if (config.codeFont) used.add(config.codeFont);
 
 	return used;
+}
+
+/**
+ * 解析字体切换的可用档位。
+ *
+ * 仅在 fontConfig.enable 与 switchable.enable 同时开启、且至少配置了两个档位时生效。
+ * defaultMode 为 null 时表示不提供切换，返回空数组。
+ *
+ * @returns 可用档位列表（至少包含 2 项才会返回）
+ */
+export function resolveFontSwitchOptions(
+	config: FontSelectionConfig,
+): FontSwitchOption[] {
+	if (!config.enable || !config.switchable?.enable) return [];
+	const options = config.switchable.options.filter(Boolean);
+	// 少于两个档位时切换没有意义
+	if (options.length < 2) return [];
+	return options;
+}
+
+/**
+ * 取得字体切换的默认档位 id。
+ *
+ * 优先使用 switchable.defaultMode；未配置时回退到第一个档位。
+ *
+ * @returns 默认档位 id，切换未启用时返回 null
+ */
+export function resolveDefaultFontMode(
+	config: FontSelectionConfig,
+): string | null {
+	const options = resolveFontSwitchOptions(config);
+	if (!options.length) return null;
+	const configured = config.switchable?.defaultMode;
+	if (configured === null) return null;
+	if (configured && options.some((o) => o.id === configured)) return configured;
+	return options[0].id;
 }
 
 /**

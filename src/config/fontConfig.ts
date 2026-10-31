@@ -110,4 +110,33 @@ export const fontConfig: FontSelectionConfig = {
 			extraChars: "",
 		},
 	},
+
+	// ─── 字体样式切换（访客可选）──────────────────────────────
+	// 开启后，主题面板的「外观」页会显示字体切换按钮，
+	// 访客可选择系统默认字体或项目主字体，选择结果持久化到 localStorage。
+	switchable: {
+		// 是否启用字体样式切换
+		enable: true,
+		// 可切换的字体档位。id 为写入 <html data-font-mode> 的值，
+		// cssVariable 为该档位使用的字体（"system" 表示系统字体栈）。
+		// label 为面板按钮文案，description 为 title/aria 提示。
+		options: [
+			{
+				id: "original",
+				label: "默认字体",
+				cssVariable: "system",
+				description: "使用系统默认字体（微软雅黑 / 苹方等）",
+			},
+			{
+				id: "chikushi",
+				label: "筑紫A丸",
+				cssVariable: "--font-chikushi-a-maru",
+				description: "使用项目的筑紫A丸圆体字",
+			},
+		],
+		// 默认档位。设为 null 表示始终使用 selected 里的配置，不做切换。
+		defaultMode: "chikushi",
+		// localStorage 键名
+		storageKey: "firefly-font-mode",
+	},
 };

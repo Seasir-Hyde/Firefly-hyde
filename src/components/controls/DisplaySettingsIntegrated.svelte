@@ -11,9 +11,9 @@ import {
 	applyPostCoverImageEnabledToDocument,
 	getDefaultBannerCarouselEnabled,
 	getDefaultBannerTitleEnabled,
-	getDefaultFullscreenCarouselEnabled,
 	getDefaultCardBorderEnabled,
 	getDefaultCardFollowThemeEnabled,
+	getDefaultFullscreenCarouselEnabled,
 	getDefaultFullscreenLayout,
 	getDefaultGradientEnabled,
 	getDefaultHue,
@@ -26,9 +26,9 @@ import {
 	getHue,
 	getStoredBannerCarouselEnabled,
 	getStoredBannerTitleEnabled,
-	getStoredFullscreenCarouselEnabled,
 	getStoredCardBorderEnabled,
 	getStoredCardFollowThemeEnabled,
+	getStoredFullscreenCarouselEnabled,
 	getStoredFullscreenLayout,
 	getStoredGradientEnabled,
 	getStoredOverlayBlur,
@@ -40,9 +40,9 @@ import {
 	getStoredWavesEnabled,
 	setBannerCarouselEnabled,
 	setBannerTitleEnabled,
-	setFullscreenCarouselEnabled,
 	setCardBorderEnabled,
 	setCardFollowThemeEnabled,
+	setFullscreenCarouselEnabled,
 	setFullscreenLayout,
 	setGradientEnabled,
 	setHue,
@@ -56,12 +56,18 @@ import {
 } from "@utils/setting-utils";
 import { onMount } from "svelte";
 import Icon from "@/components/common/Icon.svelte";
+import FontSwitch from "@/components/controls/FontSwitch.svelte";
 import {
 	backgroundWallpaper,
 	displaySettingsConfig,
+	fontConfig,
 	siteConfig,
 } from "@/config";
 import type { FullscreenWallpaperLayout, WALLPAPER_MODE } from "@/types/config";
+import {
+	resolveDefaultFontMode,
+	resolveFontSwitchOptions,
+} from "@/utils/fontHelper";
 
 type OverlaySliderItem = {
 	key: "opacity" | "blur" | "cardOpacity";
@@ -136,6 +142,14 @@ let effectiveDefaultLayout = $derived(
 	isMobileWidth ? mobileDefaultLayout : defaultLayout,
 );
 const showThemeColor = displaySettingsConfig.themeColorSwitchable;
+// 字体样式切换：档位与默认档位由 fontConfig.switchable 统一解析，
+// 与 FontSetup.astro 共用同一份逻辑，避免两处配置漂移。
+const fontSwitchOptions = resolveFontSwitchOptions(fontConfig);
+const fontSwitchDefaultMode = resolveDefaultFontMode(fontConfig);
+const showFontSwitch =
+	fontSwitchOptions.length > 0 && fontSwitchDefaultMode !== null;
+const fontSwitchStorageKey =
+	fontConfig.switchable?.storageKey || "firefly-font-mode";
 const isWavesSwitchable = displaySettingsConfig.wavesSwitchable;
 const isGradientSwitchable = displaySettingsConfig.gradientSwitchable;
 // 检查是否启用横幅标题配置（功能开关，非用户切换开关）
@@ -143,7 +157,8 @@ const isBannerTitleEnabled =
 	backgroundWallpaper.common?.homeText?.enable ?? false;
 const isBannerTitleSwitchable =
 	isBannerTitleEnabled && displaySettingsConfig.bannerTitleSwitchable;
-const isBannerCarouselSwitchable = displaySettingsConfig.bannerCarouselSwitchable;
+const isBannerCarouselSwitchable =
+	displaySettingsConfig.bannerCarouselSwitchable;
 // 是否允许用户切换全屏轮播
 const isFullscreenCarouselSwitchable =
 	backgroundWallpaper.fullscreen?.carousel?.switchable ?? false;
@@ -214,13 +229,13 @@ let cardSettingsIsDefault = $derived(
 
 const hasAnyContent = $derived(
 	showThemeColor ||
-	isWallpaperSwitchable ||
-	allowLayoutSwitch ||
-	isPostCoverImageSwitchable ||
-	hasBannerSettings ||
-	hasOverlaySettings ||
-	isSakuraSwitchable||
-	isFullscreenLayoutSwitchable,
+		isWallpaperSwitchable ||
+		allowLayoutSwitch ||
+		isPostCoverImageSwitchable ||
+		hasBannerSettings ||
+		hasOverlaySettings ||
+		isSakuraSwitchable ||
+		isFullscreenLayoutSwitchable,
 );
 
 // --- Tab visibility ---
@@ -749,6 +764,20 @@ $effect(() => {
 				<input aria-label={i18n(I18nKey.themeColor)} type="range" min="0" max="360" bind:value={hue}
 					   class="slider" id="colorSlider" step="5" style="width: 100%">
 			</div>
+		</div>
+		{/if}
+
+		<!-- Font Style Section -->
+		{#if showFontSwitch}
+		<div class="">
+			<div class="section-title">
+				字体样式
+			</div>
+			<FontSwitch
+				options={fontSwitchOptions}
+				defaultMode={fontSwitchDefaultMode}
+				storageKey={fontSwitchStorageKey}
+			/>
 		</div>
 		{/if}
 

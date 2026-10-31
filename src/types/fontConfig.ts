@@ -81,4 +81,33 @@ export type FontSelectionConfig = {
 			extraChars?: string;
 		}
 	>;
+	/** 字体样式切换配置（访客可选） */
+	switchable?: FontSwitchConfig;
+};
+
+/** 单个字体切换档位 */
+export type FontSwitchOption = {
+	/** 档位标识，写入 <html data-font-mode> 的值 */
+	id: string;
+	/** 面板按钮文案 */
+	label: string;
+	/** 该档位使用的字体 CSS 变量名，"system" 表示系统字体栈 */
+	cssVariable: string;
+	/** 按钮 title / aria 提示文案 */
+	description?: string;
+};
+
+/** 字体样式切换配置 */
+export type FontSwitchConfig = {
+	/** 是否启用字体样式切换 */
+	enable: boolean;
+	/** 可切换的字体档位列表 */
+	options: FontSwitchOption[];
+	/**
+	 * 默认档位 id。为 null 时始终使用 fontConfig.selected，不提供切换。
+	 * 未设置时回退到 options[0].id。
+	 */
+	defaultMode?: string | null;
+	/** localStorage 持久化键名 */
+	storageKey?: string;
 };

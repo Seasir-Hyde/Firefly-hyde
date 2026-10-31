@@ -164,7 +164,7 @@ const logoVariants = await Promise.all(
                 <div class:list={[
                     "flex flex-row items-center text-md",
                     siteConfig.navbar.followTheme ? "text-(--primary)" : "dark:text-white text-black"
-                ]} style="font-family: var(--font-navbar-title, inherit)">
+                ]} style="font-family: var(--font-active-navbar-title, var(--font-navbar-title, inherit))">
                                     {logoConfig?.type === "icon" ? (
                                         <Icon name={logoConfig.value || "material-symbols:home-pin-outline"} class="navbar-logo text-[1.75rem] mb-1 mr-2" />
                                     ) : logoIsImage && logoVariants.length > 0 ? (

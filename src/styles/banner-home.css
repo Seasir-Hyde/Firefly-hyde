@@ -334,14 +334,14 @@ html.is-page-transitioning .banner-home-text-overlay {
     /* 响应式字体大小：取用户配置值与视口宽度10%中的较小值，防止小屏幕溢出 */
     font-size: var(--banner-title-size, 3rem);
     font-size: min(var(--banner-title-size, 3rem), 10vw);
-    /* 独立字体设置，通过 fontConfig.bannerTitleFont 配置 */
-    font-family: var(--font-banner-title, inherit);
+    /* 独立字体设置，通过 fontConfig.bannerTitleFont 配置；跟随字体档位切换 */
+    font-family: var(--font-active-banner-title, var(--font-banner-title, inherit));
 }
 
 .banner-subtitle {
     text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
-    /* 独立字体设置，通过 fontConfig.bannerSubtitleFont 配置 */
-    font-family: var(--font-banner-subtitle, inherit);
+    /* 独立字体设置，通过 fontConfig.bannerSubtitleFont 配置；跟随字体档位切换 */
+    font-family: var(--font-active-banner-subtitle, var(--font-banner-subtitle, inherit));
 }
 
 /* 首页横幅标题下方的链接图标行（半透明圆按钮） */
