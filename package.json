@@ -23,7 +23,8 @@
     "lqips": "npx tsx scripts/generate-lqips.ts",
     "fill-descriptions": "npx tsx scripts/fill-descriptions/index.ts",
     "github-cards": "npx tsx scripts/generate-github-card-data.ts",
-    "probe-friends": "npx tsx scripts/probe-friends.ts"
+    "probe-friends": "npx tsx scripts/probe-friends.ts",
+    "refresh-friends-feed": "npx tsx scripts/refresh-friends-feed.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

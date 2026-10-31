@@ -1,7 +1,9 @@
 ---
 import { getEntry, render } from "astro:content";
 import Comment from "@components/comment/index.astro";
-// import FriendsMagicLink from "@components/friends/FriendsMagicLink.astro";
+import FriendsMagicLink from "@components/friends/FriendsMagicLink.astro";
+import FriendAvatarMarquee from "@components/friends/FriendAvatarMarquee.astro";
+import FriendRecommendationGuide from "@components/friends/FriendRecommendationGuide.astro";
 import Markdown from "@components/common/Markdown.astro";
 import { Icon } from "astro-icon/components";
 import {
@@ -15,6 +17,13 @@ import friendsLatencySnapshot from "@/data/friends-latency-snapshot.json";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { getFriendLatencyDisplay } from "@/utils/friend-latency";
+import {
+	formatRemediationCountdown,
+	remediationSeconds,
+} from "@/utils/friend-remediation";
+import { loadFriendsFeed } from "@/utils/friends-feed";
+import type { FriendLatencySnapshot } from "@/types/friendLatency";
 // 友链“xxx 次”点击计数徽章的数据源组件（内部即 Umami 指标聚合逻辑，文件名沿用历史命名）
 import MicrosoftClarity from "@components/analytics/MicrosoftClarity.astro";
 import "@/styles/pages/common.css";
@@ -67,23 +76,41 @@ const normalizeFriendUrl = (url: string) =>
 		.replace(/\/+$/, "")
 		.toLowerCase();
 const ownSiteUrl = normalizeFriendUrl(siteConfig.site_url);
-type FriendLatencyState = "fast" | "normal" | "slow" | "down";
-type FriendLatencySnapshot = {
-	generatedAt: string | null;
-	timezone: string;
-	slot: string | null;
-	results: Record<
-		string,
-		{
-			state: FriendLatencyState;
-			milliseconds?: number;
-			checkedAt: string;
-			clicks?: number;
-		}
-	>;
-};
 // 延迟快照数据来自 src/data/friends-latency-snapshot.json（文件已存在，直接使用真实数据）
 const latencySnapshot = friendsLatencySnapshot as FriendLatencySnapshot;
+
+// 友链 RSS 聚合：每个友链站点的最新文章（构建期抓取，失败回落到快照缓存）
+const feed = await loadFriendsFeed(items, { cachedOnly: import.meta.env.DEV });
+const rssUpdates = new Map<
+	string,
+	{ date: Date; title: string; stale: boolean }
+>();
+const staleFeeds = new Set(
+	feed.sources
+		.filter((source) => source.stale)
+		.map((source) => normalizeFriendUrl(source.friendUrl)),
+);
+for (const entry of feed.items) {
+	if (!entry.publishedAt) continue;
+	const key = normalizeFriendUrl(entry.friendUrl);
+	const previous = rssUpdates.get(key);
+	if (!previous || entry.publishedAt > previous.date) {
+		rssUpdates.set(key, {
+			date: entry.publishedAt,
+			title: entry.title,
+			stale: staleFeeds.has(key),
+		});
+	}
+}
+const rssDateLabel = (date: Date) =>
+	date.toLocaleDateString("sv-SE", { timeZone: "Asia/Shanghai" });
+
+// 推荐友链（不含本站），用于评选规范弹窗
+const recommendedFriends = items.filter(
+	(item) =>
+		item.recommended === true &&
+		normalizeFriendUrl(item.siteurl) !== ownSiteUrl,
+);
 
 // 页面标题和描述
 const title = friendsPageConfig.title || i18n(I18nKey.friends);
@@ -157,8 +184,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
   >
       <div class="card-base z-10 px-9 py-6 relative w-full">
       <!-- 页面标题和描述 -->
-      <!-- FriendsMagicLink 暂未启用（下方已注释），先折叠为单列，让右侧按钮与搜索框右边缘对齐；启用组件后请移除 grid-cols-[minmax(0,1fr)]! -->
-      <div class="friends-heading-row mb-4 grid-cols-[minmax(0,1fr)]!">
+      <div class="friends-heading-row mb-4">
         <div class="friends-heading-copy">
           <div class="flex flex-wrap items-center gap-3 mb-0">
             <div
@@ -173,13 +199,23 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
               <strong>{items.length}</strong>
               <span>个</span>
             </span>
-          {/* 右侧操作按钮：随机访问 + 自助申请，ml-auto 推到标题行最右侧 */}
-          <div class="flex items-center gap-2 shrink-0 ml-auto">
-            <button
-              id="random-friend-btn"
-              type="button"
-              class="friend-action-btn relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-(--primary) dark:text-white border border-(--primary) hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
-            >
+          </div>
+          {
+            description && (
+              <p class="text-base text-neutral-600 dark:text-neutral-400 leading-relaxed mb-0">
+                {description}
+              </p>
+            )
+          }
+        </div>
+
+        {/* 右侧操作按钮：随机访问 + 自助申请 + 评选规范 + 神奇按钮，与标题同一行右对齐 */}
+        <div class="friends-heading-actions">
+          <button
+            id="random-friend-btn"
+            type="button"
+            class="friend-action-btn relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-(--primary) dark:text-white border border-(--primary) hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
+          >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="1em"
@@ -198,25 +234,14 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
             <button
               id="apply-friend-btn"
               type="button"
-              class="friend-action-btn relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-(--primary) text-white dark:text-white hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
+              class="friend-action-btn relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-(--primary) text-white dark:text-white border border-transparent hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
             >
-              <svg data-v-2d63c78e="" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10543" width="18" height="18"><path data-v-2d63c78e="" d="M535.630769 821.169231l-41.353846-5.907693s-27.569231-5.907692-41.353846-11.815384c-7.876923-1.969231-17.723077 0-23.630769 5.907692l-9.846154 9.846154c-57.107692 57.107692-149.661538 63.015385-208.738462 11.815385-66.953846-57.107692-68.923077-159.507692-7.876923-220.553847l149.661539-149.661538c19.692308-19.692308 43.323077-31.507692 66.953846-39.384615 31.507692-7.876923 64.984615-5.907692 94.523077 5.907692 17.723077 7.876923 35.446154 17.723077 51.2 33.476923 7.876923 7.876923 13.784615 15.753846 19.692307 25.6 7.876923 13.784615 25.6 15.753846 35.446154 3.938462l55.138462-55.138462c7.876923-7.876923 7.876923-19.692308 1.969231-29.538462-7.876923-11.815385-17.723077-21.661538-27.569231-31.507692-13.784615-13.784615-29.538462-27.569231-47.261539-37.415384-27.569231-17.723077-59.076923-29.538462-92.553846-35.446154-61.046154-11.815385-128-1.969231-183.138461 27.56923-21.661538 11.815385-43.323077 27.569231-61.046154 45.292308l-143.753846 143.753846C17.723077 622.276923 9.846154 791.630769 110.276923 897.969231c104.369231 114.215385 281.6 116.184615 389.907692 7.876923l49.23077-49.230769c13.784615-9.846154 3.938462-33.476923-13.784616-35.446154zM897.969231 114.215385c-108.307692-100.430769-277.661538-92.553846-380.061539 11.815384L472.615385 169.353846c-13.784615 13.784615-3.938462 37.415385 13.784615 39.384616 27.569231 1.969231 55.138462 7.876923 82.707692 15.753846 7.876923 1.969231 17.723077 0 23.63077-5.907693l9.846153-9.846153c57.107692-57.107692 149.661538-63.015385 208.738462-11.815385 66.953846 57.107692 68.923077 159.507692 7.876923 220.553846L669.538462 567.138462c-19.692308 19.692308-43.323077 31.507692-66.953847 39.384615-31.507692 7.876923-64.984615 5.907692-94.523077-5.907692-17.723077-7.876923-35.446154-17.723077-51.2-33.476923-7.876923-7.876923-13.784615-15.753846-19.692307-25.6-7.876923-13.784615-25.6-15.753846-35.446154-3.938462l-55.138462 55.138462c-7.876923 7.876923-7.876923 19.692308-1.96923 29.538461 7.876923 11.815385 17.723077 21.661538 27.56923 31.507692 13.784615 13.784615 31.507692 27.569231 47.261539 37.415385 27.569231 17.723077 59.076923 29.538462 90.584615 35.446154 61.046154 11.815385 128 1.969231 183.138462-27.569231 21.661538-11.815385 43.323077-27.569231 61.046154-45.292308l149.661538-149.661538c110.276923-108.307692 106.338462-285.538462-5.907692-389.907692z" fill="currentColor" p-id="10544"></path></svg>
+              <svg data-v-2d63c78e="" class="icon text-base" viewBox="0 13.8 1024 972" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10543" width="1em" height="1em"><path data-v-2d63c78e="" d="M535.630769 821.169231l-41.353846-5.907693s-27.569231-5.907692-41.353846-11.815384c-7.876923-1.969231-17.723077 0-23.630769 5.907692l-9.846154 9.846154c-57.107692 57.107692-149.661538 63.015385-208.738462 11.815385-66.953846-57.107692-68.923077-159.507692-7.876923-220.553847l149.661539-149.661538c19.692308-19.692308 43.323077-31.507692 66.953846-39.384615 31.507692-7.876923 64.984615-5.907692 94.523077 5.907692 17.723077 7.876923 35.446154 17.723077 51.2 33.476923 7.876923 7.876923 13.784615 15.753846 19.692307 25.6 7.876923 13.784615 25.6 15.753846 35.446154 3.938462l55.138462-55.138462c7.876923-7.876923 7.876923-19.692308 1.969231-29.538462-7.876923-11.815385-17.723077-21.661538-27.569231-31.507692-13.784615-13.784615-29.538462-27.569231-47.261539-37.415384-27.569231-17.723077-59.076923-29.538462-92.553846-35.446154-61.046154-11.815385-128-1.969231-183.138461 27.56923-21.661538 11.815385-43.323077 27.569231-61.046154 45.292308l-143.753846 143.753846C17.723077 622.276923 9.846154 791.630769 110.276923 897.969231c104.369231 114.215385 281.6 116.184615 389.907692 7.876923l49.23077-49.230769c13.784615-9.846154 3.938462-33.476923-13.784616-35.446154zM897.969231 114.215385c-108.307692-100.430769-277.661538-92.553846-380.061539 11.815384L472.615385 169.353846c-13.784615 13.784615-3.938462 37.415385 13.784615 39.384616 27.569231 1.969231 55.138462 7.876923 82.707692 15.753846 7.876923 1.969231 17.723077 0 23.63077-5.907693l9.846153-9.846153c57.107692-57.107692 149.661538-63.015385 208.738462-11.815385 66.953846 57.107692 68.923077 159.507692 7.876923 220.553846L669.538462 567.138462c-19.692308 19.692308-43.323077 31.507692-66.953847 39.384615-31.507692 7.876923-64.984615 5.907692-94.523077-5.907692-17.723077-7.876923-35.446154-17.723077-51.2-33.476923-7.876923-7.876923-13.784615-15.753846-19.692307-25.6-7.876923-13.784615-25.6-15.753846-35.446154-3.938462l-55.138462 55.138462c-7.876923 7.876923-7.876923 19.692308-1.96923 29.538461 7.876923 11.815385 17.723077 21.661538 27.56923 31.507692 13.784615 13.784615 31.507692 27.569231 47.261539 37.415385 27.569231 17.723077 59.076923 29.538462 90.584615 35.446154 61.046154 11.815385 128 1.969231 183.138462-27.569231 21.661538-11.815385 43.323077-27.569231 61.046154-45.292308l149.661538-149.661538c110.276923-108.307692 106.338462-285.538462-5.907692-389.907692z" fill="currentColor" p-id="10544"></path></svg>
               <span class="hidden sm:inline">申请友链</span>
             </button>
-          </div>
-          </div>
-          {
-            description && (
-              <p class="text-base text-neutral-600 dark:text-neutral-400 leading-relaxed mb-0">
-                {description}
-              </p>
-            )
-          }
+            <FriendRecommendationGuide friends={recommendedFriends} />
+            <FriendsMagicLink />
         </div>
-
-        
-        <!-- <FriendsMagicLink /> -->
-       
       </div>
 
       
@@ -228,7 +253,13 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
           class="friends-ai-recommendation--inline"
         /> -->
       </div>
-     
+
+      <!-- 友链头像跑马灯：快捷访问各友链站点，悬停预览站点截图 -->
+      {
+        items.length > 0 && (
+          <FriendAvatarMarquee friends={items} ownSiteUrl={ownSiteUrl} />
+        )
+      }
 
       <!-- 搜索框 -->
       {
@@ -315,22 +346,39 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 			const isRecommended = !isOwnSite && item.recommended === true;
 			const isDegradedRecommended = isRecommended && item.recommendedTier === "degraded";
 			const scheduledLatency = latencySnapshot.results[normalizeFriendUrl(item.siteurl)];
-			const isTemporarilyUnavailable = item.temporarilyUnavailable === true;
-			const latencyState = isTemporarilyUnavailable
-				? "down"
-				: scheduledLatency?.state || "checking";
-			const latencyValue =
-				latencyState === "down"
-					? "失联"
-					: scheduledLatency?.milliseconds
-						? `${scheduledLatency.milliseconds}ms`
-						: "待探测";
-			const latencyLabel =
-				latencyState === "down"
-					? `${item.title}，最近一次定时 GET 探测未连通`
-					: scheduledLatency?.milliseconds
-						? `${item.title}，最近一次东八区定时 GET 探测响应时间 ${scheduledLatency.milliseconds} 毫秒`
-						: `${item.title}，等待东八区定时 GET 探测`;
+            const isTemporarilyUnavailable = item.temporarilyUnavailable === true;
+            const latency = getFriendLatencyDisplay(latencySnapshot, item.siteurl);
+            const latencyState = isTemporarilyUnavailable ? "down" : latency.state;
+            const latencyValue = isTemporarilyUnavailable ? "失联" : latency.value;
+            const latencyLabel = isTemporarilyUnavailable
+              ? `${item.title}，最近一次定时 GET 探测未连通`
+              : latency.label;
+            const rssUpdate = rssUpdates.get(normalizeFriendUrl(item.siteurl));
+            const rssDate = rssUpdate ? rssDateLabel(rssUpdate.date) : null;
+            const rssLabel = rssUpdate
+              ? `${rssUpdate.stale ? "RSS 缓存" : "RSS"} 最近文章时间：${rssDate}，${rssUpdate.title}`
+              : `${item.title}，RSS 暂无有效更新日期`;
+            // 可见性状态：构建期配置优先于远端下发
+            const visibilityStatus =
+              item.visibilityStatus ||
+              (item.temporarilyUnavailable ? "temporarily_unavailable" : "normal");
+            const isPolicyViolation = visibilityStatus === "policy_violation";
+            const violationStartedAt =
+              Number.isSafeInteger(item.violationStartedAt) &&
+              (item.violationStartedAt || 0) > 0
+                ? item.violationStartedAt || 0
+                : 0;
+            const unavailableStartedAt =
+              Number.isSafeInteger(item.unavailableStartedAt) &&
+              (item.unavailableStartedAt || 0) > 0
+                ? item.unavailableStartedAt || 0
+                : 0;
+            const remediationStartedAt = isTemporarilyUnavailable
+              ? unavailableStartedAt
+              : violationStartedAt;
+            const remediationDeadline = remediationStartedAt
+              ? remediationStartedAt + remediationSeconds(visibilityStatus)
+              : 0;
 
 			return (
               <a
@@ -338,6 +386,15 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 target="_blank"
                 rel="noopener noreferrer"
                 data-umami-event={isOwnSite ? undefined : "friend-link-click"}
+                data-friend-site-url={item.siteurl}
+                data-friend-title={item.title}
+                data-friend-visibility-status={visibilityStatus}
+                data-friend-unavailable={String(isTemporarilyUnavailable)}
+                data-friend-unavailable-started-at={unavailableStartedAt || undefined}
+                data-friend-violation-started-at={violationStartedAt || undefined}
+                data-friend-own-site={String(isOwnSite)}
+                data-friend-recommended={String(isRecommended)}
+                data-friend-screenshot={item.screenshot}
                 aria-label={
                   isTemporarilyUnavailable
                     ? `${item.title}，短暂失联`
@@ -354,6 +411,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                   isRecommended && "friend-card--recommended",
                   isDegradedRecommended && "friend-card--recommended-degraded",
                   isTemporarilyUnavailable && "friend-card--temporarily-unavailable",
+                  isPolicyViolation && "friend-card--policy-violation",
                 ]}
               >
               {/* 背景装饰 - 仅悬停显示 */}
@@ -434,6 +492,22 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                           </span>
                         ))
                     : null}
+				</div>
+
+                {/* RSS 最近更新时间 */}
+                <div class="friend-card-meta-row">
+                  {rssUpdate ? (
+                    <time
+                      class="friend-rss-updated"
+                      datetime={rssUpdate.date.toISOString()}
+                      title={rssLabel}
+                      aria-label={rssLabel}
+                    >
+                      最近更新于 {rssDate}
+                    </time>
+                  ) : (
+                    <span class="friend-rss-updated" title={rssLabel}>RSS 暂无</span>
+                  )}
                 </div>
               </div>
 
@@ -468,11 +542,37 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
               </span>
 
               {
-                isTemporarilyUnavailable && (
+                (isTemporarilyUnavailable || isPolicyViolation) && (
                   <div class="friend-card-status-overlay" aria-hidden="true">
-                    <div class="friend-card-status-badge">
-                      <Icon is:inline name="material-symbols:cloud-off-rounded" />
-                      <span>短暂失联</span>
+                    <div class="friend-card-remediation-overlay">
+                      {isTemporarilyUnavailable && (
+                        <div class="friend-card-status-badge">
+                          <Icon is:inline name="material-symbols:cloud-off-rounded" />
+                          <span>短暂失联</span>
+                        </div>
+                      )}
+                      {isPolicyViolation && (
+                        <div class="friend-card-policy-label">
+                          <Icon is:inline name="material-symbols:warning-rounded" />
+                          <span>违规友链</span>
+                        </div>
+                      )}
+                      <time
+                        class="friend-card-remediation-countdown"
+                        datetime={
+                          remediationDeadline
+                            ? new Date(remediationDeadline * 1000).toISOString()
+                            : undefined
+                        }
+                        data-friend-remediation-countdown
+                      >
+                        {remediationStartedAt
+                          ? formatRemediationCountdown(
+                              remediationStartedAt,
+                              visibilityStatus,
+                            )
+                          : "整改期限待同步"}
+                      </time>
                     </div>
                   </div>
                 )
@@ -1785,6 +1885,11 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
     })();
   </script>
 
+  <script>
+    // 友链可见性运行时：违规/失联屏蔽 + 整改倒计时逐秒刷新
+    import "@/scripts/friend-visibility";
+  </script>
+
   <script is:inline>
     // 顶部按钮逻辑：随机访问友链 + 滚动到申请表单
     function initFriendsHeaderButtons() {
@@ -2241,6 +2346,31 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       font-weight: 700;
     }
 
+    .friend-card-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.18rem;
+      min-height: 1rem;
+    }
+
+    .friend-rss-updated {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.64rem;
+      font-weight: 500;
+      line-height: 1.2;
+      color: color-mix(in srgb, var(--content-meta, #6f8296) 78%, transparent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .friend-card:hover .friend-rss-updated {
+      color: color-mix(in srgb, var(--primary) 68%, transparent);
+    }
+
     .friend-card:hover .friend-click-count,
     .friend-card:focus-visible .friend-click-count {
       border-color: rgba(255, 246, 219, 0.62);
@@ -2514,6 +2644,68 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       z-index: 1;
       -webkit-backdrop-filter: blur(0.42rem) saturate(1.12);
       backdrop-filter: blur(0.42rem) saturate(1.12);
+    }
+
+    .friend-card-remediation-overlay {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .friend-card-policy-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 2.6rem;
+      padding: 0.55rem 1.15rem;
+      border: 1px solid rgba(255, 236, 236, 0.62);
+      border-radius: 999px;
+      color: #a33a3a;
+      background: linear-gradient(135deg, rgba(255, 240, 240, 0.72), rgba(252, 226, 226, 0.42));
+      box-shadow:
+        0 0.4rem 1.1rem rgba(150, 60, 60, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.88);
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .friend-card-policy-label :global(svg) {
+      width: 1.15rem;
+      height: 1.15rem;
+      flex: none;
+    }
+
+    .friend-card-remediation-countdown {
+      display: inline-block;
+      padding: 0.28rem 0.7rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.42);
+      color: #567184;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    :root.dark .friend-card-policy-label {
+      color: #f3b0b0;
+      background: linear-gradient(135deg, rgba(92, 34, 34, 0.6), rgba(72, 26, 26, 0.4));
+      border-color: rgba(240, 149, 149, 0.42);
+    }
+
+    :root.dark .friend-card-remediation-countdown {
+      background: rgba(255, 255, 255, 0.08);
+      color: #c3d3de;
+    }
+
+    .friend-card--policy-violation .friend-card-description {
+      display: none;
     }
 
     @keyframes friend-liquid-shimmer {
@@ -3389,4 +3581,5 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       opacity: 1;
     }
   </style>
+
 </MainGridLayout>

@@ -531,7 +531,6 @@ export const ja: Translation = {
 	[Key.albumsNoResults]: "一致するアルバムはありません",
 
 	// プロジェクトページ
-	[Key.projects]: "プロジェクト",
 	[Key.projectsSubtitle]: "開発プロジェクトのポートフォリオ",
 	[Key.projectsAll]: "すべて",
 	[Key.projectsWeb]: "ウェブアプリ",

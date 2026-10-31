@@ -5,17 +5,14 @@ import { Icon } from "astro-icon/components";
 <a
 	href="/links/"
 	data-no-swup
-	class="friends-magic-button"
+	class="friend-action-btn friends-magic-button relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-(--primary) dark:text-white border border-(--primary) hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
 	aria-label="打开神奇按钮：进入友链漫游舱"
 >
-	<span class="friends-magic-button-icon" aria-hidden="true">
-		<Icon is:inline name="material-symbols:flare-rounded" class="text-[1.25rem]" />
-	</span>
-	<span class="friends-magic-button-copy">
-		<span class="friends-magic-button-title">神奇按钮</span>
-		<span class="friends-magic-button-note">（我知道你不会点的）</span>
-	</span>
-	<span class="friends-magic-button-arrow" aria-hidden="true">
-		<Icon is:inline name="material-symbols:arrow-forward-rounded" />
-	</span>
+	<Icon
+		is:inline
+		name="material-symbols:wand-stars-outline-rounded"
+		class="text-base"
+		aria-hidden="true"
+	/>
+	<span class="hidden sm:inline">神奇按钮</span>
 </a>

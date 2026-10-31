@@ -1,0 +1,213 @@
+---
+import { Icon } from "astro-icon/components";
+import type { FriendLink } from "@/types/friendsConfig";
+import "@/styles/friends-recommendation-guide.css";
+
+type Props = {
+	friends: Pick<
+		FriendLink,
+		| "title"
+		| "imgurl"
+		| "siteurl"
+		| "recommendationReason"
+		| "temporarilyUnavailable"
+		| "visibilityStatus"
+		| "violationStartedAt"
+		| "unavailableStartedAt"
+	>[];
+};
+
+const { friends } = Astro.props;
+---
+
+<button
+	type="button"
+	class="friend-action-btn friends-recommendation-button relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-(--primary) dark:text-white border border-(--primary) hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] transition-all duration-200 text-sm font-medium cursor-pointer"
+	data-friend-recommendation-open
+	aria-haspopup="dialog"
+	aria-controls="friend-recommendation-dialog"
+>
+	<Icon
+		is:inline
+		name="material-symbols:rule-rounded"
+		class="text-base"
+		aria-hidden="true"
+	/>
+	<span class="hidden sm:inline">友链推荐规范</span>
+</button>
+
+<dialog
+	id="friend-recommendation-dialog"
+	class="friend-recommendation-dialog"
+	data-friend-recommendation-dialog
+	aria-labelledby="friend-recommendation-title"
+	aria-describedby="friend-recommendation-intro"
+>
+	<div class="friend-recommendation-frame">
+		<header class="friend-recommendation-header">
+			<div class="friend-recommendation-heading">
+				<Icon
+					is:inline
+					name="material-symbols:verified-rounded"
+					class="friend-recommendation-heading-icon"
+					aria-hidden="true"
+				/>
+				<h2 id="friend-recommendation-title">推荐友链评选规范</h2>
+			</div>
+			<button
+				class="friend-recommendation-close"
+				type="button"
+				data-friend-recommendation-close
+				aria-label="关闭推荐友链评选规范"
+			>
+				<Icon is:inline name="material-symbols:close-rounded" aria-hidden="true" />
+			</button>
+		</header>
+
+		<div class="friend-recommendation-body">
+			<p id="friend-recommendation-intro" class="friend-recommendation-intro">
+				当前有 {friends.length} 个推荐友链。下方列出每站的推荐理由与评选标准；名单会定期重新观察，不是永久榜单。
+			</p>
+
+			<section
+				class="friend-recommendation-section"
+				aria-labelledby="friend-recommendation-current-title"
+			>
+				<h3 id="friend-recommendation-current-title">推荐友链与理由</h3>
+				{
+					friends.length > 0 ? (
+						<ul class="friend-recommendation-list">
+							{friends.map((friend) => (
+								<li class="friend-recommendation-item">
+									<a
+										class="friend-recommendation-site"
+										href={friend.temporarilyUnavailable || (friend.visibilityStatus && friend.visibilityStatus !== "normal") ? undefined : friend.siteurl}
+										data-friend-site-url={friend.siteurl}
+										data-friend-visibility-status={friend.visibilityStatus}
+										data-friend-violation-started-at={friend.violationStartedAt}
+										data-friend-unavailable-started-at={friend.unavailableStartedAt}
+										data-friend-unavailable={String(friend.temporarilyUnavailable === true)}
+										data-friend-title={friend.title}
+										data-friend-original-tabindex=""
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-disabled={friend.temporarilyUnavailable || (friend.visibilityStatus && friend.visibilityStatus !== "normal") ? "true" : undefined}
+										tabindex={friend.temporarilyUnavailable || (friend.visibilityStatus && friend.visibilityStatus !== "normal") ? -1 : undefined}
+									>
+									<img
+										src={friend.imgurl}
+										alt=""
+										width="30"
+										height="30"
+										loading="lazy"
+										decoding="async"
+									/>
+										<span>{friend.title}</span>
+										<Icon
+											is:inline
+											name="material-symbols:open-in-new-rounded"
+											aria-hidden="true"
+										/>
+									</a>
+									<p>
+										{friend.recommendationReason ||
+											"暂未记录单独理由；该站仍按当前推荐配置展示。"}
+									</p>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p class="friend-recommendation-empty">目前暂无推荐友链，名单会随评选结果更新。</p>
+					)
+				}
+			</section>
+
+			<section
+				class="friend-recommendation-section"
+				aria-labelledby="friend-recommendation-rules-title"
+			>
+				<h3 id="friend-recommendation-rules-title">推荐评选标准</h3>
+				<ul class="friend-recommendation-rules">
+					<li>
+						<strong>持续更新</strong>
+						<span>站点保持更新，能读到持续积累的内容。</span>
+					</li>
+					<li>
+						<strong>有自己的表达</strong>
+						<span>能看到鲜明的个人表达和长期打磨的痕迹。</span>
+					</li>
+					<li>
+						<strong>愿意继续浏览</strong>
+						<span>读完文章或逛完页面后，还会想多停一会儿、再点开几篇。</span>
+					</li>
+					<li>
+						<strong>界面审美</strong>
+						<span>会观察站点界面是否与整体审美一致。</span>
+					</li>
+					<li>
+						<strong>文章表现</strong>
+						<span>也会参考对站点文章质量的评价。</span>
+					</li>
+				</ul>
+				<p class="friend-recommendation-monthly-note">
+					这不是按权重排序的榜单，也不是一次性打分。每期会重新观察，不把推荐当作永久标签；最终由站长个人评选，也保留一定的审美偏好。
+				</p>
+			</section>
+
+			<section
+				class="friend-recommendation-section"
+				aria-labelledby="friend-recommendation-application-title"
+			>
+				<h3 id="friend-recommendation-application-title">友链收录与维护</h3>
+				<p class="friend-recommendation-rules-intro">
+					推荐是在友链收录基础上的额外精选。申请前请先添加本站；站点需支持 HTTPS、以原创内容为主、能正常访问并持续更新，且不含违法违规内容。长期无法访问或内容不符合要求时会调整或移除。
+				</p>
+			</section>
+		</div>
+	</div>
+</dialog>
+
+<script>
+	if (document.documentElement.dataset.friendRecommendationGuideBound !== "true") {
+		document.documentElement.dataset.friendRecommendationGuideBound = "true";
+
+		document.addEventListener("click", (event) => {
+			const target = event.target;
+			if (!(target instanceof Element)) return;
+
+			const openButton = target.closest<HTMLButtonElement>(
+				"[data-friend-recommendation-open]",
+			);
+			if (openButton) {
+				const dialog = document.querySelector<HTMLDialogElement>(
+					"[data-friend-recommendation-dialog]",
+				);
+				if (dialog && !dialog.open) dialog.showModal();
+				return;
+			}
+
+			const closeButton = target.closest<HTMLButtonElement>(
+				"[data-friend-recommendation-close]",
+			);
+			if (closeButton) {
+				const dialog = closeButton.closest<HTMLDialogElement>(
+					"[data-friend-recommendation-dialog]",
+				);
+				if (dialog?.open) dialog.close();
+				return;
+			}
+
+			const dialog = target.closest<HTMLDialogElement>(
+				"[data-friend-recommendation-dialog]",
+			);
+			if (dialog && target === dialog && dialog.open) dialog.close();
+		});
+
+		document.addEventListener("astro:before-swap", () => {
+			const dialog = document.querySelector<HTMLDialogElement>(
+				"[data-friend-recommendation-dialog]",
+			);
+			if (dialog?.open) dialog.close();
+		});
+	}
+</script>

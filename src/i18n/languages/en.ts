@@ -534,7 +534,6 @@ export const en: Translation = {
 	[Key.albumsNoResults]: "No matching albums",
 
 	// Projects Page
-	[Key.projects]: "Projects",
 	[Key.projectsSubtitle]: "My development project portfolio",
 	[Key.projectsAll]: "All",
 	[Key.projectsWeb]: "Web Applications",

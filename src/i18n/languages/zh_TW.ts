@@ -525,7 +525,6 @@ export const zh_TW: Translation = {
 	[Key.albumsNoResults]: "沒有匹配的相冊",
 
 	// 專案展示頁面
-	[Key.projects]: "專案展示",
 	[Key.projectsSubtitle]: "我的開發專案作品集",
 	[Key.projectsAll]: "全部",
 	[Key.projectsWeb]: "網頁應用",

@@ -1,0 +1,524 @@
+---
+import type { FriendLink } from "@/types/friendsConfig";
+
+interface Props {
+	friends: FriendLink[];
+	ownSiteUrl: string;
+}
+
+const { friends, ownSiteUrl } = Astro.props;
+// 保留两位小数，避免浮点误差写出 31.159999999999997s 这类值
+const duration = Math.max(22, Math.round(friends.length * 0.82 * 100) / 100);
+const normalizeFriendUrl = (url: string) =>
+	url
+		.trim()
+		.replace(/^https?:\/\//i, "")
+		.replace(/^www\./i, "")
+		.replace(/\/+$/, "")
+		.toLowerCase();
+---
+
+<friend-avatar-marquee
+	class="friend-avatar-marquee"
+	role="navigation"
+	aria-label="友链头像快捷访问"
+	style={`--friend-avatar-duration: ${duration}s`}
+>
+	<div class="friend-avatar-marquee-track">
+		{[0, 1].map((copy) => (
+			<div class="friend-avatar-marquee-group" aria-hidden={copy === 0 ? "true" : undefined}>
+				{friends.map((friend) => {
+					const isOwnSite = normalizeFriendUrl(friend.siteurl) === ownSiteUrl;
+					const status = friend.visibilityStatus || (friend.temporarilyUnavailable ? "temporarily_unavailable" : "normal");
+					const isTemporarilyUnavailable = status === "temporarily_unavailable";
+					const blocked = status !== "normal";
+					const screenshot = friend.screenshot && !friend.screenshot.endsWith("/no-photos.webp")
+						? friend.screenshot
+						: "/friends/screenshots/no-photos.webp";
+					return (
+						<a
+							href={blocked ? undefined : friend.siteurl}
+							data-friend-screenshot={screenshot}
+							data-friend-site-url={friend.siteurl}
+							data-friend-visibility-status={status}
+							data-friend-violation-started-at={friend.violationStartedAt}
+							data-friend-unavailable-started-at={friend.unavailableStartedAt}
+							data-friend-unavailable={String(isTemporarilyUnavailable)}
+							data-friend-title={friend.title}
+							data-friend-own-site={String(isOwnSite)}
+							data-friend-original-tabindex=""
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-disabled={blocked ? "true" : undefined}
+							aria-label={
+								isTemporarilyUnavailable
+									? `${friend.title}，短暂失联`
+									: blocked ? `${friend.title}，违规友链` : `${friend.title}，在新标签页打开友链`
+							}
+							title={friend.title}
+							tabindex={copy === 0 || blocked ? -1 : undefined}
+							draggable="false"
+							data-umami-event={isOwnSite || blocked ? undefined : "friend-link-click"}
+							data-umami-event-site={isOwnSite || blocked ? undefined : friend.siteurl}
+						>
+							<img
+								src={friend.imgurl}
+								alt=""
+								width="40"
+								height="40"
+								data-friend-avatar
+								draggable="false"
+								loading="lazy"
+								decoding="async"
+							/>
+						</a>
+					);
+				})}
+			</div>
+		))}
+	</div>
+</friend-avatar-marquee>
+<figure
+	class="friend-avatar-site-preview"
+	data-friend-avatar-preview
+	data-fallback-src="/friends/screenshots/no-photos.webp"
+	aria-hidden="true"
+>
+	<div class="friend-avatar-site-preview-skeleton" aria-hidden="true">
+		<span class="friend-avatar-site-preview-skeleton-topbar"></span>
+		<div class="friend-avatar-site-preview-skeleton-content">
+			<span class="friend-avatar-site-preview-skeleton-hero"></span>
+			<span class="friend-avatar-site-preview-skeleton-copy">
+				<i></i><i></i><i></i>
+			</span>
+		</div>
+	</div>
+	<img data-friend-avatar-preview-image alt="" width="480" height="270" decoding="async" />
+</figure>
+
+<script>
+	class FriendAvatarMarqueeElement extends HTMLElement {
+		private intersectionObserver: IntersectionObserver | null = null;
+		private inViewport = false;
+		private preview: HTMLElement | null = null;
+		private previewImage: HTMLImageElement | null = null;
+		private activePreviewAnchor: HTMLAnchorElement | null = null;
+
+		connectedCallback() {
+			if (!this.preview) {
+				const preview = this.nextElementSibling;
+				if (preview instanceof HTMLElement && preview.hasAttribute("data-friend-avatar-preview")) {
+					this.preview = preview;
+				}
+			}
+			this.previewImage = this.preview?.querySelector<HTMLImageElement>("[data-friend-avatar-preview-image]") ?? null;
+			this.previewImage?.addEventListener("load", this.handlePreviewImageLoad);
+			this.previewImage?.addEventListener("error", this.handlePreviewImageError);
+			if (this.preview) document.body.append(this.preview);
+			this.addEventListener("pointerover", this.handlePointerOver);
+			this.addEventListener("pointerout", this.handlePointerOut);
+			this.addEventListener("pointerleave", this.hidePreview);
+			this.addEventListener("focusin", this.handleFocusIn);
+			this.addEventListener("focusout", this.handleFocusOut);
+			document.addEventListener("visibilitychange", this.updatePlayback);
+			window.addEventListener("resize", this.hidePreview);
+			window.addEventListener("scroll", this.hidePreview, true);
+			if ("IntersectionObserver" in window) {
+				this.intersectionObserver = new IntersectionObserver(([entry]) => {
+					this.inViewport = Boolean(entry?.isIntersecting);
+					this.updatePlayback();
+				});
+				this.intersectionObserver.observe(this);
+			} else {
+				this.inViewport = true;
+			}
+			this.updatePlayback();
+		}
+
+		disconnectedCallback() {
+			this.intersectionObserver?.disconnect();
+			this.intersectionObserver = null;
+			this.inViewport = false;
+			this.removeAttribute("data-running");
+			document.removeEventListener("visibilitychange", this.updatePlayback);
+			window.removeEventListener("resize", this.hidePreview);
+			window.removeEventListener("scroll", this.hidePreview, true);
+			this.removeEventListener("pointerover", this.handlePointerOver);
+			this.removeEventListener("pointerout", this.handlePointerOut);
+			this.removeEventListener("pointerleave", this.hidePreview);
+			this.removeEventListener("focusin", this.handleFocusIn);
+			this.removeEventListener("focusout", this.handleFocusOut);
+			this.previewImage?.removeEventListener("load", this.handlePreviewImageLoad);
+			this.previewImage?.removeEventListener("error", this.handlePreviewImageError);
+			this.hidePreview();
+			this.preview?.remove();
+		}
+
+		private updatePlayback = () => {
+			this.toggleAttribute("data-running", this.inViewport && !document.hidden);
+			if (!this.inViewport || document.hidden) this.hidePreview();
+		};
+
+		private getPreviewAnchor(target: EventTarget | null) {
+			if (!(target instanceof Element)) return null;
+			const anchor = target.closest<HTMLAnchorElement>("a[data-friend-screenshot]");
+			return anchor && this.contains(anchor) ? anchor : null;
+		}
+
+		private showPreview = (anchor: HTMLAnchorElement) => {
+			const screenshot = anchor.dataset.friendScreenshot;
+			if (!screenshot || !this.preview || !this.previewImage) {
+				this.hidePreview();
+				return;
+			}
+			if (this.activePreviewAnchor === anchor) return;
+			this.activePreviewAnchor = anchor;
+			const fallback = this.preview.dataset.fallbackSrc || "/friends/screenshots/no-photos.webp";
+			const source = this.failedPreviewSources.has(screenshot) ? fallback : screenshot;
+			if (this.previewImage.getAttribute("src") !== source) {
+				this.preview.dataset.source = source;
+				this.preview.setAttribute("data-loading", "");
+				this.previewImage.src = source;
+			} else if (this.previewImage.complete && this.previewImage.naturalWidth > 0) {
+				this.preview.dataset.source = source;
+				this.preview.removeAttribute("data-loading");
+			} else {
+				this.preview.dataset.source = source;
+				this.preview.setAttribute("data-loading", "");
+			}
+
+			const anchorBounds = anchor.getBoundingClientRect();
+			const previewBounds = this.preview.getBoundingClientRect();
+			if (!previewBounds.width || !previewBounds.height) {
+				this.hidePreview();
+				return;
+			}
+			const halfWidth = previewBounds.width / 2;
+			const minLeft = Math.min(halfWidth + 8, window.innerWidth / 2);
+			const maxLeft = Math.max(minLeft, window.innerWidth - halfWidth - 8);
+			const left = Math.max(minLeft, Math.min(maxLeft, anchorBounds.left + anchorBounds.width / 2));
+			const spaceAbove = anchorBounds.top - 12;
+			const spaceBelow = window.innerHeight - anchorBounds.bottom - 12;
+			const placement = spaceAbove >= previewBounds.height || spaceAbove >= spaceBelow ? "above" : "below";
+			const top = placement === "above" ? anchorBounds.top - 10 : anchorBounds.bottom + 10;
+
+			this.preview.dataset.placement = placement;
+			this.preview.style.left = `${left}px`;
+			this.preview.style.top = `${top}px`;
+			this.preview.setAttribute("data-visible", "");
+		};
+
+		private hidePreview = () => {
+			this.activePreviewAnchor = null;
+			this.preview?.removeAttribute("data-visible");
+		};
+
+		private failedPreviewSources = new Set<string>();
+
+		private handlePreviewImageLoad = () => {
+			if (
+				this.previewImage?.naturalWidth &&
+				this.previewImage.getAttribute("src") === this.preview?.dataset.source
+			) {
+				this.preview?.removeAttribute("data-loading");
+			}
+		};
+
+		private handlePreviewImageError = () => {
+			const source = this.preview?.dataset.source;
+			if (!this.preview || !this.previewImage || !source) return;
+			this.failedPreviewSources.add(source);
+			const fallback = this.preview.dataset.fallbackSrc || "/friends/screenshots/no-photos.webp";
+			this.preview.setAttribute("data-loading", "");
+			if (source !== fallback) {
+				this.preview.dataset.source = fallback;
+				this.previewImage.src = fallback;
+			}
+		};
+
+		private handlePointerOver = (event: PointerEvent) => {
+			if (event.pointerType === "touch") return;
+			const anchor = this.getPreviewAnchor(event.target);
+			if (anchor) this.showPreview(anchor);
+		};
+
+		private handlePointerOut = (event: PointerEvent) => {
+			const anchor = this.getPreviewAnchor(event.target);
+			if (!anchor || (event.relatedTarget instanceof Node && anchor.contains(event.relatedTarget))) return;
+			const nextAnchor = this.getPreviewAnchor(event.relatedTarget);
+			if (nextAnchor) {
+				this.showPreview(nextAnchor);
+			} else if (this.activePreviewAnchor === anchor) {
+				this.hidePreview();
+			}
+		};
+
+		private handleFocusIn = (event: FocusEvent) => {
+			const anchor = this.getPreviewAnchor(event.target);
+			if (anchor) this.showPreview(anchor);
+		};
+
+		private handleFocusOut = (event: FocusEvent) => {
+			const nextAnchor = this.getPreviewAnchor(event.relatedTarget);
+			if (nextAnchor) {
+				this.showPreview(nextAnchor);
+			} else {
+				this.hidePreview();
+			}
+		};
+	}
+
+	if (!customElements.get("friend-avatar-marquee")) {
+		customElements.define("friend-avatar-marquee", FriendAvatarMarqueeElement);
+	}
+</script>
+
+<style>
+	.friend-avatar-marquee {
+		display: flex;
+		align-items: center;
+		height: 3rem;
+		margin: 0 0 0.8rem;
+		overflow: hidden;
+		mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+		user-select: none;
+	}
+
+	.friend-avatar-marquee-track,
+	.friend-avatar-marquee-group {
+		display: flex;
+		align-items: center;
+		width: max-content;
+	}
+
+	.friend-avatar-marquee-track {
+		flex: none;
+		animation: friend-avatars-flow var(--friend-avatar-duration) linear infinite;
+		animation-play-state: paused;
+		will-change: transform;
+	}
+
+	.friend-avatar-marquee[data-running] .friend-avatar-marquee-track {
+		animation-play-state: running;
+	}
+
+	.friend-avatar-marquee-group {
+		flex: none;
+		gap: 0.75rem;
+		padding-right: 0.75rem;
+	}
+
+	.friend-avatar-marquee-group a {
+		display: block;
+		width: 2.5rem;
+		height: 2.5rem;
+		flex: none;
+		border-radius: 50%;
+		box-shadow: 0 2px 5px rgb(27 40 58 / 24%);
+		transition: box-shadow 180ms ease, transform 180ms ease;
+	}
+
+	.friend-avatar-marquee-group a[href] {
+		cursor: pointer;
+	}
+
+	@media (hover: hover) {
+		.friend-avatar-marquee-group a:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 4px 8px rgb(27 40 58 / 30%);
+		}
+	}
+
+	.friend-avatar-marquee-group a:focus-visible {
+		outline: 2px solid var(--primary);
+		outline-offset: 3px;
+	}
+
+	.friend-avatar-marquee-group img {
+		width: 2.5rem;
+		height: 2.5rem;
+		display: block;
+		border-radius: 50%;
+		object-fit: cover;
+		-webkit-user-drag: none;
+	}
+
+	.friend-avatar-marquee:hover .friend-avatar-marquee-track,
+	.friend-avatar-marquee:has(a:focus-visible) .friend-avatar-marquee-track {
+		animation-play-state: paused;
+	}
+
+	.friend-avatar-site-preview {
+		position: fixed;
+		z-index: 1200;
+		width: min(20rem, calc(100vw - 1rem));
+		aspect-ratio: 16 / 9;
+		margin: 0;
+		overflow: hidden;
+		border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--line-divider));
+		border-radius: 0.875rem;
+		background: var(--card-bg);
+		box-shadow: 0 0.875rem 2rem rgb(24 42 62 / 28%);
+		pointer-events: none;
+		opacity: 0;
+		visibility: hidden;
+		transform: translate(-50%, -100%) scale(0.97);
+		transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
+	}
+
+	.friend-avatar-site-preview[data-loading] img {
+		opacity: 0;
+	}
+
+	.friend-avatar-site-preview[data-visible][data-placement="above"] {
+		opacity: 1;
+		visibility: visible;
+		transform: translate(-50%, -100%) scale(1);
+	}
+
+	.friend-avatar-site-preview[data-visible][data-placement="below"] {
+		opacity: 1;
+		visibility: visible;
+		transform: translate(-50%, 0) scale(1);
+	}
+
+	.friend-avatar-site-preview img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: top center;
+		transition: opacity 160ms ease;
+	}
+
+	.friend-avatar-site-preview-skeleton {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+		padding: 0.7rem;
+		background: linear-gradient(110deg, #e6eaf0 8%, #f6f8fb 20%, #e6eaf0 34%);
+		background-size: 220% 100%;
+		animation: friend-avatar-preview-shimmer 1.35s ease-in-out infinite;
+		transition: opacity 160ms ease, visibility 160ms ease;
+	}
+
+	.friend-avatar-site-preview:not([data-loading]) .friend-avatar-site-preview-skeleton {
+		visibility: hidden;
+		opacity: 0;
+		animation: none;
+	}
+
+	.friend-avatar-site-preview-skeleton-topbar,
+	.friend-avatar-site-preview-skeleton-hero,
+	.friend-avatar-site-preview-skeleton-copy i {
+		display: block;
+		border-radius: 0.25rem;
+		background: rgb(125 139 159 / 20%);
+	}
+
+	.friend-avatar-site-preview-skeleton-topbar {
+		width: 42%;
+		height: 0.4rem;
+		flex: none;
+	}
+
+	.friend-avatar-site-preview-skeleton-content {
+		display: grid;
+		grid-template-columns: 1.15fr 0.85fr;
+		flex: 1;
+		gap: 0.55rem;
+	}
+
+	.friend-avatar-site-preview-skeleton-hero {
+		min-height: 0;
+	}
+
+	.friend-avatar-site-preview-skeleton-copy {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding-top: 0.1rem;
+	}
+
+	.friend-avatar-site-preview-skeleton-copy i {
+		height: 0.35rem;
+	}
+
+	.friend-avatar-site-preview-skeleton-copy i:nth-child(2) {
+		width: 78%;
+	}
+
+	.friend-avatar-site-preview-skeleton-copy i:nth-child(3) {
+		width: 56%;
+	}
+
+	:global(.dark) .friend-avatar-site-preview-skeleton {
+		background-image: linear-gradient(110deg, #202733 8%, #303b4b 20%, #202733 34%);
+	}
+
+	:global(.dark) .friend-avatar-site-preview-skeleton-topbar,
+	:global(.dark) .friend-avatar-site-preview-skeleton-hero,
+	:global(.dark) .friend-avatar-site-preview-skeleton-copy i {
+		background: rgb(218 228 241 / 13%);
+	}
+
+	@keyframes friend-avatar-preview-shimmer {
+		from { background-position: 100% 0; }
+		to { background-position: -120% 0; }
+	}
+
+	@media (hover: none), (max-width: 767px) {
+		.friend-avatar-site-preview {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.friend-avatar-site-preview {
+			transition: none;
+		}
+
+		.friend-avatar-site-preview-skeleton {
+			animation: none;
+		}
+	}
+
+	@keyframes friend-avatars-flow {
+		from { transform: translateX(-50%); }
+		to { transform: translateX(0); }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.friend-avatar-marquee {
+			overflow-x: auto;
+			mask-image: none;
+		}
+
+		.friend-avatar-marquee-group a {
+			transition: none;
+		}
+
+		@media (hover: hover) {
+			.friend-avatar-marquee-group a:hover {
+				transform: none;
+			}
+		}
+
+		.friend-avatar-marquee-track {
+			animation: none;
+			transform: none;
+			will-change: auto;
+		}
+
+		.friend-avatar-marquee:has(a:focus-visible) .friend-avatar-marquee-track {
+			transform: none;
+		}
+
+		.friend-avatar-marquee-group:first-child {
+			display: none;
+		}
+	}
+</style>

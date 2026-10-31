@@ -1,0 +1,310 @@
+.friend-recommendation-dialog {
+	position: fixed;
+	inset: 0;
+	width: min(76rem, calc(100vw - 2rem));
+	max-width: none;
+	max-height: min(47rem, calc(100dvh - 4rem));
+	margin: auto;
+	padding: 0;
+	overflow: hidden;
+	border: 1px solid color-mix(in oklch, var(--line-divider) 82%, var(--text-color) 4%);
+	border-radius: 0.9rem;
+	background: var(--card-bg);
+	color: var(--text-color);
+	opacity: 0;
+	transform: translateY(0.75rem) scale(0.985);
+	transition:
+		opacity 220ms ease,
+		transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+		display 260ms allow-discrete,
+		overlay 260ms allow-discrete;
+}
+
+.friend-recommendation-dialog::backdrop {
+	background: rgb(16 19 25 / 0);
+	transition: background 220ms ease;
+}
+
+.friend-recommendation-dialog[open] {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+}
+
+.friend-recommendation-dialog[open]::backdrop {
+	background: rgb(16 19 25 / 0.52);
+}
+
+@starting-style {
+	.friend-recommendation-dialog[open] {
+		opacity: 0;
+		transform: translateY(0.75rem) scale(0.985);
+	}
+
+	.friend-recommendation-dialog[open]::backdrop {
+		background: rgb(16 19 25 / 0);
+	}
+}
+
+.friend-recommendation-frame {
+	display: grid;
+	max-height: inherit;
+	grid-template-rows: auto minmax(0, 1fr);
+}
+
+.friend-recommendation-header {
+	display: flex;
+	min-height: 3.75rem;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.65rem clamp(1rem, 4vw, 1.5rem);
+	border-bottom: 1px solid var(--line-divider);
+}
+
+.friend-recommendation-heading {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 0.65rem;
+}
+
+.friend-recommendation-heading-icon {
+	width: 1.35rem;
+	height: 1.35rem;
+	flex: none;
+	color: var(--primary);
+}
+
+.friend-recommendation-heading h2 {
+	margin: 0;
+	font-size: clamp(1.05rem, 3vw, 1.25rem);
+	font-weight: 720;
+	line-height: 1.4;
+	text-wrap: pretty;
+}
+
+.friend-recommendation-close {
+	display: grid;
+	width: 2.35rem;
+	height: 2.35rem;
+	flex: none;
+	place-items: center;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--content-meta);
+	cursor: pointer;
+	transition: color 150ms ease, background-color 150ms ease;
+}
+
+.friend-recommendation-close:hover,
+.friend-recommendation-close:focus-visible {
+	background: color-mix(in oklch, var(--primary) 10%, transparent);
+	color: var(--text-color);
+}
+
+.friend-recommendation-close:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+.friend-recommendation-close svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.friend-recommendation-body {
+	min-height: 0;
+	overflow: auto;
+	overscroll-behavior: contain;
+	padding: 1.1rem clamp(1rem, 4vw, 1.5rem) 1.6rem;
+	scrollbar-width: thin;
+}
+
+.friend-recommendation-intro,
+.friend-recommendation-rules-intro {
+	margin: 0;
+	color: var(--content-meta);
+	font-size: 0.92rem;
+	line-height: 1.75;
+	text-wrap: pretty;
+}
+
+.friend-recommendation-section {
+	margin-top: 1.35rem;
+}
+
+.friend-recommendation-section h3 {
+	margin: 0 0 0.45rem;
+	font-size: 1rem;
+	font-weight: 700;
+	line-height: 1.5;
+}
+
+.friend-recommendation-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.friend-recommendation-item {
+	display: grid;
+	grid-template-columns: minmax(8rem, 0.35fr) minmax(0, 1fr);
+	gap: 0.5rem 1.1rem;
+	padding: 0.72rem 0;
+	border-bottom: 1px solid var(--line-divider);
+}
+
+.friend-recommendation-site {
+	display: inline-flex;
+	width: fit-content;
+	max-width: 100%;
+	align-items: center;
+	gap: 0.55rem;
+	color: #d3ad54;
+	font-size: 0.9rem;
+	font-weight: 700;
+	line-height: 1.6;
+	text-decoration: none;
+}
+
+:root.dark .friend-recommendation-site {
+	color: #f2d47b;
+}
+
+.friend-recommendation-site img {
+	width: 1.875rem;
+	height: 1.875rem;
+	flex: none;
+	border: 1px solid color-mix(in oklch, #e8bd62 52%, transparent);
+	border-radius: 50%;
+	background: var(--muted);
+	object-fit: cover;
+}
+
+.friend-recommendation-site:hover,
+.friend-recommendation-site:focus-visible {
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+
+.friend-recommendation-site:focus-visible {
+	border-radius: 0.2rem;
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+.friend-recommendation-site svg {
+	width: 0.95rem;
+	height: 0.95rem;
+	flex: none;
+}
+
+.friend-recommendation-item p {
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 1.7;
+	text-wrap: pretty;
+}
+
+.friend-recommendation-empty {
+	margin: 0;
+	color: var(--content-meta);
+	font-size: 0.9rem;
+	line-height: 1.7;
+}
+
+.friend-recommendation-rules-intro {
+	margin-bottom: 0.45rem;
+}
+
+.friend-recommendation-rules {
+	display: grid;
+	gap: 0.55rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.friend-recommendation-rules li {
+	display: grid;
+	grid-template-columns: minmax(7.5rem, 0.28fr) minmax(0, 1fr);
+	gap: 0.4rem 1rem;
+	padding: 0.65rem 0;
+	border-bottom: 1px solid var(--line-divider);
+	font-size: 0.9rem;
+	line-height: 1.7;
+}
+
+.friend-recommendation-rules strong {
+	color: var(--primary);
+	font-weight: 700;
+}
+
+.friend-recommendation-rules span {
+	text-wrap: pretty;
+}
+
+.friend-recommendation-monthly-note {
+	margin: 0.75rem 0 0;
+	color: var(--content-meta);
+	font-size: 0.86rem;
+	line-height: 1.7;
+	text-wrap: pretty;
+}
+
+.friend-recommendation-article-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	margin-top: 0.7rem;
+	color: var(--primary);
+	font-size: 0.9rem;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.friend-recommendation-article-link:hover,
+.friend-recommendation-article-link:focus-visible {
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+
+.friend-recommendation-article-link:focus-visible {
+	border-radius: 0.2rem;
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+.friend-recommendation-article-link svg {
+	width: 1rem;
+	height: 1rem;
+}
+
+@media (max-width: 520px) {
+	.friend-recommendation-dialog {
+		width: calc(100vw - 1rem);
+		max-height: min(47rem, calc(100dvh - 1rem));
+	}
+
+	.friend-recommendation-body {
+		padding-top: 0.9rem;
+	}
+
+	.friend-recommendation-item,
+	.friend-recommendation-rules li {
+		grid-template-columns: 1fr;
+		gap: 0.2rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.friend-recommendation-dialog,
+	.friend-recommendation-dialog::backdrop {
+		transition: none;
+	}
+
+	.friend-recommendation-close {
+		transition: none;
+	}
+}

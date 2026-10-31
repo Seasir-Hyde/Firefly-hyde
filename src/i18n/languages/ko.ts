@@ -531,7 +531,6 @@ export const ko: Translation = {
 	[Key.devicesViewDetails]: "상세 보기",
 
 	// Projects Page
-	[Key.projects]: "프로젝트",
 	[Key.projectsSubtitle]: "나의 개발 프로젝트 포트폴리오",
 	[Key.projectsAll]: "전체",
 	[Key.projectsWeb]: "웹 애플리케이션",

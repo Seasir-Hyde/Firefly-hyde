@@ -536,7 +536,6 @@ export const ru: Translation = {
 	[Key.albumsNoResults]: "Нет подходящих альбомов",
 
 	// Страница проектов
-	[Key.projects]: "Проекты",
 	[Key.projectsSubtitle]: "Мой портфель проектов",
 	[Key.projectsAll]: "Все",
 	[Key.projectsWeb]: "Веб-приложения",

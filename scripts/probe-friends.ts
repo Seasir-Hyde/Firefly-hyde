@@ -1,12 +1,18 @@
 //友链延迟检测逻辑
 import { writeFile } from "node:fs/promises";
-import { friendsPageConfig, getEnabledFriends } from "../src/config/friendsConfig.ts";
 import { analyticsConfig } from "../src/config/analyticsConfig.ts";
+import {
+	friendsPageConfig,
+	getEnabledFriends,
+} from "../src/config/friendsConfig.ts";
 
 const TIME_ZONE = "Asia/Shanghai";
 const REQUEST_TIMEOUT_MS = 6000;
 const MAX_CONCURRENT_CHECKS = 4;
-const SNAPSHOT_URL = new URL("../src/data/friends-latency-snapshot.json", import.meta.url);
+const SNAPSHOT_URL = new URL(
+	"../src/data/friends-latency-snapshot.json",
+	import.meta.url,
+);
 
 type FriendLatencyState = "fast" | "normal" | "slow" | "down";
 
@@ -15,6 +21,8 @@ type LatencyEntry = {
 	state: FriendLatencyState;
 	milliseconds?: number;
 	checkedAt: string;
+	httpStatus?: number | null;
+	failureReason?: string | null;
 	// 来自 Umami 的 friend-link-click / outbound-link-click 事件聚合（按归一化域名求和）
 	clicks?: number;
 };
@@ -27,7 +35,9 @@ const normalizeFriendUrl = (url: string) =>
 		.replace(/\/+$/, "")
 		.toLowerCase();
 
-const classifyLatency = (milliseconds: number): Exclude<FriendLatencyState, "down"> => {
+const classifyLatency = (
+	milliseconds: number,
+): Exclude<FriendLatencyState, "down"> => {
 	if (milliseconds < 500) return "fast";
 	if (milliseconds < 1000) return "normal";
 	return "slow";
@@ -52,7 +62,12 @@ const measureFriend = async (siteUrl: string) => {
 	try {
 		const pingUrl = new URL(siteUrl);
 		if (!/^https?:$/.test(pingUrl.protocol)) {
-			return { state: "down" as const, checkedAt };
+			return {
+				state: "down" as const,
+				checkedAt,
+				httpStatus: null,
+				failureReason: `不支持的协议 ${pingUrl.protocol}`,
+			};
 		}
 		pingUrl.searchParams.set(
 			"_friend_ping",
@@ -74,11 +89,31 @@ const measureFriend = async (siteUrl: string) => {
 			return {
 				state: "down" as const,
 				checkedAt,
+				httpStatus: response.status,
+				failureReason: `HTTP ${response.status}`,
 			};
 		}
-		return { state: classifyLatency(milliseconds), milliseconds, checkedAt };
-	} catch {
-		return { state: "down" as const, checkedAt };
+		return {
+			state: classifyLatency(milliseconds),
+			milliseconds,
+			checkedAt,
+			httpStatus: response.status,
+			failureReason: null,
+		};
+	} catch (error) {
+		const timedOut =
+			controller.signal.aborted ||
+			(error instanceof Error && error.name === "AbortError");
+		return {
+			state: "down" as const,
+			checkedAt,
+			httpStatus: null,
+			failureReason: timedOut
+				? `Timeout after ${REQUEST_TIMEOUT_MS}ms`
+				: error instanceof Error
+					? error.message
+					: "Unknown error",
+		};
 	} finally {
 		clearTimeout(timeoutId);
 	}
@@ -86,14 +121,18 @@ const measureFriend = async (siteUrl: string) => {
 
 // ---------- Umami 点击次数采集 ----------
 const fetchUmamiShare = async (apiBase: string, shareId: string) => {
-	const res = await fetch(`${apiBase}/api/share/${encodeURIComponent(shareId)}`, {
-		signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-	});
+	const res = await fetch(
+		`${apiBase}/api/share/${encodeURIComponent(shareId)}`,
+		{
+			signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+		},
+	);
 	if (!res.ok) throw new Error(`Umami share ${res.status}`);
 	const json: unknown = await res.json();
 	const websiteId = (json as { websiteId?: string })?.websiteId;
 	const token = (json as { token?: string })?.token;
-	if (!websiteId || !token) throw new Error("Umami share 响应缺少 websiteId/token");
+	if (!websiteId || !token)
+		throw new Error("Umami share 响应缺少 websiteId/token");
 	return { websiteId, token };
 };
 
@@ -105,7 +144,8 @@ const fetchUmamiEventValues = async (
 	propertyName: string,
 ): Promise<Array<{ value?: unknown; total?: unknown }>> => {
 	const url = new URL(`${apiBase}/api/websites/${websiteId}/event-data/values`);
-	url.searchParams.set("startAt", "0");	url.searchParams.set("endAt", String(Date.now()));
+	url.searchParams.set("startAt", "0");
+	url.searchParams.set("endAt", String(Date.now()));
 	url.searchParams.set("eventName", eventName);
 	url.searchParams.set("propertyName", propertyName);
 	url.searchParams.set("limit", "1000");
@@ -115,7 +155,9 @@ const fetchUmamiEventValues = async (
 	});
 	if (!res.ok) throw new Error(`Umami event-data ${res.status}`);
 	const json: unknown = await res.json();
-	const rows = Array.isArray(json) ? json : ((json as { data?: unknown[] })?.data ?? []);
+	const rows = Array.isArray(json)
+		? json
+		: ((json as { data?: unknown[] })?.data ?? []);
 	return rows as Array<{ value?: unknown; total?: unknown }>;
 };
 
@@ -133,8 +175,20 @@ const fetchAllUmamiClicks = async (): Promise<Map<string, number>> => {
 	try {
 		const { websiteId, token } = await fetchUmamiShare(apiBase, umami.shareId);
 		const [friendClicks, outboundClicks] = await Promise.allSettled([
-			fetchUmamiEventValues(apiBase, websiteId, token, "friend-link-click", "site"),
-			fetchUmamiEventValues(apiBase, websiteId, token, "outbound-link-click", "url"),
+			fetchUmamiEventValues(
+				apiBase,
+				websiteId,
+				token,
+				"friend-link-click",
+				"site",
+			),
+			fetchUmamiEventValues(
+				apiBase,
+				websiteId,
+				token,
+				"outbound-link-click",
+				"url",
+			),
 		]);
 		const counts = new Map<string, number>();
 		const addRows = (
@@ -175,7 +229,9 @@ const fetchRemoteFriendUrls = async (): Promise<string[]> => {
 		});
 		if (!response.ok) throw new Error(`HTTP ${response.status}`);
 		const data: unknown = await response.json();
-		const items = Array.isArray(data) ? data : (data as { items?: unknown })?.items;
+		const items = Array.isArray(data)
+			? data
+			: (data as { items?: unknown })?.items;
 		if (!Array.isArray(items)) return [];
 		return items
 			.map((item) =>
@@ -217,7 +273,9 @@ const probeFriends = async () => {
 	};
 
 	await Promise.all(
-		Array.from({ length: Math.min(MAX_CONCURRENT_CHECKS, queue.length) }, () => worker()),
+		Array.from({ length: Math.min(MAX_CONCURRENT_CHECKS, queue.length) }, () =>
+			worker(),
+		),
 	);
 
 	// 把 Umami 点击次数并入延迟快照条目（按归一化域名对齐），缺失则不写 clicks
@@ -227,15 +285,22 @@ const probeFriends = async () => {
 		if (typeof clicks === "number" && clicks > 0) entry.clicks = clicks;
 	}
 
-
 	const snapshot = {
 		version: 1,
 		generatedAt: new Date().toISOString(),
+		probeLocation:
+			process.env.GITHUB_ACTIONS === "true"
+				? "GitHub Actions 探测节点"
+				: "本地探测节点",
 		timezone: TIME_ZONE,
 		slot: getBeijingSlot(),
 		results,
 	};
-	await writeFile(SNAPSHOT_URL, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
+	await writeFile(
+		SNAPSHOT_URL,
+		`${JSON.stringify(snapshot, null, 2)}\n`,
+		"utf8",
+	);
 	console.log(
 		`Friend latency snapshot updated: ${Object.keys(results).length} sites, ${snapshot.slot} ${TIME_ZONE}`,
 	);

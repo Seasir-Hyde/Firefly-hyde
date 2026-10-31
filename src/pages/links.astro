@@ -1,0 +1,18 @@
+---
+import FriendsMagicPortal from "@components/friends/FriendsMagicPortal.astro";
+import { getEnabledFriends, siteConfig } from "@/config";
+import Layout from "@/layouts/Layout.astro";
+
+if (!siteConfig.pages.friends) {
+	return Astro.redirect("/404/");
+}
+
+const items = getEnabledFriends();
+---
+
+<Layout
+	title="友链漫游舱"
+	description="穿过友链隧道，随机访问一位正在写作的朋友。"
+>
+	<FriendsMagicPortal items={items} routeMode />
+</Layout>
