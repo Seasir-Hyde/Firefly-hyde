@@ -416,6 +416,17 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
               >
               {/* 背景装饰 - 仅悬停显示 */}
               <div class="friend-card-surface absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+                {/* 头像取景背景：复用友链头像图作为卡片底纹，左侧渐隐。
+                    头像加载失败时由降级逻辑隐藏该层，仅保留底色。 */}
+                <img
+                  class="friend-card-avatar-backdrop"
+                  src={item.imgurl}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
+                  data-friend-avatar-backdrop
+                />
                 <div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300" />
                 {
                   isRecommended && !isDegradedRecommended && (
@@ -627,6 +638,16 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 class="friend-card group flex items-center gap-3 p-2.5 rounded-xl relative overflow-visible"
               >
                 <div class="friend-card-surface absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+                  {/* 头像取景背景：与友链列表卡片保持一致的底纹与降级处理 */}
+                  <img
+                    class="friend-card-avatar-backdrop"
+                    src={item.imgurl}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    decoding="async"
+                    data-friend-avatar-backdrop
+                  />
                   <div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300" />
                 </div>
 
@@ -1812,9 +1833,12 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         '</div>';
       }
       return '<a href="' + item.siteUrl + '" target="_blank" rel="noopener noreferrer" data-umami-event="friend-link-click" data-tags="' + (item.tags ? item.tags.join(',') : '') + '" class="friend-card friend-list-card group rounded-xl border border-(--line-divider) transition-all duration-300 relative overflow-hidden animate-fade-in-up">' +
-        '<div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300 pointer-events-none"></div>' +
+        '<div class="friend-card-surface absolute inset-0 rounded-xl overflow-hidden pointer-events-none">' +
+          '<img class="friend-card-avatar-backdrop" src="' + item.imgUrl + '" alt="" aria-hidden="true" loading="lazy" decoding="async" data-friend-avatar-backdrop />' +
+          '<div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300"></div>' +
+        '</div>' +
         '<div class="friend-card-avatar relative z-10 w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">' +
-          '<img src="' + item.imgUrl + '" alt="' + item.title + '" class="w-full h-full object-cover" loading="lazy" />' +
+          '<img src="' + item.imgUrl + '" alt="' + item.title + '" class="w-full h-full object-cover" loading="lazy" data-friend-avatar />' +
         '</div>' +
         '<div class="friend-card-content relative z-10 grow min-w-0 flex flex-col justify-center gap-0.5">' +
           '<div class="friend-card-heading">' +
@@ -1897,6 +1921,11 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
   <script>
     // 友链可见性运行时：违规/失联屏蔽 + 整改倒计时逐秒刷新
     import "@/scripts/friend-visibility";
+  </script>
+
+  <script>
+    // 友链卡片头像取景背景：头像图加载失败时隐藏底纹层，避免渲染破图
+    import "@/scripts/friend-avatar-backdrop";
   </script>
 
   <script is:inline>
@@ -2187,6 +2216,40 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
         border-color 240ms ease,
         box-shadow 300ms ease;
+    }
+
+    /* 头像取景背景：把友链头像图铺在卡片左侧作为底纹，
+       靠 mask 渐变向右淡出，低透明度叠加在卡片底色之上。
+       高度取卡片满高，宽度限制在 70% 以内，避免压住右侧正文。 */
+    .friend-card-avatar-backdrop {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 12rem;
+      max-width: 70%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0.13;
+      -webkit-mask-image: linear-gradient(to right, black 20%, transparent 100%);
+      mask-image: linear-gradient(to right, black 20%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* 暗色模式下底色更深，适当提高背景可见度。 */
+    :root.dark .friend-card-avatar-backdrop {
+      opacity: 0.17;
+    }
+
+    /* 头像图加载失败（外链 404 / 防盗链 / 网络不通）时隐藏底纹层，
+       卡片回退为纯底色，不显示破图图标。 */
+    .friend-card-avatar-backdrop[data-friend-backdrop-failed] {
+      display: none;
+    }
+
+    /* 头像本体加载失败时移出图片，保留头像容器的占位底色，
+       避免出现破图图标破坏圆形裁切。 */
+    .friend-card-avatar img[data-friend-avatar-failed] {
+      display: none;
     }
 
     .friend-card:hover .friend-card-avatar,
