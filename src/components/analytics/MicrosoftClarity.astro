@@ -392,6 +392,22 @@ const {
 			document.querySelectorAll('[data-umami-stat="pageviews"]').forEach((element) => {
 				if (stats) renderStatValue(element, (Number(stats.pageviews) || 0) + historicalPageviewCount);
 			});
+			renderFriendSitePageviews(stats);
+		}
+
+		// 友链页「本站主理人」条目里的本站总访问次数。
+		// 数值来自 Umami 站点总 PV（与页脚统计同源），超过一万按「万」缩写。
+		function renderFriendSitePageviews(stats) {
+			if (!stats) return;
+			const count = (Number(stats.pageviews) || 0) + historicalPageviewCount;
+			const text = count >= 10000 ? `${(count / 10000).toFixed(1)}w` : formatNumber(count);
+			document.querySelectorAll("[data-friend-site-pageviews]").forEach((element) => {
+				element.textContent = text;
+				const badge = element.closest(".friend-site-visit-count");
+				const label = `本站总访问 ${formatNumber(count)} 次`;
+				badge?.setAttribute("title", label);
+				badge?.setAttribute("aria-label", label);
+			});
 		}
 
 		function renderFriendClickCounts(values) {
@@ -529,7 +545,13 @@ const {
 				["todayVisitors", "todayPageviews"].includes(element.getAttribute("data-umami-stat")),
 			);
 			const needsFriendClickCounts = Boolean(document.querySelector("[data-friend-clicks-for]"));
-			if (!needsViews && !needsStats && !needsFriendClickCounts) return;
+			// 友链页「本站主理人」条目需要站点总 PV，同样依赖 stats 接口，
+			// 因此即使页面上没有 [data-umami-stat] 元素也要拉取。
+			const needsSitePageviews = Boolean(
+				document.querySelector("[data-friend-site-pageviews]"),
+			);
+			if (!needsViews && !needsStats && !needsFriendClickCounts && !needsSitePageviews)
+				return;
 
 			try {
 				const share = await getShare();
@@ -537,7 +559,9 @@ const {
 				const dayStart = getLocalDayStart(now);
 				const tasks = await Promise.allSettled([
 					needsViews ? getMetrics(share, forceRefresh) : Promise.resolve(null),
-					needsStats ? getStats(share, 0, now, "all", forceRefresh) : Promise.resolve(null),
+					needsStats || needsSitePageviews
+						? getStats(share, 0, now, "all", forceRefresh)
+						: Promise.resolve(null),
 					needsTodayStats
 						? getStats(share, dayStart, now, `today:${dayStart}`, forceRefresh)
 						: Promise.resolve(null),
@@ -551,6 +575,7 @@ const {
 				const friendClickCounts = tasks[3].status === "fulfilled" ? tasks[3].value : null;
 				if (metrics) renderPageViews(metrics);
 				if (needsStats) renderSiteStats(stats, todayStats);
+				else if (needsSitePageviews) renderFriendSitePageviews(stats);
 				if (friendClickCounts) renderFriendClickCounts(friendClickCounts);
 				if (!metrics && needsViews) {
 					document.querySelectorAll("[data-umami-pageviews]").forEach((element) => {

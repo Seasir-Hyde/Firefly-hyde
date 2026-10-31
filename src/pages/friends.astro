@@ -1,10 +1,12 @@
 ---
 import { getEntry, render } from "astro:content";
+// 友链“xxx 次”点击计数徽章的数据源组件（内部即 Umami 指标聚合逻辑，文件名沿用历史命名）
+import MicrosoftClarity from "@components/analytics/MicrosoftClarity.astro";
 import Comment from "@components/comment/index.astro";
-import FriendsMagicLink from "@components/friends/FriendsMagicLink.astro";
+import Markdown from "@components/common/Markdown.astro";
 import FriendAvatarMarquee from "@components/friends/FriendAvatarMarquee.astro";
 import FriendRecommendationGuide from "@components/friends/FriendRecommendationGuide.astro";
-import Markdown from "@components/common/Markdown.astro";
+import FriendsMagicLink from "@components/friends/FriendsMagicLink.astro";
 import { Icon } from "astro-icon/components";
 import {
 	analyticsConfig,
@@ -17,15 +19,13 @@ import friendsLatencySnapshot from "@/data/friends-latency-snapshot.json";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import type { FriendLatencySnapshot } from "@/types/friendLatency";
 import { getFriendLatencyDisplay } from "@/utils/friend-latency";
 import {
 	formatRemediationCountdown,
 	remediationSeconds,
 } from "@/utils/friend-remediation";
 import { loadFriendsFeed } from "@/utils/friends-feed";
-import type { FriendLatencySnapshot } from "@/types/friendLatency";
-// 友链“xxx 次”点击计数徽章的数据源组件（内部即 Umami 指标聚合逻辑，文件名沿用历史命名）
-import MicrosoftClarity from "@components/analytics/MicrosoftClarity.astro";
 import "@/styles/pages/common.css";
 import "@/styles/pages/friends.css";
 import "@/styles/friends-magic-link.css";
@@ -406,7 +406,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 }
                 data-tags={item.tags?.join(",")}
                 class:list={[
-                  "friend-card friend-list-card group flex items-center gap-3 p-2.5 rounded-xl relative overflow-visible",
+                  "friend-card friend-list-card group rounded-xl relative overflow-visible",
                   isOwnSite && "friend-card--own",
                   isRecommended && "friend-card--recommended",
                   isDegradedRecommended && "friend-card--recommended-degraded",
@@ -416,7 +416,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
               >
               {/* 背景装饰 - 仅悬停显示 */}
               <div class="friend-card-surface absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-                <div class="absolute inset-0 bg-(--primary) opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+                <div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300" />
                 {
                   isRecommended && !isDegradedRecommended && (
                     <recommended-star-flow class="friend-recommended-flow" aria-hidden="true">
@@ -426,30 +426,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 }
               </div>
 
-              {
-                (isRecommended || isOwnSite) && (
-                  <span
-                    class:list={[
-                      "friend-recommended-badge",
-                      isOwnSite && "friend-site-owner-badge",
-                    ]}
-                    aria-hidden="true"
-                  >
-                    <svg
-                      class:list={[isOwnSite ? "friend-owner-icon" : "friend-recommended-icon"]}
-                      viewBox="0 0 24 24"
-                      role="presentation"
-                    >
-                      {isOwnSite ? (
-                        <path d="m4.7 10.4 7.3-5.6 7.3 5.6v7.3c0 .83-.67 1.5-1.5 1.5H6.2c-.83 0-1.5-1.5-1.5-1.5v-7.3Zm3.1 1.1v6.2h2.8v-3.3h2.8v3.3h2.8v-6.2L12 8.6l-4.2 2.9Z" />
-                      ) : (
-                        <path d="M12 3.1c.7 0 1.32.42 1.6 1.06l1.41 3.32c.18.43.58.73 1.04.77l3.59.32c.7.06 1.29.54 1.49 1.22.2.67-.03 1.4-.59 1.82l-2.73 2.08c-.37.28-.53.76-.4 1.2l.84 3.49c.17.69-.09 1.41-.68 1.79-.58.39-1.35.39-1.94 0l-3.02-1.96a1.37 1.37 0 0 0-1.5 0l-3.02 1.96c-.59.39-1.36.39-1.94 0-.59-.38-.85-1.1-.68-1.79l.84-3.49c.13-.44-.03-.92-.4-1.2l-2.73-2.08c-.56-.42-.79-1.15-.59-1.82.2-.68.79-1.16 1.49-1.22l3.59-.32c.46-.04.86-.34 1.04-.77l1.41-3.32A1.73 1.73 0 0 1 12 3.1Z" />
-                      )}
-                    </svg>
-                    <span>{isOwnSite ? "本站主理人" : "推荐"}</span>
-                  </span>
-                )
-              }
 
               {/* 头像 */}
               <div class="friend-card-avatar relative z-10 w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">
@@ -463,7 +439,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 
               {/* 内容 */}
               <div class="friend-card-content relative z-10 grow min-w-0 flex flex-col justify-center gap-0.5">
-                <div class="flex items-center justify-between">
+                <div class="friend-card-heading">
                   <div
                     class:list={[
                       "friend-card-title font-bold text-base text-neutral-900 dark:text-neutral-100 transition-colors truncate",
@@ -472,6 +448,22 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                   >
                     {item.title}
                   </div>
+                    <span
+                      class:list={[
+                        "friend-latency",
+                        `friend-latency--${latencyState}`,
+                      ]}
+                      data-friend-latency-for={item.siteurl}
+                      data-friend-latency-name={item.title}
+                      data-friend-latency-state={latencyState}
+                      title={latencyLabel}
+                      aria-label={latencyLabel}
+                    >
+                      <span class="friend-latency-dot" aria-hidden="true"></span>
+                      <span data-friend-latency-value aria-live="polite">
+                        {latencyValue}
+                      </span>
+                    </span>
                 </div>
 
                 <div
@@ -495,51 +487,62 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 				</div>
 
                 {/* RSS 最近更新时间 */}
-                <div class="friend-card-meta-row">
+              </div>
+              {/* 卡片底部信息行：左侧「本站主理人 / 最近更新于」，右侧「探测次数」 */}
+              <div class="friend-card-footer">
+                <div class="friend-card-footer__identity">
+                  {(isRecommended || isOwnSite) && (
+                  <span
+                  class:list={[
+                  "friend-recommended-badge",
+                  isOwnSite && "friend-site-owner-badge",
+                  ]}
+                  aria-hidden="true"
+                  >
+                  <span>{isOwnSite ? "本站主理人" : "推荐"}</span>
+                  </span>
+                  )}
                   {rssUpdate ? (
-                    <time
-                      class="friend-rss-updated"
-                      datetime={rssUpdate.date.toISOString()}
-                      title={rssLabel}
-                      aria-label={rssLabel}
-                    >
-                      最近更新于 {rssDate}
-                    </time>
+                  <time
+                  class="friend-rss-updated"
+                  datetime={rssUpdate.date.toISOString()}
+                  title={rssLabel}
+                  aria-label={rssLabel}
+                  >
+                  最近更新于 {rssDate}
+                  </time>
                   ) : (
-                    <span class="friend-rss-updated" title={rssLabel}>RSS 暂无</span>
+                  <span class="friend-rss-updated" title={rssLabel}>RSS 暂无</span>
+                  )}
+                </div>
+                <div class="friend-card-footer__metrics">
+                  {!isOwnSite && (
+                  <span
+                  class="friend-click-count friend-click-count--inline"
+                  data-friend-clicks-for={item.siteurl}
+                  title="从本站点击次数"
+                  aria-label={`${item.title}，从本站点击 ${scheduledLatency?.clicks != null ? scheduledLatency.clicks.toLocaleString('zh-CN') : 0} 次`}
+                  >
+                  <Icon is:inline name="material-symbols:ads-click-rounded" aria-hidden="true" />
+                  <span data-friend-clicks-value aria-live="polite">{scheduledLatency?.clicks != null ? scheduledLatency.clicks.toLocaleString('zh-CN') : '…'}</span>
+                  <span class="friend-click-count-unit" aria-hidden="true">次</span>
+                  </span>
+                  )}
+                  {isOwnSite && (
+                  <span
+                  class="friend-site-visit-count"
+                  title="本站总访问次数"
+                  aria-label="本站总访问次数"
+                  >
+                  <Icon is:inline name="material-symbols:ads-click-rounded" aria-hidden="true" />
+                  <span data-friend-site-pageviews aria-live="polite">…</span>
+                  <span class="friend-click-count-unit" aria-hidden="true">次</span>
+                  </span>
                   )}
                 </div>
               </div>
 
-              {!isOwnSite && (
-                <span
-                  class="friend-click-count"
-                  data-friend-clicks-for={item.siteurl}
-                  title="从本站点击次数"
-                  aria-label={`${item.title}，从本站点击 ${scheduledLatency?.clicks != null ? scheduledLatency.clicks.toLocaleString('zh-CN') : 0} 次`}
-                >
-                  <Icon is:inline name="material-symbols:ads-click-rounded" aria-hidden="true" />
-                  <span data-friend-clicks-value aria-live="polite">{scheduledLatency?.clicks != null ? scheduledLatency.clicks.toLocaleString('zh-CN') : '…'}</span>
-                  <span class="friend-click-count-unit" aria-hidden="true">次</span>
-                </span>
-              )}
 
-              <span
-                class:list={[
-                  "friend-latency",
-                  `friend-latency--${latencyState}`,
-                ]}
-                data-friend-latency-for={item.siteurl}
-                data-friend-latency-name={item.title}
-                data-friend-latency-state={latencyState}
-                title={latencyLabel}
-                aria-label={latencyLabel}
-              >
-                <span class="friend-latency-dot" aria-hidden="true"></span>
-                <span data-friend-latency-value aria-live="polite">
-                  {latencyValue}
-                </span>
-              </span>
 
               {
                 (isTemporarilyUnavailable || isPolicyViolation) && (
@@ -624,7 +627,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 class="friend-card group flex items-center gap-3 p-2.5 rounded-xl relative overflow-visible"
               >
                 <div class="friend-card-surface absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-                  <div class="absolute inset-0 bg-(--primary) opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+                  <div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300" />
                 </div>
 
                 <div class="friend-card-avatar relative z-10 w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">
@@ -1808,24 +1811,30 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
           }).join('') +
         '</div>';
       }
-      return '<a href="' + item.siteUrl + '" target="_blank" rel="noopener noreferrer" data-umami-event="friend-link-click" data-tags="' + (item.tags ? item.tags.join(',') : '') + '" class="friend-card friend-list-card group flex items-center gap-3 p-2.5 rounded-xl border border-(--line-divider) hover:border-(--primary) hover:bg-(--card-bg) transition-all duration-300 hover:shadow-lg relative overflow-hidden animate-fade-in-up">' +
-        '<div class="absolute inset-0 bg-(--primary) opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"></div>' +
-        '<div class="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">' +
+      return '<a href="' + item.siteUrl + '" target="_blank" rel="noopener noreferrer" data-umami-event="friend-link-click" data-tags="' + (item.tags ? item.tags.join(',') : '') + '" class="friend-card friend-list-card group rounded-xl border border-(--line-divider) transition-all duration-300 relative overflow-hidden animate-fade-in-up">' +
+        '<div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300 pointer-events-none"></div>' +
+        '<div class="friend-card-avatar relative z-10 w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">' +
           '<img src="' + item.imgUrl + '" alt="' + item.title + '" class="w-full h-full object-cover" loading="lazy" />' +
         '</div>' +
         '<div class="friend-card-content relative z-10 grow min-w-0 flex flex-col justify-center gap-0.5">' +
-          '<div class="flex items-center justify-between">' +
-            '<div class="font-bold text-base text-(--btn-content) group-hover:text-(--primary) transition-colors truncate">' + item.title + '</div>' +
+          '<div class="friend-card-heading">' +
+            '<div class="friend-card-title font-bold text-base text-(--btn-content) group-hover:text-(--primary) transition-colors truncate">' + item.title + '</div>' +
+            renderFriendLatency() +
           '</div>' +
           '<div class="friend-card-description text-sm line-clamp-1" title="' + item.desc + '">' + item.desc + '</div>' +
           tagsHtml +
         '</div>' +
-        '<span class="friend-click-count" data-friend-clicks-for="' + item.siteUrl + '" title="从本站点击次数" aria-label="' + item.title + '，从本站点击 ' + (friendClicks != null ? friendClicks.toLocaleString('zh-CN') : 0) + ' 次">' +
-          '<svg width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8q-1.65 0-2.825 1.175T8 12q0 1.125.563 2.075t1.562 1.475q.4.2.563.587t-.013.788q-.175.35-.525.525t-.7 0q-1.575-.75-2.512-2.225T6 12q0-2.5 1.75-4.25T12 6q1.775 0 3.263.938T17.475 9.5q.15.35-.012.7t-.513.5q-.4.175-.8 0t-.6-.575q-.525-1-1.475-1.562T12 8m0-4Q8.65 4 6.325 6.325T4 12q0 3.15 2.075 5.4t5.2 2.55q.425.05.737.375t.288.75t-.313.7t-.712.25q-1.95-.125-3.638-.975t-2.95-2.213t-1.975-3.125T2 12q0-2.075.788-3.9t2.137-3.175T8.1 2.788T12 2q3.925 0 6.838 2.675t3.187 6.6q.05.4-.237.688t-.713.312t-.762-.275t-.388-.725q-.375-3-2.612-5.137T12 4m7.55 17.5l-3.3-3.275l-.75 2.275q-.125.35-.475.338t-.475-.363L12.275 12.9q-.1-.275.125-.5t.5-.125l7.575 2.275q.35.125.363.475t-.338.475l-2.275.75l3.3 3.3q.425.425.425.975t-.425.975t-.987.425t-.988-.425"/></svg>' +
-          '<span data-friend-clicks-value aria-live="polite">' + (friendClicks != null ? friendClicks.toLocaleString('zh-CN') : '…') + '</span>' +
-          '<span class="friend-click-count-unit" aria-hidden="true">次</span>' +
-        '</span>' +
-        renderFriendLatency() +
+        '<div class="friend-card-footer">' +
+          '<div class="friend-card-footer__identity">' +
+            '<span class="friend-rss-updated">RSS 暂无</span>' +
+          '</div>' +
+          '<div class="friend-card-footer__metrics">' +
+            '<span class="friend-click-count friend-click-count--inline" data-friend-clicks-for="' + item.siteUrl + '" title="从本站点击次数" aria-label="' + item.title + '，从本站点击次数">' +
+              '<span data-friend-clicks-value>…</span>' +
+              '<span class="friend-click-count-unit">次</span>' +
+            '</span>' +
+          '</div>' +
+        '</div>' +
       '</a>';
     }
 
@@ -2164,8 +2173,12 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       }
     }
 
+    /* 友链头像统一圆形裁切。
+       覆盖 Tailwind 的 rounded-xl（.rounded-xl 的 border-radius: 0.75rem），
+       用 50% 保证 img 被裁成正圆，边缘无方形残留。 */
     .friend-card-avatar {
       isolation: isolate;
+      border-radius: 50%;
       border-color: color-mix(in srgb, var(--primary) 18%, var(--line-divider));
       box-shadow:
         0 0.18rem 0.55rem color-mix(in srgb, var(--primary) 9%, transparent),
@@ -2182,6 +2195,12 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       box-shadow:
         0 0.28rem 0.7rem color-mix(in srgb, var(--primary) 13%, transparent),
         0 0 0.95rem color-mix(in srgb, var(--primary) 24%, transparent);
+    }
+
+    /* 兜底：确保头像内的图片本身也是圆形，避免个别浏览器下
+       border-radius 不裁切 overflow 子元素而出现方形边缘。 */
+    .friend-card-avatar img {
+      border-radius: 50%;
     }
 
     .friend-card-description {
@@ -2296,28 +2315,26 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       box-shadow: 0 1.15rem 3rem rgba(0, 0, 0, 0.42);
     }
 
+    /* 从本站点击次数：位于卡片右下角，与「本站主理人 / 最近更新于」同一水平线。
+       采用无边框小字样式，与参考布局一致。 */
     .friend-click-count {
       --friend-click-count-ink: #6f8296;
-      position: absolute;
-      top: 0.55rem;
-      right: 0.62rem;
+      position: relative;
       z-index: 24;
       display: inline-flex;
       align-items: center;
       gap: 0.2rem;
-      min-width: 2.45rem;
-      height: 1.72rem;
-      padding: 0 0.5rem;
-      border: 1px dashed rgba(255, 246, 219, 0.42);
-      border-radius: 8px 11px 7px 10px;
-      background-color: transparent;
-      box-shadow:
-        0 0.3rem 0.5rem rgba(17, 17, 25, 0.12),
-        0 0.08rem 0.24rem rgba(17, 17, 25, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      min-width: 0;
+      height: auto;
+      min-height: 20px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
       color: var(--friend-click-count-ink);
-      font-size: 0.68rem;
-      font-weight: 800;
+      font-size: 0.64rem;
+      font-weight: 600;
       font-variant-numeric: tabular-nums;
       line-height: 1;
       white-space: nowrap;
@@ -2346,12 +2363,50 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       font-weight: 700;
     }
 
-    .friend-card-meta-row {
-      display: flex;
+    /* 本站总访问次数：位于卡片右下角，与「本站主理人 / 最近更新于」同一水平线，
+       采用无边框小字样式，与点击次数保持一致。 */
+    .friend-site-visit-count {
+      display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      margin-top: 0.18rem;
-      min-height: 1rem;
+      flex: none;
+      gap: 0.18rem;
+      min-width: 0;
+      height: auto;
+      min-height: 20px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      color: color-mix(in srgb, var(--content-meta) 88%, var(--text-color));
+      font-size: 0.64rem;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .friend-site-visit-count :global(svg) {
+      width: 0.82rem;
+      height: 0.82rem;
+      flex: none;
+      color: var(--primary);
+    }
+
+    .friend-card--own .friend-site-visit-count {
+      color: #178bc0;
+    }
+
+    .friend-card--own .friend-site-visit-count :global(svg) {
+      color: #2a9bca;
+    }
+
+    :global(.dark) .friend-card--own .friend-site-visit-count {
+      color: #a7def6;
+    }
+
+    :global(.dark) .friend-card--own .friend-site-visit-count :global(svg) {
+      color: #87d8f5;
     }
 
     .friend-rss-updated {
@@ -2365,21 +2420,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 100%;
-    }
-
-    .friend-card:hover .friend-rss-updated {
-      color: color-mix(in srgb, var(--primary) 68%, transparent);
-    }
-
-    .friend-card:hover .friend-click-count,
-    .friend-card:focus-visible .friend-click-count {
-      border-color: rgba(255, 246, 219, 0.62);
-      box-shadow:
-        0 0.34rem 0.5rem rgba(17, 17, 25, 0.16),
-        0 0.1rem 0.26rem rgba(17, 17, 25, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      color: var(--primary);
-      transform: translateY(-0.04rem);
     }
 
     :root.dark .friend-click-count {
@@ -2404,42 +2444,35 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       color: #f1be4c;
     }
 
-    .friend-card-content {
-      padding-right: 4.65rem;
-    }
-
+    /* 探测延迟：位于卡片标题行右端，与站点名称并列展示，
+       不再与右下角的访问次数等信息挤在同一角落。 */
+    /* 探测延迟：位于卡片右下角指标列的上方，
+       与下方探测次数右边缘对齐，构成垂直排列的指标列。 */
     .friend-latency {
-      position: absolute;
-      right: 0.62rem;
-      bottom: 0.55rem;
+      position: relative;
       z-index: 24;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 0.32rem;
-      min-width: 4.08rem;
-      height: 1.72rem;
-      padding: 0 0.52rem;
-      border: 1px dashed rgba(255, 246, 219, 0.42);
-      border-radius: 10px 7px 12px 8px;
-      background-color: transparent;
-      box-shadow:
-        0 0.3rem 0.5rem rgba(17, 17, 25, 0.12),
-        0 0.08rem 0.24rem rgba(17, 17, 25, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.22);
-      color: color-mix(in srgb, var(--content-meta) 88%, var(--text-color));
-      font-size: 0.68rem;
-      font-weight: 800;
+      justify-content: flex-end;
+      flex: none;
+      gap: 0.2rem;
+      min-width: 0;
+      height: auto;
+      min-height: 20px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      color: var(--friend-latency-color, var(--content-meta));
+      font-size: 0.64rem;
+      font-weight: 600;
       font-variant-numeric: tabular-nums;
       line-height: 1;
       white-space: nowrap;
       pointer-events: none;
       transform: none;
-      transition:
-        border-color 220ms ease,
-        color 220ms ease,
-        box-shadow 220ms ease,
-        transform 220ms ease;
+      transition: color 220ms ease;
     }
 
     .friend-latency-dot {
@@ -2475,19 +2508,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       color: #dc879b;
     }
 
-    .friend-card:hover .friend-latency,
-    .friend-card:focus-visible .friend-latency {
-      border-color: rgba(255, 246, 219, 0.62);
-      box-shadow:
-        0 0.34rem 0.5rem rgba(17, 17, 25, 0.16),
-        0 0.1rem 0.26rem rgba(17, 17, 25, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      transform: translateY(-0.04rem);
-    }
-
     :global(.dark) .friend-latency {
-      border-color: rgba(255, 246, 219, 0.26);
-      background-color: transparent;
       color: color-mix(in srgb, var(--content-meta) 92%, white);
     }
 
@@ -2528,6 +2549,14 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       --friend-card-border-color: rgba(255, 246, 219, 0.28);
       --friend-card-hover-border-color: color-mix(in srgb, var(--primary) 42%, var(--line-divider));
       isolation: isolate;
+      /* 三列两行网格，对齐参考布局：
+         第 1 列头像，第 2 列起为内容区，第 2 行横跨整卡放底部信息行。 */
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      align-items: center;
+      gap: 4px 10px;
+      padding: 12px 14px;
       border: 1px solid var(--friend-card-border-color);
       border-radius: 10px 7px 12px 8px;
       background-color: color-mix(in srgb, var(--card-bg) 26%, transparent);
@@ -2542,6 +2571,61 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         border-color 220ms ease,
         background-color 220ms ease,
         box-shadow 220ms ease;
+    }
+
+    /* 头像：第 1 列第 1 行，相对右侧标题 / 描述 / 标签整体垂直居中 */
+    .friend-card > .friend-card-avatar {
+      grid-column: 1;
+      grid-row: 1;
+      width: 48px;
+      height: 48px;
+      align-self: center;
+    }
+
+    /* 内容区：第 2 列起第 1 行 */
+    .friend-card > .friend-card-content {
+      grid-column: 2 / -1;
+      grid-row: 1;
+      min-width: 0;
+    }
+
+    /* 底部信息行：横跨整卡第 2 行，
+       左侧「本站主理人 / 最近更新于」，右侧「探测次数」。 */
+    .friend-card > .friend-card-footer {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px 8px;
+      min-width: 0;
+    }
+
+    /* 标题行：站点名在左，探测延迟在右（卡片右上角） */
+    .friend-card-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    .friend-card-footer__identity,
+    .friend-card-footer__metrics {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    /* 探测次数位于卡片右下角；与右上角的探测延迟同处内容区右边缘，
+       因此两者的右边界落在同一条垂直线上。 */
+    .friend-card-footer__metrics {
+      margin-left: auto;
     }
 
     .friend-card--temporarily-unavailable {
@@ -2775,13 +2859,12 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       }
     }
 
+    /* 卡片 hover：仅保留轻微上浮与阴影提亮，
+       不改变背景色与边框色，保持卡片静态外观（与参考实现一致）。 */
     .friend-card:hover,
     .friend-card:focus-visible {
       z-index: 100;
       transform: translateY(-0.125rem);
-      border-style: dashed;
-      border-color: var(--friend-card-hover-border-color);
-      background-color: color-mix(in srgb, var(--card-bg) 52%, transparent);
       box-shadow:
         0 0.7rem 1.45rem rgba(65, 143, 188, 0.15),
         0 0.18rem 0.44rem rgba(73, 113, 151, 0.08),
@@ -2807,10 +2890,9 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
+    /* 暗色模式同样只提亮阴影，不改变背景色与边框色。 */
     :global(.dark) .friend-card:hover,
     :global(.dark) .friend-card:focus-visible {
-      border-color: var(--friend-card-hover-border-color);
-      background-color: color-mix(in srgb, var(--card-bg) 72%, transparent);
       box-shadow:
         0 0.78rem 1.6rem rgba(0, 0, 0, 0.28),
         0 0.16rem 0.45rem rgba(0, 0, 0, 0.18),
@@ -2903,13 +2985,14 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         0 0 1.08rem color-mix(in srgb, #e7b83e 14%, transparent);
     }
 
+    /* 推荐 / 本站主理人徽章：随卡片内容流排在左下角，
+       与「最近更新于」等站点信息同处 meta 行，不再悬浮在卡片左上角。 */
     .friend-recommended-badge {
-      position: absolute;
-      top: -0.62rem;
-      left: 0.62rem;
-      z-index: 40;
+      position: relative;
+      z-index: 24;
       display: inline-flex;
       align-items: center;
+      flex: none;
       gap: 0.24rem;
       min-height: 1.58rem;
       padding: 0.22rem 0.62rem 0.24rem 0.5rem;
@@ -2959,17 +3042,22 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       filter: drop-shadow(0 0 0.12rem rgba(224, 157, 19, 0.25));
     }
 
+    /* 「本站主理人」在参考设计中是纯文字标识（无虚线边框、无底色），
+       与「推荐」徽章的方框样式区分开，视觉更轻。 */
     .friend-site-owner-badge {
       color: #176e98;
+      padding: 0;
+      min-height: auto;
     }
 
     .friend-site-owner-badge::before {
-      border-color: color-mix(in srgb, #42a9d8 48%, rgba(230, 248, 255, 0.42));
-      background: color-mix(in srgb, #b9eafa 24%, transparent);
-      box-shadow:
-        0 0.3rem 0.5rem rgba(17, 17, 25, 0.12),
-        0 0.08rem 0.24rem rgba(17, 17, 25, 0.08),
-        inset 0 1px rgba(255, 255, 255, 0.3);
+      display: none;
+    }
+
+    /* 徽章内的图标在纯文字样式下略微放大，保持可读性 */
+    .friend-site-owner-badge .friend-owner-icon {
+      width: 0.92rem;
+      height: 0.92rem;
     }
 
     .friend-owner-icon {

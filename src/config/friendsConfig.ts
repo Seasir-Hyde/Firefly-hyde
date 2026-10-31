@@ -92,7 +92,7 @@ export const friendsConfig: FriendLink[] = [
 	},
 	{
 		title: "One",
-		desc: "上海修车spa足浴推拿反差狂魔one哥",
+		desc: "明心见性，爱自己",
 		siteurl: "https://onedayxyy.cn/",
 		imgurl:
 			"https://img.onedayxyy.cn/images/Teek/Teekwebsite/xyy-logo.avif?w=150&h=150&fit=crop&fm=webp&q=80",
