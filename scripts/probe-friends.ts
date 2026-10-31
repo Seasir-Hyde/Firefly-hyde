@@ -105,8 +105,7 @@ const fetchUmamiEventValues = async (
 	propertyName: string,
 ): Promise<Array<{ value?: unknown; total?: unknown }>> => {
 	const url = new URL(`${apiBase}/api/websites/${websiteId}/event-data/values`);
-	url.searchParams.set("startAt", "0");
-	url.searchParams.set("endAt", String(Date.now()));
+	url.searchParams.set("startAt", "0");	url.searchParams.set("endAt", String(Date.now()));
 	url.searchParams.set("eventName", eventName);
 	url.searchParams.set("propertyName", propertyName);
 	url.searchParams.set("limit", "1000");
