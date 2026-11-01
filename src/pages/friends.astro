@@ -25,7 +25,13 @@ import {
 	formatRemediationCountdown,
 	remediationSeconds,
 } from "@/utils/friend-remediation";
-import { loadFriendsFeed } from "@/utils/friends-feed";
+import {
+	buildFriendUpdateMap,
+	fetchRemoteFriends,
+	loadFriendsFeed,
+	REMOTE_FRIENDS_API_URL,
+	remoteFriendToFriendLink,
+} from "@/utils/friends-feed";
 import "@/styles/pages/common.css";
 import "@/styles/pages/friends.css";
 import "@/styles/friends-magic-link.css";
@@ -81,15 +87,15 @@ const latencySnapshot = friendsLatencySnapshot as FriendLatencySnapshot;
 
 // 友链 RSS 聚合：每个友链站点的最新文章（构建期抓取，失败回落到快照缓存）
 const feed = await loadFriendsFeed(items, { cachedOnly: import.meta.env.DEV });
-const rssUpdates = new Map<
-	string,
-	{ date: Date; title: string; stale: boolean }
->();
 const staleFeeds = new Set(
 	feed.sources
 		.filter((source) => source.stale)
 		.map((source) => normalizeFriendUrl(source.friendUrl)),
 );
+const rssUpdates = new Map<
+	string,
+	{ date: Date; title: string; stale: boolean }
+>();
 for (const entry of feed.items) {
 	if (!entry.publishedAt) continue;
 	const key = normalizeFriendUrl(entry.friendUrl);
@@ -104,6 +110,21 @@ for (const entry of feed.items) {
 }
 const rssDateLabel = (date: Date) =>
 	date.toLocaleDateString("sv-SE", { timeZone: "Asia/Shanghai" });
+
+// 远程友链：由 /api/friends 在运行时下发，构建期同样抓一次 RSS，
+// 这样动态插入的卡片才能像本地友链一样显示「最后更新」。
+// 接口不可用时降级为空列表：动态卡片回落到接口自带的记录更新时间。
+const remoteFriends = await fetchRemoteFriends(REMOTE_FRIENDS_API_URL);
+const remoteFeed = remoteFriends.length
+	? await loadFriendsFeed(remoteFriends.map(remoteFriendToFriendLink), {
+			cachedOnly: import.meta.env.DEV,
+			// 远程友链数量多且多为小站，收紧超时与重试次数，避免拖慢构建
+			timeoutMs: 5000,
+			attempts: 2,
+		})
+	: null;
+// 注入给浏览器端：动态卡片按站点 URL 查表取「最后更新」
+const remoteFriendUpdates = remoteFeed ? buildFriendUpdateMap(remoteFeed) : {};
 
 // 推荐友链（不含本站），用于评选规范弹窗
 const recommendedFriends = items.filter(
@@ -806,7 +827,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 <div class="pb-4 flex-1 min-w-0">
                   <p class="font-semibold text-sm mb-1 text-neutral-900 dark:text-neutral-100">填写申请信息：</p>
                   {/* 申请表单：提交本站信息到后端，状态为 pending，等待审核 */}
-                  <form id="friend-link-form" class="space-y-3">
+                  <form id="friend-link-form" class="space-y-3" data-friends-api-url={REMOTE_FRIENDS_API_URL}>
                     <div>
                       <label class="block text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-1">站点名称 <span class="text-red-500">*</span></label>
                       <input type="text" name="title" required placeholder="您的站点名称" class="w-full rounded-lg bg-black/5 dark:bg-white/5 border border-(--line-divider) px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-colors" />
@@ -1725,6 +1746,9 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       // 防止重复初始化（swup 切换页面时会再次触发）
       if (!form || !submitBtn || submitBtn.dataset.initialized) return;
 
+      // 友链接口地址由构建期注入到表单的 data 属性，避免多处硬编码
+      var apiUrl = form.dataset.friendsApiUrl || '';
+
       // 防重复提交标记
       var isSubmitting = false;
 
@@ -1758,7 +1782,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 
         try {
           // 向后端提交申请，状态默认为 pending
-          var res = await fetch('https://seasir.top/api/friends', {
+          var res = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: title, desc: desc, siteUrl: siteUrl, imgUrl: imgUrl, email: email, message: message })
@@ -1806,12 +1830,59 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
     />
   )}
 
-  {/* latencyResults：构建时延迟快照注入浏览器端，供动态卡片（远程 API 友链）渲染延迟徽章 */}
-  <script is:inline define:vars={{ latencyResults: latencySnapshot.results }}>
-    function renderFriendCard(item) {
-      var normalizeFriendUrl = function(url) {
-        return String(url || '').trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '').toLowerCase();
+  {/* latencyResults：构建时延迟快照注入浏览器端，供动态卡片（远程 API 友链）渲染延迟徽章
+      remoteFriendUpdates：构建期抓取的远程友链 RSS 最新文章时间，供动态卡片渲染「最后更新」 */}
+  <script is:inline define:vars={{ latencyResults: latencySnapshot.results, remoteFriendUpdates, remoteFriendsApiUrl: REMOTE_FRIENDS_API_URL }}>
+    var normalizeFriendUrl = function(url) {
+      return String(url || '').trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '').toLowerCase();
+    };
+    var escapeHtml = function(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+    var formatUpdateDate = function(value) {
+      if (value === null || value === undefined || value === '') return null;
+      var date;
+      if (value instanceof Date) {
+        date = value;
+      } else if (typeof value === 'number') {
+        // 0 与负数视为无效时间，避免渲染成 1970 年
+        if (!isFinite(value) || value <= 0) return null;
+        // 小于 1e11 的值按 Unix 秒处理（1e11 毫秒约等于 1973 年）
+        date = new Date(value < 1e11 ? value * 1000 : value);
+      } else {
+        date = new Date(value);
+      }
+      if (isNaN(date.getTime())) return null;
+      return {
+        iso: date.toISOString(),
+        label: date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Shanghai' })
       };
+    };
+    // 远程友链的「最后更新」：优先用构建期抓到的 RSS 最新文章时间，
+    // 其次回落到接口下发的友链记录更新时间，两者都缺失时显示「RSS 暂无」。
+    var renderFriendUpdated = function(item) {
+      var key = normalizeFriendUrl(item.siteUrl);
+      var rssEntry = remoteFriendUpdates ? remoteFriendUpdates[key] : null;
+      if (rssEntry && rssEntry.date) {
+        var rssDate = formatUpdateDate(rssEntry.date);
+        if (rssDate) {
+          var rssLabel = (rssEntry.stale ? 'RSS 缓存' : 'RSS') + ' 最近文章时间：' + rssDate.label + '，' + (rssEntry.title || '');
+          return '<time class="friend-rss-updated" datetime="' + rssDate.iso + '" title="' + escapeHtml(rssLabel) + '" aria-label="' + escapeHtml(rssLabel) + '">最近更新于 ' + rssDate.label + '</time>';
+        }
+      }
+      var recordDate = formatUpdateDate(item.updatedAt) || formatUpdateDate(item.createdAt);
+      if (recordDate) {
+        var recordLabel = item.title + '，友链记录最后更新：' + recordDate.label;
+        return '<time class="friend-rss-updated" datetime="' + recordDate.iso + '" title="' + escapeHtml(recordLabel) + '" aria-label="' + escapeHtml(recordLabel) + '">最近更新于 ' + recordDate.label + '</time>';
+      }
+      return '<span class="friend-rss-updated" title="' + escapeHtml(item.title) + '，RSS 暂无有效更新日期">RSS 暂无</span>';
+    };
+    function renderFriendCard(item) {
       var friendEntry = latencyResults[normalizeFriendUrl(item.siteUrl)];
       var friendClicks = friendEntry && typeof friendEntry.clicks === 'number' ? friendEntry.clicks : null;
       var renderFriendLatency = function() {
@@ -1850,7 +1921,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         '</div>' +
         '<div class="friend-card-footer">' +
           '<div class="friend-card-footer__identity">' +
-            '<span class="friend-rss-updated">RSS 暂无</span>' +
+            renderFriendUpdated(item) +
           '</div>' +
           '<div class="friend-card-footer__metrics">' +
             '<span class="friend-click-count friend-click-count--inline" data-friend-clicks-for="' + item.siteUrl + '" title="从本站点击次数" aria-label="' + item.title + '，从本站点击次数">' +
@@ -1869,10 +1940,10 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 
       if (loading) loading.classList.remove('hidden');
 
-      fetch('https://seasir.top/api/friends')
+      fetch(remoteFriendsApiUrl)
         .then(function(res) { return res.json(); })
         .then(function(data) {
-          var friends = data.items;
+          var friends = data.items || data.friends;
           if (Array.isArray(friends) && friends.length > 0) {
             friends.sort(function(a, b) {
               return (Number(b.weight) || 0) - (Number(a.weight) || 0);

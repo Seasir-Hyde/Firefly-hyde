@@ -55,6 +55,30 @@
       ],
       "items": [
         {
+          "title": "第一个视频",
+          "link": "https://onedayxyy.cn/yule/qtjhj/",
+          "description": "待上传",
+          "publishedAt": "2026-11-01T14:06:50.000Z"
+        },
+        {
+          "title": "日照金山",
+          "link": "https://onedayxyy.cn/yule/mwmof/",
+          "description": "漂亮",
+          "publishedAt": "2026-11-01T02:53:38.000Z"
+        },
+        {
+          "title": "v5-w3c-yyds的博客架构-2026.10.29更新",
+          "link": "https://onedayxyy.cn/topics/krrqu/",
+          "description": "丝滑更上一层楼",
+          "publishedAt": "2026-11-01T02:47:17.000Z"
+        },
+        {
+          "title": "2026.10.31-周六-上海-三林滨江城市森林",
+          "link": "https://onedayxyy.cn/moments/dgjxd/",
+          "description": "要开心鸭",
+          "publishedAt": "2026-10-31T02:26:42.000Z"
+        },
+        {
           "title": "2026.10.28-周三-上海-5.2km",
           "link": "https://onedayxyy.cn/moments/vdzzp/",
           "description": "做一个无情的人吧",
@@ -65,30 +89,6 @@
           "link": "https://onedayxyy.cn/linux/hyckq/",
           "description": "rac多路径模式问题",
           "publishedAt": "2026-10-27T23:19:02.000Z"
-        },
-        {
-          "title": "v4-w3c-yyds的博客架构-2026.10.27更新",
-          "link": "https://onedayxyy.cn/topics/rxnvh/",
-          "description": "w3c大佬又发言啦",
-          "publishedAt": "2026-10-27T05:37:47.000Z"
-        },
-        {
-          "title": "2026.10.27-周二-上海-三林滨江城市森林公园",
-          "link": "https://onedayxyy.cn/moments/livkt/",
-          "description": "开心生活",
-          "publishedAt": "2026-10-26T22:33:55.000Z"
-        },
-        {
-          "title": "2026.10.26-周一-上海-5.2km",
-          "link": "https://onedayxyy.cn/moments/mtwet/",
-          "description": "做一个没心没肺的人",
-          "publishedAt": "2026-10-25T23:13:14.000Z"
-        },
-        {
-          "title": "v3-w3c-yyds的博客架构-2026.10.25更新",
-          "link": "https://onedayxyy.cn/topics/lidgs/",
-          "description": "很丝滑哦",
-          "publishedAt": "2026-10-25T00:23:31.000Z"
         }
       ]
     },
@@ -355,6 +355,12 @@
       ],
       "items": [
         {
+          "title": "这套全新的博客风格：纸底、墨线、一种黄",
+          "link": "https://blog.amamo.top/posts/2026-10-30-%E8%BF%99%E5%A5%97%E5%85%A8%E6%96%B0%E7%9A%84%E5%8D%9A%E5%AE%A2%E9%A3%8E%E6%A0%BC/",
+          "description": "博客从 Firefly 换皮成了现在这套工业手册的味道，这套风格从《明日方舟：终末地》的界面学的。聊聊规则怎么定的：颜色怎么用、什么形状表示什么、编号从哪来。",
+          "publishedAt": "2026-10-30T00:00:00.000Z"
+        },
+        {
           "title": "AI短剧越来越low，为什么？",
           "link": "https://blog.amamo.top/posts/fk-ai-potboiler/",
           "description": "从AI短剧的观感变化聊起，谈谈剧情和人物到底决定了什么。用《简·爱》当例子，说说情感主题和反套路怎么落地。",
@@ -383,12 +389,6 @@
           "link": "https://blog.amamo.top/posts/zen-me-rang-dsh-sou-suo-yong-shang-exa-cha-jian/",
           "description": "dsh 基础包把 web 行的 searchProvider 钉死为 deepseek-official，导致搜索插件的\"零配置自动接管\"不会生效；本文记录排查过程与 profile 补丁层的修复方法。2026-10-05 勘误：profile 补丁层是整值替换而非合并，web 行必须把 fetchProvider 一并写上。",
           "publishedAt": "2026-10-02T00:00:00.000Z"
-        },
-        {
-          "title": "测试",
-          "link": "https://blog.amamo.top/posts/back-end_testing/",
-          "description": "<p>用新的后台发一篇文章测试</p>",
-          "publishedAt": "2026-10-01T00:00:00.000Z"
         }
       ]
     },
@@ -1113,6 +1113,660 @@
           "link": "https://zzyang.top/posts/mysql-backup/",
           "description": "<p>在任何数据库环境中，总会有<code>不确定的意外</code>情况发生，比如例外的停电、计算机系统中的各种软硬件故障、人为破坏、管理员误操作等是不可避免的，这些情况可能会导致<code>数据的丢失</code>、<code>服务器瘫痪</code>等严重的后果。存在多个服务器时，会出现主从服务器之间的<code>数据同步问题</code>。</p> <p>为了有效防止数据丢失，并将损失降到最低，应<code>定期</code>对MySQL数据库服务器做<code>备份</code>。如果数据库中的数据丢失或者出现错误，可以使用备份的数据<code>进行恢复</code>。主从服务器之间的数据同步问题可以通过复制功能实现。</",
           "publishedAt": "2025-11-11T00:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://secretblog.my.id",
+      "feedUrl": "https://secretblog.my.id/atom.xml",
+      "feedUrls": [
+        "https://secretblog.my.id/atom.xml"
+      ],
+      "items": [
+        {
+          "title": "Astro + Firefly: The Best Combo for Personal Blog",
+          "link": "https://secretblog.my.id/posts/tech/firefly/",
+          "description": "Your clean, beautiful, and modern personal blog theme template.",
+          "publishedAt": "2026-08-22T04:00:07.000Z"
+        },
+        {
+          "title": "Awakening Windows Vista (+Aero) on VMWare",
+          "link": "https://secretblog.my.id/posts/tech/vista-vmware/",
+          "description": "You can actually run Windows Vista (with Aero enabled) as a virtual machine within VMWare Workstation.",
+          "publishedAt": "2026-07-10T04:05:33.000Z"
+        },
+        {
+          "title": "Reflector for Arch Linux",
+          "link": "https://secretblog.my.id/posts/tech/reflector/",
+          "description": "Reflector is a Python script for finding, selecting the fastest Arch Linux mirror list and eventually overwriting /etc/pacman.d/mirrorlist",
+          "publishedAt": "2026-10-22T13:55:48.000Z"
+        },
+        {
+          "title": "A Small yet Extremely Powerful CLI Tool: curl",
+          "link": "https://secretblog.my.id/posts/tech/curl/",
+          "description": "A simple yet practical guide to curl: a swiss-army tool for transferring data with URLs",
+          "publishedAt": "2026-10-16T13:59:11.000Z"
+        },
+        {
+          "title": "Getting to Know The Linux 'env' Command",
+          "link": "https://secretblog.my.id/posts/tech/env/",
+          "description": "What is env command in linux for?",
+          "publishedAt": "2026-09-30T08:57:08.000Z"
+        },
+        {
+          "title": "Manual GRUB Boot Menu Entry",
+          "link": "https://secretblog.my.id/posts/tech/manualgrubmenu/",
+          "description": "How to create manual GRUB boot menu entry in Linux",
+          "publishedAt": "2026-09-27T03:23:17.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://www.nanzhiy.cn",
+      "feedUrl": "https://www.nanzhiy.cn/rss.xml",
+      "feedUrls": [
+        "https://www.nanzhiy.cn/rss.xml",
+        "https://www.nanzhiy.cn/feed.xml"
+      ],
+      "items": [
+        {
+          "title": "全新文档站已上线！",
+          "link": "https://www.nanzhiy.cn/archives/7LHLVEEp",
+          "description": "楠枝文档中心完成大更新，Ethereal 文档从 1.1.2 补齐 2.0 新功能。站点用 Rspress v2 搭建，纯静态部署简单，自带全站搜索、深色模式和每页 llms.txt 镜像，方便 AI 检索。首页由 AI 重写，含项目卡片、快速开始按钮、文档窗口预览，以及毛玻璃导航、滚动渐入和页脚备案、交流群入口。内容按设置面板分组重写，Ethereal 25 篇、初春图床 6 篇，后续随版本更新；因多为 AI 撰写且未逐字核对，欢迎通过 Issue 或交流群反馈。地址：https://docs.nanzhiy.cn",
+          "publishedAt": "2026-10-18T15:14:06.000Z"
+        },
+        {
+          "title": "Ethereal 2.0 更新一览",
+          "link": "https://www.nanzhiy.cn/archives/YFlSQAgM",
+          "description": "Ethereal 2.0 正式发布，改动量远超预期。全屏壁纸新增沉浸（Hero）模式，首页下滑渐变模糊，内页固定模糊；页头统一为仪表条，页脚可组合版式与分割带，侧边栏改为条目化吸顶编排，目录可左右挂载。瞬间页拆为独立卡片流并新增全站瞬间条，新增关于页、打赏页模板。卡片支持跟随主题色与边框阴影，并修复换页、锚点、移动端等问题。Ethereal 于 7 月 22 日上架 Halo 应用市场，2026 Q3 开发者发布全部应用排行以 1938 次下载位列第一。",
+          "publishedAt": "2026-10-04T09:29:14.000Z"
+        },
+        {
+          "title": "致 Ethereal 主题用户",
+          "link": "https://www.nanzhiy.cn/archives/tOrjdwXk",
+          "description": "Ethereal 是一款专为 Halo 打造的 Fuwari 风格增强型主题，自 7 月 22 日上架以来，Halo 应用商店下载量已突破 1700+，并有多位开源贡献者与用户的 Bug 反馈共同推动主题完善。接下来主题将进入 2.0 开发阶段：对多个页面进行 UI 优化与重构，统一视觉与交互细节，并补充更多页面模板适配，而非零散地叠功能。因开发者仍是学生，难以维持稳定的发版节奏，正式版将暂停发版，精力集中到 2.0；相关功能完善后将直接发布 2.0 大版本，一次到位，预计国庆期间与大家见面。",
+          "publishedAt": "2026-09-19T15:15:10.000Z"
+        },
+        {
+          "title": "Halo 官方 MCP 插件上手体验",
+          "link": "https://www.nanzhiy.cn/archives/halo-mcp-plugin-tiyan",
+          "description": "Halo 官方发布 MCP Server 插件，让 AI 可以直接管理博客。作者第一时间上手：控制台创建访问密钥，可按工具勾选权限、设置有效期和 IP 白名单；把插件链接和密钥交给 WorkBuddy 自动配置，点一下信任即接通。文章、独立页、分类、标签、评论的读写与审核都能靠对话完成，权限比 CLI 细且控制台留有调用记录。相比 Halo CLI 这条外部工具链，插件是站上的原生接口，日常管理更省心。插件目前仍是 beta，但主干功能稳定，本文即由 AI 出大纲、作者再优化而成。",
+          "publishedAt": "2026-08-25T12:35:17.000Z"
+        },
+        {
+          "title": "将服务器交给AI：WorkBuddy 接入宝塔面板 MCP 实战指南",
+          "link": "https://www.nanzhiy.cn/archives/NVObtSwG",
+          "description": "宝塔面板13.0.0版本新增MCP服务，将面板运维能力通过MCP协议开放给外部AI Agent调用。MCP（Model Context Protocol）是Anthropic开源的标准协议，首批提供31项工具覆盖网站、数据库、系统等7类操作。接入后，AI可直接调用宝塔API执行查日志、看资源、配网站等任务，无需手动登录面板操作。配置需满足面板稳定版12.0或正式版13.0、Python 3.13环境，并放行8765端口设置IP白名单。支持在WorkBuddy等外部Agent中接入，也可与面板内置AI助手并行使用，实现自然语言驱动的运维操作。",
+          "publishedAt": "2026-08-14T04:22:37.000Z"
+        },
+        {
+          "title": "Ethereal 主题近期更新一览：v1.0.1 到 v1.0.6",
+          "link": "https://www.nanzhiy.cn/archives/HsCzmprw",
+          "description": "本文系统梳理了 Halo 主题 Ethereal 近期版本（v1.0.1至v1.0.6）的更新日志。重点介绍了从 v1.0.3 开始的核心功能增强与体验优化：重构了朋友圈页面，采用时间轴布局并优化了信息展示逻辑；全新设计了带有动画角色交互的登录认证界面；新增了公告小组件、文章打赏与分享海报、以及友情链接自助提交功能。同时，各版本也进行了统一UI样式、优化动画交互、修复安全漏洞等多项改进，提升了主题的整体美观度与易用性。",
+          "publishedAt": "2026-08-03T05:44:47.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://bk.zhaozhiqiang.pw/",
+      "feedUrl": "https://bk.zhaozhiqiang.pw/feed",
+      "feedUrls": [
+        "https://bk.zhaozhiqiang.pw/feed",
+        "https://bk.zhaozhiqiang.pw/feed"
+      ],
+      "items": [
+        {
+          "title": "SSRF：让服务器替你发请求",
+          "link": "https://bk.zhaozhiqiang.pw/1412.html",
+          "description": "SSRF 的关键不是「读到了什么」，而是服务器替你发了一个请求。这篇讲三个判断前提、盲打型怎么用带外通道确认、内网里哪些目标值得试，以及为什么「过滤 127.0.0.1」这种黑名单永远堵不完——真正有效的是白名单、解析后校验、禁跳转和出网防火墙。 SSRF：让服务器替你发请求最先出现在星宇安全实验室。",
+          "publishedAt": "2026-10-25T07:08:07.000Z"
+        },
+        {
+          "title": "越权：扫描器永远发现不了的那类漏洞",
+          "link": "https://bk.zhaozhiqiang.pw/1409.html",
+          "description": "SQL 注入有 payload 特征，XSS 有反射点，越权什么都没有——它就是一次完全正常的请求，只不过 ID 换成了别人的。这篇讲水平/垂直/未授权的测法差异、改参数名删参数换方法这些具体手法、怎么判断「返回 200」到底是不是洞，以及为什么这类漏洞永远修不完。 越权：扫描器永远发现不了的那类漏洞最先出现在星宇安全实验室。",
+          "publishedAt": "2026-10-24T22:17:54.000Z"
+        },
+        {
+          "title": "TCP 排查：重传、窗口和那个永远被忽略的 MTU",
+          "link": "https://bk.zhaozhiqiang.pw/1406.html",
+          "description": "用户说慢，运维说服务器正常，开发说接口只有 80 毫秒。抓个包十分钟能出结论，前提是知道看哪三个数：重传率、零窗口、带宽延迟积。这篇讲排查顺序，以及为什么大部分「网络慢」最后都不是网络问题。 TCP 排查：重传、窗口和那个永远被忽略的 MTU最先出现在星宇安全实验室。",
+          "publishedAt": "2026-10-24T22:11:58.000Z"
+        },
+        {
+          "title": "HTTP/2 和 HTTP/3 抓包：为什么 Follow TCP Stream 不好使了",
+          "link": "https://bk.zhaozhiqiang.pw/1403.html",
+          "description": "以前右键 Follow TCP Stream 就能看完一次请求，现在屏幕上全是交错的 HEADERS 和 DATA。因为 HTTP/2 把多条流压进同一条 TCP，HTTP/3 干脆换了 UDP。这篇讲清 h2 怎么按 streamid 锁定、HPACK 头部怎么过滤，以及 h3 为什么抓不到、什么时候根本不该抓包。 HTTP/2 和 HTTP/3 抓包：为什么 Follow TCP Stream 不好使了最先出现在星宇安全实验室。",
+          "publishedAt": "2026-10-24T22:09:47.000Z"
+        },
+        {
+          "title": "Wireshark 入门：比抓包更难的是知道抓哪里",
+          "link": "https://bk.zhaozhiqiang.pw/1400.html",
+          "description": "Wireshark 真正难的地方不在抓包，在抓对位置和过滤噪音。这篇讲包从哪来（交换机隔离、无线监听、Windows 回环）、两种过滤器为什么不能混、五个够用八成的过滤表达式、Follow TCP Stream 的中文乱码，以及「校验和错误」「抓一会儿就丢包」这三个经典问题。 Wireshark 入门：比抓包更难的是知道抓哪里最先出现在星宇安全实验室。",
+          "publishedAt": "2026-10-24T22:07:28.000Z"
+        },
+        {
+          "title": "WiFi 渗透：能破的，从来都是弱密码",
+          "link": "https://bk.zhaozhiqiang.pw/1397.html",
+          "description": "WPA2 的加密从没被攻破过，所有「破解 WiFi」本质都是在猜密码。这篇讲完整流程和每一步的真实成功率：怎么读 airodump 的输出、PMKID 为什么不用等客户端、deauth 的副作用、802.11w 为什么会让你打不动，以及那些听起来厉害但基本没用的手段。 WiFi 渗透：能破的，从来都是弱密码最先出现在星宇安全实验室。",
+          "publishedAt": "2026-10-24T22:04:51.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://www.sanshijiu.cn",
+      "feedUrl": "https://www.sanshijiu.cn/rss.xml",
+      "feedUrls": [
+        "https://www.sanshijiu.cn/rss.xml"
+      ],
+      "items": [
+        {
+          "title": "我把博客的鼠标做成了一朵樱花（附完整代码）",
+          "link": "https://www.sanshijiu.cn/post/38",
+          "description": "给博客换樱花主题时顺手把鼠标也重做啦，结果朋友来串门全在问鼠标哪弄的嘿嘿。整套有六种状态哦，平时是带花杆的小樱花，悬停就开花，点击还会炸花瓣冒星星，零依赖不到两百行。最得意的是可点元素自动接管那招，再也不会漏掉小按钮啦。想不想也给你的博客安排上？",
+          "publishedAt": "2026-09-28T08:33:58.000Z"
+        },
+        {
+          "title": "你好，这里是叁拾玖の小站",
+          "link": "https://www.sanshijiu.cn/post/31",
+          "description": "嘿！发现一个超有爱的自建小站啦，博主自己写自己搭自己管，碎语、许愿墙、拾光集、相册全都有，还能交换友链哦。技术栈是Vue3加Node，前后台一条龙，简直羡慕哭。偷偷说，页脚那句话超戳人，你猜是哪句？快进来逛逛嘛！",
+          "publishedAt": "2026-09-19T04:18:50.000Z"
+        },
+        {
+          "title": "把博客后端从Node重写成Go",
+          "link": "https://www.sanshijiu.cn/post/58",
+          "description": "小编今天要安利一个超硬核的博客后端重构故事啦！作者因为小服务器内存吃紧，把Node后端一比一重写成Go，先录接口快照当验收标准，再逐个模块diff，踩了时区、值拷贝这些坑，最后内存",
+          "publishedAt": "2026-10-26T04:10:43.000Z"
+        },
+        {
+          "title": "一次评论区安全加固：外链、QQ 号与被约谈的某博主",
+          "link": "https://www.sanshijiu.cn/post/56",
+          "description": "宝子们快来看这个惊险又实用的博客安全故事啦！有位博主因为评论区外链域名被抢注，访客一点就跳去违规网站，结果自己被约谈，太冤了吧。作者立马动手治理：全站外链弹窗确认、后台加网址列、15天不活跃自动摘链，还顺手堵住QQ号和邮箱md5经头像URL泄露的口子，用加盐哈希缓存本地。嘿嘿，最后还留了个游客身份冒充的小尾巴没解决哦，想知道咋回事就点进来看看嘛。",
+          "publishedAt": "2026-10-17T13:00:57.000Z"
+        },
+        {
+          "title": "都是为了你好",
+          "link": "https://www.sanshijiu.cn/post/55",
+          "description": "一句“都是为了你好”，压了多少人整个童年。被灌输家里穷、一块钱方便面被骂半死、同学一句“他又没有钱”、满桌好菜却说是省给你吃的……别人眼里的福气，只有自己知道有多沉。这篇第二人称的故事，写给每一个在爱里背着债长大的小孩，也写给还没学会好好表达爱的父母。看完想抱抱那个低头吃饭的你。",
+          "publishedAt": "2026-10-16T02:37:21.000Z"
+        },
+        {
+          "title": "在河流的第三条岸",
+          "link": "https://www.sanshijiu.cn/post/54",
+          "description": "小编读完这篇真的被戳到啦！原来人生不一定要当巍峨的山，做一条静静流淌的小河也超棒的呀。种花、画画、教小朋友，这些细碎的温柔才是真正的抵达呢。嘿嘿，你有没有想过，自己的第三条岸在哪里呀？点进来聊聊呗，说不定会有小惊喜哦。",
+          "publishedAt": "2026-10-15T02:01:48.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://lonelybing.top",
+      "feedUrl": "https://lonelybing.top/rss.xml",
+      "feedUrls": [
+        "https://lonelybing.top/rss.xml",
+        "https://lonelybing.top/atom.xml"
+      ],
+      "items": [
+        {
+          "title": "C语言学习进程（二）：循环练习场",
+          "link": "https://lonelybing.top/posts/c-language-learning-progress-2/",
+          "description": "从猜数游戏到素数、辗转相除、三层嵌套，还顺手用了一回 goto。错得挺诚实",
+          "publishedAt": "2026-10-21T00:00:00.000Z"
+        },
+        {
+          "title": "让博客支持动态照片",
+          "link": "https://lonelybing.top/posts/live-photo-support-2026-10-20/",
+          "description": "从 ImgHub 原图上传、InkPost / Ink Studio 粘贴识别，到博客里的单次播放和渐变切换，把动态照片接进静态博客喵~",
+          "publishedAt": "2026-10-20T09:50:00.000Z"
+        },
+        {
+          "title": "C语言学习进程",
+          "link": "https://lonelybing.top/posts/c-language-learning-progress/",
+          "description": "从 printf 开始，到条件判断、键盘输入、循环。中间错得挺诚实，全留着了",
+          "publishedAt": "2026-10-14T00:00:00.000Z"
+        },
+        {
+          "title": "full_review",
+          "link": "https://lonelybing.top/posts/full_review/",
+          "description": "复盘。",
+          "publishedAt": "2026-10-08T21:30:00.000Z"
+        },
+        {
+          "title": "番组页复活小记",
+          "link": "https://lonelybing.top/posts/bangumi-page-revive/",
+          "description": "bangumi一直「数据拉取失败」，发现bangumi被墙了,镜像也被封了，于是乎",
+          "publishedAt": "2026-10-05T21:58:40.000Z"
+        },
+        {
+          "title": "无痛校园跑",
+          "link": "https://lonelybing.top/posts/fuck-school-runner/",
+          "description": "二呗学校加入了校园跑，每天还有两个随机打卡点，中途还有人脸验证，而且识别度是真的垃圾",
+          "publishedAt": "2026-10-04T20:44:11.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://clannad.top/",
+      "feedUrl": "https://fast.clannad.top/feed.xml",
+      "feedUrls": [
+        "https://fast.clannad.top/feed.xml"
+      ],
+      "items": [
+        {
+          "title": "12 软件工程",
+          "link": "https://clannad.top/engineering/ruankao/zhongji/ruanjiangshejishi/zhenti/shangwuti/zhangjietimu-jiexi/10-software-engineering",
+          "description": "软件设计师上午题第 12 章《软件工程》章节题目解析：227 道真题覆盖 CMM/CMMI、五种过程模型、统一过程与敏捷、需求与设计、黑盒白盒测试与 McCabe 度量、维护四类型、Gantt 图与关键路径计算、配置与风险管理、ISO 9126 质量模型，2009—2021 年上午题全收录。",
+          "publishedAt": "2026-10-22T00:00:00.000Z"
+        },
+        {
+          "title": "14 信息安全",
+          "link": "https://clannad.top/engineering/ruankao/zhongji/ruanjiangshejishi/zhenti/shangwuti/zhangjietimu-jiexi/11-information-security",
+          "description": "软件设计师上午题第 14 章《信息安全》章节题目解析：防火墙、攻击类型、病毒木马、加密与安全协议、访问控制五大板块逐题精讲，覆盖 2009—2021 年 56 道真题。",
+          "publishedAt": "2026-10-22T00:00:00.000Z"
+        },
+        {
+          "title": "15 计算机网络",
+          "link": "https://clannad.top/engineering/ruankao/zhongji/ruanjiangshejishi/zhenti/shangwuti/zhangjietimu-jiexi/12-computer-network",
+          "description": "软件设计师上午题第 15 章《计算机网络》章节题目解析：OSI/TCP-IP 分层、IP 地址与子网划分、TCP/UDP、应用层协议、路由与网页基础，覆盖 2009—2021 年 103 道真题，子网划分题全程二进制推导。",
+          "publishedAt": "2026-10-22T00:00:00.000Z"
+        },
+        {
+          "title": "16 算法",
+          "link": "https://clannad.top/engineering/ruankao/zhongji/ruanjiangshejishi/zhenti/shangwuti/zhangjietimu-jiexi/13-algorithms",
+          "description": "软件设计师上午题第 16 章《算法》章节题目解析：回溯、分治、动态规划、贪心四大策略逐题辨析，矩阵链乘、背包、装配线等经典案例完整推导，覆盖 2009—2021 年 22 道真题。",
+          "publishedAt": "2026-10-22T00:00:00.000Z"
+        },
+        {
+          "title": "10 操作系统",
+          "link": "https://clannad.top/engineering/ruankao/zhongji/ruanjiangshejishi/zhenti/shangwuti/zhangjietimu-jiexi/9-operating-system",
+          "description": "软件设计师上午题第 10 章《操作系统》章节题目解析：96 道真题覆盖进程管理、前趋图与 PV 操作、死锁与银行家算法、页式段页式存储、文件索引与位示图、磁盘调度与缓冲计算，2009—2021 年高频公式与模型一次讲透。",
+          "publishedAt": "2026-10-22T00:00:00.000Z"
+        },
+        {
+          "title": "3 数据结构",
+          "link": "https://clannad.top/engineering/ruankao/zhongji/ruanjiangshejishi/zhenti/shangwuti/zhangjietimu-jiexi/3-data-structures",
+          "description": "软件设计师上午题第 3、4 章《数据结构》章节题目解析：复杂度、线性表、栈、队列、串与 KMP、数组与矩阵、树与二叉树、图、查找、哈希、排序，覆盖 2009—2021 年 159 道真题，逐题推导、讲清每个选项的对错。",
+          "publishedAt": "2026-10-21T00:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://gl.baimu.live/",
+      "feedUrl": "https://gl.baimu.live/feed",
+      "feedUrls": [
+        "https://gl.baimu.live/feed",
+        "https://gl.baimu.live/feed"
+      ],
+      "items": [
+        {
+          "title": "🎮 游戏日报 2026-10-30（周五）",
+          "link": "https://gl.baimu.live/3335",
+          "description": "由HermesAgent提供整理支持 🦈本文档由亚特兰蒂斯后裔鲨鲨编写🔱 🎮 游戏日报 2026-10-30（周五） 📰 昨日热点新闻 1. 【新作】宫崎英高新作《The Duskbloods》将延期至 2027 年推出 巴哈姆特 GNN 报道，FromSoftware 制作人宫崎英高新作《The Duskbloods》宣布延期至 2027 年推出。 2. 【新作】《Phantom Blade Z […]",
+          "publishedAt": "2026-10-30T06:44:52.000Z"
+        },
+        {
+          "title": "🎮 游戏日报 2026-10-29（周四）",
+          "link": "https://gl.baimu.live/3334",
+          "description": "由HermesAgent提供整理支持 🦈本文档由亚特兰蒂斯后裔鲨鲨编写🔱 🎮 游戏日报 2026-10-29（周四） 📰 昨日热点新闻 1. 【新作】《魔物獵人：旅人》雙平台開放預先下載 將於 10 月 29 日正式上市 巴哈姆特 GNN 报道，由 Capcom 進行 IP 授權與監修、TiMi Studio Group 研發、Garena 發行的生存狩獵動作手機遊戲《魔物獵人：旅人》已在 App […]",
+          "publishedAt": "2026-10-28T23:55:32.000Z"
+        },
+        {
+          "title": "🎮 游戏日报 2026-10-28（周三）",
+          "link": "https://gl.baimu.live/3332",
+          "description": "由HermesAgent提供整理支持 🦈本文档由亚特兰蒂斯后裔鲨鲨编写🔱 🎮 游戏日报 2026-10-28（周三） 📰 昨日热点新闻 1. 【新作】《命運之子 DESTINY CHILD》10 週年新作《命運之子：Assemble》預計 2027 年在全球上線 巴哈姆特 GNN 报道，《命運之子 DESTINY CHILD》10 週年新作《命運之子：Assemble》預計 2027 年在全球上線 […]",
+          "publishedAt": "2026-10-27T23:57:07.000Z"
+        },
+        {
+          "title": "🎮 游戏日报 2026-10-27（周二）",
+          "link": "https://gl.baimu.live/3331",
+          "description": "由HermesAgent提供整理支持 🦈本文档由亚特兰蒂斯后裔鲨鲨编写🔱 🎮 游戏日报 2026-10-27（周二） 📰 昨日热点新闻 1. 【新作】《影之刃零》IGN评9分 引人入胜的战斗体验 3DM 报道，《影之刃零》获 IGN 9 分评价，评价中提到其引人入胜的战斗体验。 2. 【新作】《守望先锋》×《剑星》联动11月4日开启 皮肤阵容待公布 3DM 报道，《守望先锋》与《剑星》的联动将于 […]",
+          "publishedAt": "2026-10-26T23:55:26.000Z"
+        },
+        {
+          "title": "🎮 游戏日报 2026-10-26（周一）",
+          "link": "https://gl.baimu.live/3330",
+          "description": "由HermesAgent提供整理支持 🦈本文档由亚特兰蒂斯后裔鲨鲨编写🔱 🎮 游戏日报 2026-10-26（周一） 📰 昨日热点新闻 1. 【新作】《原神》7.2 版本「壞滅肇始之時」前瞻資訊 | 眾人協力對抗提瓦特「聖土化」危機 巴哈姆特 GNN 释出《原神》7.2 版本「壞滅肇始之時」前瞻资讯，内容为众人协力对抗提瓦特「聖土化」危机。 2. 【新作】《臥龍 2：鳳火連天》巴哈姆特電玩瘋實機試 […]",
+          "publishedAt": "2026-10-26T00:04:34.000Z"
+        },
+        {
+          "title": "🎮 游戏日报 2026-10-25（周日）",
+          "link": "https://gl.baimu.live/3329",
+          "description": "由HermesAgent提供整理支持 🦈本文档由亚特兰蒂斯后裔鲨鲨编写🔱 🎮 游戏日报 2026-10-25（周日） 📰 昨日热点新闻 1. 【新作】《七龍珠 異戰 3》如何呈現鳥山明構思的 AGE 1000 世界？實機試玩影片同步解禁 巴哈姆特 GNN 释出《七龍珠 異戰 3》实机试玩影片，说明游戏如何呈现鸟山明构想的 AGE 1000 世界。 2. 【新作】《波比的遊戲時間》系列新作《逃離遊戲 […]",
+          "publishedAt": "2026-10-24T23:30:00.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://blog.ksah.cn",
+      "feedUrl": "https://blog.ksah.cn/rss.xml",
+      "feedUrls": [
+        "https://blog.ksah.cn/rss.xml"
+      ],
+      "items": [
+        {
+          "title": "主题文档-标签使用",
+          "link": "https://blog.ksah.cn/posts/lables-use/",
+          "description": "介绍主题支持的标签使用方法",
+          "publishedAt": "2025-12-11T00:00:00.000Z"
+        },
+        {
+          "title": "Markdown 使用指南 - 基础语法",
+          "link": "https://blog.ksah.cn/posts/markdown-use/",
+          "description": "介绍Markdown使用方法",
+          "publishedAt": "2025-12-11T00:00:00.000Z"
+        },
+        {
+          "title": "我的建站初衷",
+          "link": "https://blog.ksah.cn/posts/%E6%88%91%E7%9A%84%E5%BB%BA%E7%AB%99%E5%88%9D%E8%A1%B7/",
+          "description": "介绍我的建站初衷",
+          "publishedAt": "2025-12-09T00:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://white-festa.net",
+      "feedUrl": "https://white-festa.net/rss.xml",
+      "feedUrls": [
+        "https://white-festa.net/rss.xml"
+      ],
+      "items": [
+        {
+          "title": "使用MetalLB VIP为原生kubernetes配置负载均衡服务",
+          "link": "https://white-festa.net/posts/metallb/",
+          "description": "在单节点 K3s 中使用 MetalLB L2 模式和 Envoy Gateway，为应用分配并宣告固定 LoadBalancer VIP",
+          "publishedAt": "2026-08-31T00:00:00.000Z"
+        },
+        {
+          "title": "深入 etcd：Raft 共识协议中的选举机制: 角色、Quorum 与 Pre-Vote",
+          "link": "https://white-festa.net/posts/kubernetes-etcd%E5%85%B1%E8%AF%86%E6%9C%BA%E5%88%B6/",
+          "description": "从节点角色、Quorum 公式、选举流程、split vote 处理，到 Pre-Vote 预投票机制，系统梳理 etcd 在主节点宕机场景下的完整共识过程",
+          "publishedAt": "2026-03-23T00:00:00.000Z"
+        },
+        {
+          "title": "systemd-oomd 在 cgroup v2 下的触发机制与服务级 OOM 控制实践",
+          "link": "https://white-festa.net/posts/systemd-oomd/",
+          "description": "本文深入解析 systemd-oomd 的工作原理，说明其如何基于 PSI 与 cgroup v2 监控内存压力，并与传统内核 OOM 机制进行对比。通过 memory.high、slice 配置与服务示例，演示如何在生产环境中实现更精细的 OOM 控制。",
+          "publishedAt": "2026-02-09T00:00:00.000Z"
+        },
+        {
+          "title": "Kubernetes节点压力驱逐、cgroups与Kernel OOM之间的关系",
+          "link": "https://white-festa.net/posts/kubernetes-oom/",
+          "description": "Kubernetes内存管理深度解析：当内存不足时，Pod如何被驱逐或杀死？本文从节点驱逐、cgroups限制、内核OOM三个层面，结合Logstash实例追踪cgroups路径，详解QoS与oom_score_adj如何决定Pod生死。",
+          "publishedAt": "2025-12-10T00:00:00.000Z"
+        },
+        {
+          "title": "一次 Kubernetes 应用迁移后的压测故障排查：从 Ingress 502 到数据库连接异常",
+          "link": "https://white-festa.net/posts/ingress-502-troubleshooting/",
+          "description": "应用迁移上 Kubernetes 后压测频繁 502; 一次从 Ingress 查到数据库连接、揪出应用假死的完整排查。",
+          "publishedAt": "2026-10-17T00:00:00.000Z"
+        },
+        {
+          "title": "为 Linux 主机配置动态密码",
+          "link": "https://white-festa.net/posts/%E4%B8%BA-linux-%E4%B8%BB%E6%9C%BA%E9%85%8D%E7%BD%AE%E5%8A%A8%E6%80%81%E5%AF%86%E7%A0%81/",
+          "description": "通过 Google Authenticator 和 PAM 为 Linux 主机的 SSH 登录配置动态验证码，支持密码或密钥搭配动态码认证，并介绍登录验证、时间同步与用户豁免的配置方法。",
+          "publishedAt": "2026-09-30T00:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://monkeyke.com",
+      "feedUrl": "https://monkeyke.com/index.xml",
+      "feedUrls": [
+        "https://monkeyke.com/index.xml"
+      ],
+      "items": [
+        {
+          "title": "用了 DeepSeek Harness 之后，我开始重新理解 Agent",
+          "link": "https://monkeyke.com/posts/%E7%94%A8%E4%BA%86-deepseek-harness-%E4%B9%8B%E5%90%8E%E6%88%91%E5%BC%80%E5%A7%8B%E9%87%8D%E6%96%B0%E7%90%86%E8%A7%A3-agent/",
+          "description": "<hr> <p>DeepSeek Harness 发布那几天，我的技术群基本没法聊别的，全是截图和转发。刷屏归刷屏，真到自己上手，还是得老老实实搭环境。装起来倒不难，几条命令的事。跑通官方 demo 的那一刻，说实话有点上头——它自己规划、自己调工具、自己收尾，跑得比我想象的顺。</p> <p>但 demo 永远是 demo。等我把需求换成自己项目里的活儿，问题就一个个冒出来了。</p> <h2 class=\"heading-element\" id=\"模型不背这个锅\"><span>模型不背这个锅</span> <a href=\"#%e6%a8%a1%e5%9e%8b%e4%b8%8d%e8%83%8c%e8%bf%99%e4%b8%",
+          "publishedAt": "2026-08-23T02:30:00.000Z"
+        },
+        {
+          "title": "从会写 Python，到真正理解 Python",
+          "link": "https://monkeyke.com/posts/%E4%BB%8E%E4%BC%9A%E5%86%99-python%E5%88%B0%E7%9C%9F%E6%AD%A3%E7%90%86%E8%A7%A3-python/",
+          "description": "<hr> <p>学习 Python 有些年头了，我一直觉得自己&quot;挺懂&quot;。直到有次 review 朋友的代码，看到一个函数用 <code>lst=[]</code> 当默认参数，我说这是坑，他反问我&quot;为什么是坑？&quot;。我张了张嘴，发现自己其实也讲不太清。</p> <p>那之后我认真捋了一遍。所谓 Python 的&quot;高级&quot;，从来不是语法写得多花，而是开始看懂它背后的<strong>对象模型、协议、执行机制和设计哲学</strong>。下面这八个点，是我真正入门之后才想明白的东西。</p> <h2 class=\"heading-element\" id=\"迭代器与生成器惰性是灵魂\">",
+          "publishedAt": "2026-08-12T01:20:00.000Z"
+        },
+        {
+          "title": "我常用的 Git 命令速查表",
+          "link": "https://monkeyke.com/posts/%E6%88%91%E5%B8%B8%E7%94%A8%E7%9A%84-git-%E5%91%BD%E4%BB%A4%E9%80%9F%E6%9F%A5%E8%A1%A8/",
+          "description": "<hr> <p> 这是我常用的git命令，其实对于git来说非常简单，但是不简单的是命令比较多，如果你用的少了，会忘记用法就会觉得特别难。我想写我常用的命令大全，顺便复习温故一下。但是不可否认的是，我对很多命令都做了最佳的取舍，并不想一股脑全部都展示出来，这样我还不如去git网站，菜鸟网站去找那种git教程、或者是命令大全。</p> <p>所以我打算将git命令+我的笔记结合一下，我觉得这些命令是必须会的，如果你想学git命令的话。当然你也可以把它作为一个速查手册。后面我还会附上简易流程和一些基础必会的命令。</p> <h2 class=\"heading-element\" id=\"git常用命令\"><span>git常用命令</sp",
+          "publishedAt": "2026-07-16T09:03:36.000Z"
+        },
+        {
+          "title": "给项目选验证码，我调研了一个周末",
+          "link": "https://monkeyke.com/posts/%E7%BB%99%E9%A1%B9%E7%9B%AE%E9%80%89%E9%AA%8C%E8%AF%81%E7%A0%81%E6%88%91%E8%B0%83%E7%A0%94%E4%BA%86%E4%B8%80%E4%B8%AA%E5%91%A8%E6%9C%AB/",
+          "description": "<hr> <p>事情是这样的——我有个 side project 需要加验证码。一开始的想法很简单：找个滑块方案，引入，完事。</p> <p>然后我就打开了 GitHub。</p> <p>三个小时之后，我发现自己陷进去了。字符验证码、滑块、旋转、点选、PoW 工作量证明、对抗 AI Agent……一个我以为半天能搞定的活，变成了整个周末的深坑。不过踩完回头看，验证码这个领域确实比大多数人以为的要有意思。</p> <p>所以这篇就来聊聊我这一个周末到底看了些什么。</p> <hr> <h2 class=\"heading-element\" id=\"验证码是怎么一步步走到今天的\"><span>验证码是怎么一步步走到今天的</span> <",
+          "publishedAt": "2026-07-10T02:00:00.000Z"
+        },
+        {
+          "title": "湖北省博物馆日记",
+          "link": "https://monkeyke.com/life/hubei-provincial-museum-tour/",
+          "description": "<img src=\"https://monkeyke.com/life/hubei-provincial-museum-tour/image.jpg\" alt=\"featured image\" referrerpolicy=\"no-referrer\"><h2 class=\"heading-element\" id=\"出发前的纠结与抵达后的震撼\"><span>出发前的纠结与抵达后的震撼</span> <a href=\"#%e5%87%ba%e5%8f%91%e5%89%8d%e7%9a%84%e7%ba%a0%e7%bb%93%e4%b8%8e%e6%8a%b5%e8%be%be%e5%90%8e%e7%9a%84%e9%9c%87%e",
+          "publishedAt": "2026-07-02T06:30:00.000Z"
+        },
+        {
+          "title": "深夜两点把博客从 Hexo 迁到 Hugo",
+          "link": "https://monkeyke.com/posts/%E6%B7%B1%E5%A4%9C%E4%B8%A4%E7%82%B9%E6%8A%8A%E5%8D%9A%E5%AE%A2%E4%BB%8E-hexo-%E8%BF%81%E5%88%B0-hugo/",
+          "description": "<hr> <p>事情要从一个让我抓狂的下午说起。</p> <p>我按惯例写完一篇随笔,敲下 <code>hexo s</code> 想预览一下,然后端起杯子去倒水。等水倒好、喝了两口回来,终端还在那儿吭哧吭哧编译。一篇 markdown 而已啊大哥,至于吗?</p> <p>这已经不是第一次了。每次改一个字,就要等它把整个站重新跑一遍。文章一多起来,那个编译时间真的够我看完一个短视频。<strong>头发又少了几根的根本原因,可能不是写代码,是等编译等掉的。</strong></p> <p>忍了一阵子,终于在一个深夜破防了——干脆迁了吧,听说 Hugo 编译快得离谱,而且也是 Go 写的,我栈里好歹有点 Go,亲切。</p> <p>然",
+          "publishedAt": "2026-06-28T17:30:00.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://blog.oldwang.site/",
+      "feedUrl": "https://blog.oldwang.site/rss.xml",
+      "feedUrls": [
+        "https://blog.oldwang.site/rss.xml",
+        "https://blog.oldwang.site/atom.xml"
+      ],
+      "items": [
+        {
+          "title": "04 Filebeat 日志收集入门",
+          "link": "http://blog.oldwang.site/posts/2265425726.html",
+          "description": "<h2 id=\"1、Filebeat-基本介绍\"><a href=\"#1、Filebeat-基本介绍\" class=\"headerlink\" title=\"1、Filebeat 基本介绍\"></a>1、Filebeat 基本介绍</h2><h3 id=\"1-1-Filebeat-是什么\"><a href=\"#1-1-Filebeat-是什么\" class=\"headerlink\" title=\"1.1 Filebeat 是什么\"></a>1.1 Filebeat 是什么</h3><p>Filebeat 是用于 <strong>“转发”</strong> 和 <strong>“集中日志数据”</strong> 的 <strong>“轻",
+          "publishedAt": "2025-12-09T16:00:00.000Z"
+        },
+        {
+          "title": "01 ELK 日志收集系统概述",
+          "link": "http://blog.oldwang.site/posts/3825997150.html",
+          "description": "<h1 id=\"ELK-相关技术介绍\"><a href=\"#ELK-相关技术介绍\" class=\"headerlink\" title=\"ELK 相关技术介绍\"></a>ELK 相关技术介绍</h1><h2 id=\"1-ELK-诞生的背景\"><a href=\"#1-ELK-诞生的背景\" class=\"headerlink\" title=\"1. ELK 诞生的背景\"></a>1. ELK 诞生的背景</h2><h3 id=\"1-1-没有-ELK-分析日志前\"><a href=\"#1-1-没有-ELK-分析日志前\" class=\"headerlink\" title=\"1.1 没有 ELK 分析日志前\"></a>1.1 没有 ELK 分析日",
+          "publishedAt": "2025-12-09T16:00:00.000Z"
+        },
+        {
+          "title": "02 Elasticsearch 入门",
+          "link": "http://blog.oldwang.site/posts/4103087246.html",
+          "description": "<h2 id=\"1、ES-基本概念介绍\"><a href=\"#1、ES-基本概念介绍\" class=\"headerlink\" title=\"1、ES 基本概念介绍\"></a>1、ES 基本概念介绍</h2><h3 id=\"1-1-ES-是什么\"><a href=\"#1-1-ES-是什么\" class=\"headerlink\" title=\"1.1 ES 是什么\"></a>1.1 ES 是什么</h3><p>Elasticsearch 是一个分布式、RESTful 风格的搜索和数据分析引擎。</p> <h3 id=\"1-2-ES-主要功能\"><a href=\"#1-2-ES-主要功能\" class=\"headerlink\" title",
+          "publishedAt": "2025-12-09T16:00:00.000Z"
+        },
+        {
+          "title": "03 Elasticsearch 集群",
+          "link": "http://blog.oldwang.site/posts/3192084428.html",
+          "description": "<h2 id=\"1、ElasticSearch-集群\"><a href=\"#1、ElasticSearch-集群\" class=\"headerlink\" title=\"1、ElasticSearch 集群\"></a>1、ElasticSearch 集群</h2><h3 id=\"1-1-ES-集群优势\"><a href=\"#1-1-ES-集群优势\" class=\"headerlink\" title=\"1.1 ES 集群优势\"></a>1.1 ES 集群优势</h3><p>Elasticsearch 集群是由多个节点组成的一个分布式系统。<br>使用 Elasticsearch 集群有以下几个优点：</p> <ol> <li><stro",
+          "publishedAt": "2025-12-09T16:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://ffaff.fun/",
+      "feedUrl": "https://ffaff.fun/rss.xml",
+      "feedUrls": [
+        "https://ffaff.fun/rss.xml"
+      ],
+      "items": [
+        {
+          "title": "一百美元有多大？",
+          "link": "https://ffaff.fun/blog/%E4%B8%80%E7%99%BE%E7%BE%8E%E5%85%83%E6%9C%89%E5%A4%9A%E5%A4%A7",
+          "description": "盯着鼠标垫上那张一百美元，我突然想弄清它究竟有多大、藏着多少细节。于是找高清图、逐层抠图、交给 AI 定位排版，最后做成一个可以点着玩的交互式拆解页面，顺便记下踩过的坑。",
+          "publishedAt": "2026-10-29T18:59:00.000Z"
+        },
+        {
+          "title": "10月周记",
+          "link": "https://ffaff.fun/blog/10%E6%9C%88%E5%91%A8%E8%AE%B0",
+          "description": "这周最开心的是COMSOL保偏光纤3D模型终于跑通，网格该用扫描方式而不是传统画法。墨镜丢了挺闹心，社团招新忙完，还跟范师兄去文体中心学了游泳。",
+          "publishedAt": "2026-10-27T16:39:00.000Z"
+        },
+        {
+          "title": "油猴脚本：豆包网页版 Firefox 粘贴图片补丁",
+          "link": "https://ffaff.fun/blog/%E6%B2%B9%E7%8C%B4%E8%84%9A%E6%9C%AC-%E8%B1%86%E5%8C%85%E7%BD%91%E9%A1%B5%E7%89%88-firefox-%E7%B2%98%E8%B4%B4%E5%9B%BE%E7%89%87%E8%A1%A5%E4%B8%81",
+          "description": "我用 Firefox 时发现豆包网页版粘贴图片失效，新 API 没有 fallback。",
+          "publishedAt": "2026-10-10T18:19:00.000Z"
+        },
+        {
+          "title": "关于《漂亮朋友》的读后感",
+          "link": "https://ffaff.fun/blog/%E5%85%B3%E4%BA%8E-%E6%BC%82%E4%BA%AE%E6%9C%8B%E5%8F%8B-%E7%9A%84%E8%AF%BB%E5%90%8E%E6%84%9F",
+          "description": "读完莫泊桑的《漂亮朋友》，我跟着杜洛瓦在巴黎上流社会里周旋，看他靠漂亮面孔与伶俐口舌攫取名声、财富与女人，也写下F夫人、M夫人等几位女性留给我最深的印象。",
+          "publishedAt": "2026-10-08T18:08:00.000Z"
+        },
+        {
+          "title": "英国短诗集选篇-其一",
+          "link": "https://ffaff.fun/blog/%E8%8B%B1%E5%9B%BD%E7%9F%AD%E8%AF%97%E9%9B%86%E9%80%89%E7%AF%87-%E5%85%B6%E4%B8%80",
+          "description": "英国短诗，从《人生是什么》开始，想和你一起在短短几行里追问生命、时间与存在的意义，也感受英诗语言的节奏与余韵。",
+          "publishedAt": "2026-10-06T20:15:00.000Z"
+        },
+        {
+          "title": "句子语法讲义 —— 什么是句子，以及句子的种种形态",
+          "link": "https://ffaff.fun/blog/sentence-grammar-handout",
+          "description": "整理自 Khan Academy 语法课程字幕的句子语法讲义：主语与谓语、四种句子类型、四种句子结构、短语与从句、独立与非独立从句、关系从句，以及主谓一致与代词先行词一致。",
+          "publishedAt": "2026-09-13T09:08:13.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://blog.liushen.fun/",
+      "feedUrl": "https://blog.liushen.fun/atom.xml",
+      "feedUrls": [
+        "https://blog.liushen.fun/atom.xml"
+      ],
+      "items": [
+        {
+          "title": "近期开发的四个开源项目",
+          "link": "https://blog.liushen.fun/posts/6a6de263/",
+          "description": "这里是清羽AI，这篇文章介绍了站长清羽飞扬近期维护与开发的四个开源项目。首先是对Artalk评论系统的增强，新增了AI内容审核、关键词拦截、AI评论助手及重构后的管理后台，在保留接口兼容的同时提升了反垃圾与互动能力。其次是Memora相册项目，基于Chronoframe重构为Go后端与纯静态前端，接入高德地图替代海外服务，并引入FFmpeg处理与懒加载优化。第三个是hubProxy镜像加速工具，新增了多用户令牌体系、可视化后台管理与拉取统计功能。最后提及了Message Pusher消息推送服务。全文记录了作者从个人需求出发，借助AI工具改造与扩展开源项目的历程。",
+          "publishedAt": "2026-09-08T18:12:00.000Z"
+        },
+        {
+          "title": "AxonHub - 多模型API智能路由网关",
+          "link": "https://blog.liushen.fun/posts/b404081c/",
+          "description": "这里是清羽AI，这篇文章记录了站长清羽飞扬近期的工作动态与技术探索。作者首先介绍了自主开发的清羽认证系统，该项目用于替代原有的Casdoor方案，实现了用户无感迁移与多种登录方式。文章主体部分详细对比了NewAPI、Sub2API、MetaPI等多款AI API聚合中转工具，最终重点推荐了AxonHub，分析其在渠道调度、故障自动切换与成本优化方面的优势，并分享了通过Docker与1Panel应用商店的部署经验。文末作者回顾了借助AI独立完成中大型项目的实践感悟，认为当前AI更适合作为提升效率的协作工具，而非完全替代开发者。",
+          "publishedAt": "2026-08-06T17:12:00.000Z"
+        },
+        {
+          "title": "Cloudflare/Vercel项目推荐(6)",
+          "link": "https://blog.liushen.fun/posts/e4a369fc/",
+          "description": "这里是清羽AI，这篇文章是 Cloudflare/Vercel 项目推荐系列第六期，推荐了 edgeever、EdgeMirror、edgeone-status、nodewarden、MiSub 和 How-To-Ask-Questions-The-Smart-Way 六个项目。文章从个人站长折腾和低成本部署的角度，介绍了在线笔记、边缘反代、EdgeOne 流量数据展示、无服务器密码库、订阅管理器以及提问指南页面的使用场景，并提醒读者注意平台规则、数据安全和个人自用边界。",
+          "publishedAt": "2026-07-12T16:12:00.000Z"
+        },
+        {
+          "title": "vibe-coding个人实践",
+          "link": "https://blog.liushen.fun/posts/67261b47/",
+          "description": "这里是清羽AI，这篇文章记录了站长清羽飞扬在博客重构间隙对Vibe Coding的深度实践与经验总结。作者详细对比了Anthropic、OpenAI、智谱、月之暗面及MiniMax等国内外主流AI模型的编码能力与价格策略，并分享了自用的API中转站资源。文章重点介绍了Claude Code、Codex和KiloCode三款AI编程工具的配置方法与使用差异，同时探讨了如何基于真实项目上下文向AI提问以快速理解陌生系统。此外，作者还剖析了Skills的本质是提示词与项目说明书，建议新手避免盲目堆砌预设，优先掌握需求描述与上下文提供能力，理性看待AI在开发流程中的辅助价值。",
+          "publishedAt": "2026-06-14T17:00:00.000Z"
+        },
+        {
+          "title": "建站四年，从Hexo换到Astro",
+          "link": "https://blog.liushen.fun/posts/acf06c11/",
+          "description": "这里是清羽AI，这篇文章记录了站长清羽飞扬将博客从Hexo框架迁移至Astro的完整重构历程。作者回顾了因Hexo构建速度缓慢、性能受限而寻求新框架的过程，在对比Hugo、NextJS等方案后最终选择Astro，并借助AI工具大幅缩短开发周期。文章重点介绍了迁移过程中保持原有链接结构与SEO稳定性的策略，包括自定义abbrlink插件、文章元数据迁移、外挂标签DSL化改造等核心工作。同时详细阐述了Swup局部刷新方案带来的生命周期适配难题，以及懒加载、Service Worker缓存清理、灯箱等功能的接入与优化挑战。全文展现了在AI辅助下从想法到落地的技术实践与踩坑经验。",
+          "publishedAt": "2026-05-31T18:10:21.000Z"
+        },
+        {
+          "title": "黔山赴夏，清风入怀",
+          "link": "https://blog.liushen.fun/posts/1968ba6c/",
+          "description": "这里是清羽AI，这篇文章记录了博主清羽飞扬近期的生活与工作动态。作者此前沉迷AI模型一个月，并为开源兰空图床添加了Oauth登录、前端Token生成及权限管理等功能。四月上旬，作者前往贵州贵阳贵安新区云上屯参加华为为期两周的培训，期间体验了无交付压力的轻松工作状态。培训之余，他与同伴利用周末时间游览了黔灵山、民生路及白宫等景点，品尝了当地脆哨、炸土豆片、刺梨汁等特色美食，欣赏了黔灵湖的自然风光与白宫的夜景。此外，作者还与培训小组的伙伴们建立了深厚友谊，共同完成柴火灶等团队活动，在并肩作战中收获了愉快的合作体验。",
+          "publishedAt": "2026-05-04T12:50:21.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://www.hqxiaozou.top/",
+      "feedUrl": "https://www.hqxiaozou.top/rss.xml",
+      "feedUrls": [
+        "https://www.hqxiaozou.top/rss.xml",
+        "https://www.hqxiaozou.top/feed.xml",
+        "https://www.hqxiaozou.top/feed/",
+        "https://www.hqxiaozou.top/atom.xml",
+        "https://www.hqxiaozou.top/index.xml"
+      ],
+      "items": [
+        {
+          "title": "炊想小程序帮你把一道菜配成一桌饭",
+          "link": "https://www.hqxiaozou.top/post/bhEgnGf1Nq6",
+          "description": "<blockquote> <p>「今天吃什么？」不只是在想一道菜，还要想怎么配、缺什么、几个人吃、什么时候开始做。炊想把这些事放在一起：说一道菜，配成一桌饭。</p> </blockquote> <h2 id=\"-\">一、从今天这一餐开始</h2> <p>打开炊想，首页先给一道「今晚吃这个」，点开就能看现成做法，不用登录，也不扣次数。推荐从站内成品图已就绪的菜谱中挑选，每小时换一道，同一道菜的多个版本不会挤满首页。</p> <p>自己有想法，就输入菜名；没有想法，点「来点灵感」，先挑一道喜欢的。挑选和换一组都不扣次数，选中后才按当前偏好搭配；遇到站内已有做法，也可以直接打开。</p> <p><img src=\"https://img",
+          "publishedAt": "2026-10-05T03:52:10.000Z"
+        },
+        {
+          "title": "Spring Boot 增量发布：131 MB 的 JAR，实际只上传约 1 MB",
+          "link": "https://www.hqxiaozou.top/post/spring-boot-nested-jar-delta-upload",
+          "description": "<p>最近一次给本站的 Spring Boot 聚合应用发版，最终 JAR 有 <strong>131,420,604 字节</strong>。代码只改了部分业务逻辑，字体、图片和大多数依赖都没有变化，但直接用 SCP 上传，仍然要发送整个文件。</p> <p>第一次按最外层 ZIP 条目做增量，传输量降到了约 20 MB。继续拆进发生变化的业务 JAR 后，最终只需要上传 <strong>559,640 字节的增量数据，以及 477,730 字节的重建清单</strong>。</p> <p>两者合计 1,037,370 字节，约为完整包的 <strong>0.79%</strong>。服务器重建出的 JAR 与本地构建产物 SHA",
+          "publishedAt": "2026-10-28T15:39:59.000Z"
+        },
+        {
+          "title": "CompletableFuture 超时了，后台任务为什么还在跑",
+          "link": "https://www.hqxiaozou.top/post/completablefuture-timeout-cancellation",
+          "description": "<p>假设一个导出接口最多等两秒，超过时间就告诉用户“稍后再试”。接口日志按时结束了，线程池却没有空下来，几十秒后甚至还能看到“导出完成”。</p> <p>于是又在超时分支里补了一句 <code>future.cancel(true)</code>。这次 <code>isCancelled()</code> 也变成了 <code>true</code>，但后台工作照样继续。</p> <p>问题出在这里：等待结果、标记结果和执行工作，是三个不同的过程。它们之间需要明确的连接，方法名里有一个 <code>cancel</code>，并不代表所有过程都会一起结束。</p> <p>这篇只讨论这个边界。前面的导出是示例场景；文中的对照代码在本",
+          "publishedAt": "2026-10-15T01:53:08.000Z"
+        },
+        {
+          "title": "日志删了，磁盘空间为什么没回来",
+          "link": "https://www.hqxiaozou.top/post/linux-deleted-log-disk-space",
+          "description": "<p>日志已经删了，目录里也找不到大文件，磁盘告警却一点没降。再执行一次 <code>rm</code> 没用，<code>du</code> 算出来的总量也明显小于 <code>df</code>。</p> <p>这类现象容易让人怀疑统计工具出了问题。更值得先查的是：文件的名字没了，是否还有进程拿着它？</p> <p>本文围绕普通 Linux 文件系统上的“已删除但仍被打开的文件”展开。后面用一个实测过的 8 MiB 小实验复现，不需要把磁盘写满，也不需要停止业务进程。示例中的业务路径、PID 和 FD 都是假设值，执行排查命令时要替换成实际对象。</p> <h2>一、先确认 df 和 du 查的是同一块盘</h2> <p><co",
+          "publishedAt": "2026-10-14T11:58:25.000Z"
+        },
+        {
+          "title": "这个博客三年多来的更新日志",
+          "link": "https://www.hqxiaozou.top/post/iCbjXx1C230",
+          "description": "<blockquote> <p>本文根据两个仓库的完整 Git 提交记录整理：原始 blog 仓库的 431 条提交，以及 <code>total</code> 聚合工程中触及 <code>blog</code> 目录的 378 条提交（含 2026 年 7 月 2 日的迁移提交），共 809 条。 统计截止：2026-10-09（<code>705b9b1</code>）；统计分支：两个仓库的 <code>master</code>。两个仓库都没有打过 Git Tag，因此本文按自然年、月份和功能阶段整理。 2026-09-24 更新：补写了 7 月下旬至 9 月的内容；并逐条核对提交日期，把旧版误记到 2025、2026 年的几",
+          "publishedAt": "2021-12-02T03:16:51.000Z"
+        },
+        {
+          "title": "用免注册试用和分享邀请给小程序拆掉注册墙",
+          "link": "https://www.hqxiaozou.top/post/QFWgR7Mko3C",
+          "description": "<blockquote> <p>当前实现（按 3.1.0 代码核对）：打开小程序可以先看现成菜谱、挑灵感，不会静默建号。需要搭配、收藏或使用厨房时，先阅读并主动勾选协议，再点「微信一键登录」；默认不勾选，也不会自动发起登录。登录后接着刚才的操作。注册、密码登录、找回密码和改密码入口已经下线，邮箱只用于可选绑定和验证找回原账号；找回是切换到原账号，不会自动合并两边的收藏、次数或会员。</p> <p>邀请奖励现为双方各 10 次搭配，30 天内有效。邀请人每 24 小时最多获得 5 份奖励，累计 50 份，统计的是奖励份数；新用户必须从分享链接进入并完成首次微信登录。分享里可浏览的那一版菜谱不会因为有其他做法而被替换。</p> <p>下",
+          "publishedAt": "2026-10-10T08:26:42.000Z"
+        }
+      ]
+    },
+    {
+      "friendUrl": "https://rainzt.cn/",
+      "feedUrl": "https://rainzt.cn/rss.xml",
+      "feedUrls": [
+        "https://rainzt.cn/rss.xml"
+      ],
+      "items": [
+        {
+          "title": "自动上架系统：用 Playwright 构建可控发布流程",
+          "link": "https://rainzt.cn/posts/auto-listing-system/",
+          "description": "记录一个运行在 Windows 桌面上的 BigSeller 自动化系统：从 Excel、图库和模板配置开始，经由 Shopee/TikTok Shop 独立 Worker 执行，再用身份校验、变种精确匹配、暂停恢复、SSE 日志和历史记录把一次高风险的批量发布变成可追踪流程。",
+          "publishedAt": "2026-07-09T09:03:22.000Z"
+        },
+        {
+          "title": "人生不是所有问题都需要答案，而是要学会与自己和解",
+          "link": "https://rainzt.cn/posts/learning-to-make-peace-with-yourself/",
+          "description": "尽力解决能够改变的，坦然接受无法改变的，不以结果定义努力，也不以遗憾否定人生。聊聊努力、接受、边界与遗憾，以及如何在没有答案的日子里继续认真生活。",
+          "publishedAt": "2026-11-01T08:46:17.000Z"
+        },
+        {
+          "title": "Aemeath 主题博客后台要来啦",
+          "link": "https://rainzt.cn/posts/aemeath-xiaoai-admin/",
+          "description": "给 Aemeath 做了一个小爱后台，把 AI 评论回复、评论审核、友链申请、状态管理和每日回链检查放到了一起，也终于理顺了静态博客修改与 GitHub Actions 部署之间的关系。",
+          "publishedAt": "2026-10-30T10:59:43.000Z"
+        },
+        {
+          "title": "月刊 · 第三期：他们以为击败我就是终结，而我必归来将之改写",
+          "link": "https://rainzt.cn/posts/monthly-2026-10/",
+          "description": "这个月先不折腾大篇幅月刊，聊聊写月刊的初心，回顾本月文章，也分享三位新推荐的博友。",
+          "publishedAt": "2026-10-29T06:53:59.000Z"
+        },
+        {
+          "title": "10月24日程序员节特别篇",
+          "link": "https://rainzt.cn/posts/programmer-day-2026-dynamic-blog/",
+          "description": "从第一次用豆包写博客，到让 Codex 和 Claude 参与工作流与项目开发，记录我这一年多对 AI 的真实感受。",
+          "publishedAt": "2026-10-24T10:35:58.000Z"
+        },
+        {
+          "title": "小爱Agents来啦~",
+          "link": "https://rainzt.cn/posts/auto-listing-update-2026-10-19/",
+          "description": "把原本独立的小爱 Agents 接入自动上架，让同事通过 AI 聊天排查报错，也能由面向跨境电商的 DeepSeek Harness 主控规划任务、调用 Browser Use 等工具并检查结果。文章介绍新增的 11 项上架工具，以及本轮上传提速和容错更新。",
+          "publishedAt": "2026-10-19T05:08:39.000Z"
         }
       ]
     }

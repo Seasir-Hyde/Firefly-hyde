@@ -19,6 +19,31 @@ export type FriendLink = {
 	screenshot?: string; // 站点截图预览图（悬停展示）
 };
 
+/**
+ * 远程友链：由 /api/friends 接口在运行时下发（Supabase 边缘函数），
+ * 字段为驼峰命名，与本地配置（FriendLink）不是同一套结构。
+ */
+export type RemoteFriendLink = {
+	title: string; // 友链标题
+	desc: string; // 友链描述
+	siteUrl: string; // 友链地址
+	imgUrl: string; // 头像图片URL
+	tags: string[]; // 标签数组
+	weight: number; // 权重，数字越大排序越靠前
+	updatedAt: string | null; // 友链记录最后更新时间（ISO 字符串）
+	createdAt: string | null; // 友链记录创建时间（ISO 字符串）
+};
+
+/**
+ * 友链「最后更新」信息。
+ * 本地友链来自 RSS 条目的发布时间，远程友链优先取 RSS，回落取友链记录时间。
+ */
+export type FriendUpdateEntry = {
+	date: string; // ISO 时间字符串
+	title: string; // 最新文章标题（RSS 兜底时为空）
+	stale: boolean; // 是否来自快照缓存（抓取失败时的降级数据）
+};
+
 export type FriendsPageConfig = {
 	title?: string; // 页面标题，留空则使用 i18n 中的翻译
 	description?: string; // 页面描述，留空则使用 i18n 中的翻译

@@ -2,7 +2,11 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import sanitizeHtml from "sanitize-html";
 import { siteConfig } from "@/config";
-import type { FriendLink } from "@/types/friendsConfig";
+import type {
+	FriendLink,
+	FriendUpdateEntry,
+	RemoteFriendLink,
+} from "@/types/friendsConfig";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { getPostUrlBySlug } from "@/utils/url-utils";
 
@@ -52,6 +56,12 @@ const DEFAULT_FEED_PATHS = [
 	"?feed=rss2",
 ];
 
+/**
+ * 远程友链接口（Supabase 边缘函数，见 scripts/hyde-Supabase-friends.js）。
+ * 与本地友链的区别：数据在运行时由该接口下发，字段为驼峰命名。
+ */
+export const REMOTE_FRIENDS_API_URL = "https://seasir.top/api/friends";
+
 export type FriendFeedItem = {
 	friendTitle: string;
 	friendUrl: string;
@@ -76,6 +86,17 @@ export type FriendsFeedSnapshot = {
 	checkedCount: number;
 	freshSources: number;
 	staleSources: number;
+};
+
+export type FriendsFeedOptions = {
+	/** 只读快照缓存，不发起网络请求（本地开发用） */
+	cachedOnly?: boolean;
+	/** 单次请求超时（毫秒），远程友链批量抓取时可收紧以控制构建耗时 */
+	timeoutMs?: number;
+	/** 单个 feed 的最大尝试次数（含首次） */
+	attempts?: number;
+	/** 是否把本次抓取结果写入快照文件 */
+	writeSnapshot?: boolean;
 };
 
 type FeedDocument = {
@@ -120,6 +141,173 @@ function normalizeSiteUrl(url: string): string {
 		.replace(/^www\./i, "")
 		.replace(/\/+$/, "")
 		.toLowerCase();
+}
+
+/**
+ * 把时间字段规整为 ISO 字符串。
+ * 兼容 Unix 毫秒、Unix 秒与 ISO 字符串三种写法（边缘函数写的是 Date.now() 毫秒），
+ * 无法解析时返回 null，交由调用方走兜底逻辑。
+ */
+function toIsoTimestamp(value: unknown): string | null {
+	if (value === null || value === undefined) return null;
+	if (typeof value === "number") {
+		// 0 与负数视为无效时间，避免被当成 1970 年
+		if (!Number.isFinite(value) || value <= 0) return null;
+		// 小于 1e11 的值按 Unix 秒处理（1e11 毫秒约等于 1973 年）
+		const date = new Date(value < 1e11 ? value * 1000 : value);
+		return Number.isNaN(date.getTime()) ? null : date.toISOString();
+	}
+	if (typeof value === "string") {
+		const trimmed = value.trim();
+		if (!trimmed) return null;
+		const numeric = Number(trimmed);
+		if (Number.isFinite(numeric)) return toIsoTimestamp(numeric);
+		const parsed = new Date(trimmed);
+		return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+	}
+	return null;
+}
+
+function pickString(source: Record<string, unknown>, keys: string[]): string {
+	for (const key of keys) {
+		const value = source[key];
+		if (typeof value === "string" && value.trim()) return value.trim();
+	}
+	return "";
+}
+
+function pickTags(source: Record<string, unknown>): string[] {
+	const raw = source.tags;
+	const normalize = (list: unknown[]): string[] =>
+		list
+			.filter(
+				(tag): tag is string =>
+					typeof tag === "string" && tag.trim().length > 0,
+			)
+			.map((tag) => tag.trim());
+	if (Array.isArray(raw)) return normalize(raw);
+	if (typeof raw === "string" && raw.trim()) {
+		try {
+			const parsed: unknown = JSON.parse(raw);
+			if (Array.isArray(parsed)) return normalize(parsed);
+		} catch {
+			// 不是合法 JSON 时按逗号切分兜底
+		}
+		return normalize(raw.split(","));
+	}
+	return [];
+}
+
+/**
+ * 规整远程接口下发的单条友链数据。
+ * 接口字段为驼峰命名（siteUrl / imgUrl），与本地配置（siteurl / imgurl）不同，
+ * 这里同时兼容两种写法，避免接口换实现后前端直接失效。
+ */
+export function normalizeRemoteFriend(raw: unknown): RemoteFriendLink | null {
+	if (!raw || typeof raw !== "object") return null;
+	const source = raw as Record<string, unknown>;
+	const title = pickString(source, ["title", "name"]);
+	const siteUrl = pickString(source, ["siteUrl", "siteurl", "url"]);
+	if (!title || !siteUrl) return null;
+	return {
+		title,
+		desc: pickString(source, ["desc", "description"]),
+		siteUrl,
+		imgUrl: pickString(source, ["imgUrl", "imgurl", "avatar", "image"]),
+		tags: pickTags(source),
+		weight: Number(source.weight) || 0,
+		updatedAt: toIsoTimestamp(
+			source.updatedAt ??
+				source.updated_at ??
+				source.lastUpdate ??
+				source.last_update,
+		),
+		createdAt: toIsoTimestamp(source.createdAt ?? source.created_at),
+	};
+}
+
+/**
+ * 拉取远程友链列表。
+ * 失败时返回空列表：页面退化为只展示本地友链，不阻塞构建与渲染。
+ */
+export async function fetchRemoteFriends(
+	apiUrl: string = REMOTE_FRIENDS_API_URL,
+	options: { timeoutMs?: number } = {},
+): Promise<RemoteFriendLink[]> {
+	const timeoutMs = options.timeoutMs ?? FETCH_TIMEOUT_MS;
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(), timeoutMs);
+	try {
+		const response = await fetch(apiUrl, {
+			signal: controller.signal,
+			redirect: "follow",
+			headers: {
+				Accept: "application/json",
+				"Cache-Control": "no-cache",
+			},
+		});
+		if (!response.ok) return [];
+		const payload: unknown = await response.json();
+		const list = Array.isArray(payload)
+			? payload
+			: Array.isArray((payload as { items?: unknown })?.items)
+				? (payload as { items: unknown[] }).items
+				: Array.isArray((payload as { friends?: unknown })?.friends)
+					? (payload as { friends: unknown[] }).friends
+					: [];
+		return list
+			.map((item) => normalizeRemoteFriend(item))
+			.filter((item): item is RemoteFriendLink => item !== null);
+	} catch {
+		return [];
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+/** 远程友链转换为本地友链结构，以便复用同一套 RSS 抓取管线 */
+export function remoteFriendToFriendLink(remote: RemoteFriendLink): FriendLink {
+	return {
+		title: remote.title,
+		desc: remote.desc,
+		siteurl: remote.siteUrl,
+		imgurl: remote.imgUrl,
+		tags: remote.tags,
+		weight: remote.weight,
+		enabled: true,
+	};
+}
+
+/**
+ * 汇总每个友链的最新文章时间，键为归一化后的站点域名。
+ * 本地友链与远程友链共用同一份结构，前端按 URL 查表即可。
+ */
+export function buildFriendUpdateMap(
+	feed: FriendsFeedSnapshot,
+): Record<string, FriendUpdateEntry> {
+	const staleFeeds = new Set(
+		feed.sources
+			.filter((source) => source.stale)
+			.map((source) => normalizeSiteUrl(source.friendUrl)),
+	);
+	const updates: Record<string, FriendUpdateEntry> = {};
+	for (const entry of feed.items) {
+		if (!entry.publishedAt) continue;
+		const key = normalizeSiteUrl(entry.friendUrl);
+		const previous = updates[key];
+		if (
+			previous &&
+			new Date(previous.date).getTime() >= entry.publishedAt.getTime()
+		) {
+			continue;
+		}
+		updates[key] = {
+			date: entry.publishedAt.toISOString(),
+			title: entry.title,
+			stale: staleFeeds.has(key),
+		};
+	}
+	return updates;
 }
 
 function decodeXmlEntities(value: string): string {
@@ -311,21 +499,30 @@ async function readFriendsFeedSnapshot(): Promise<
 async function writeFriendsFeedSnapshot(records: FeedRecord[]): Promise<void> {
 	if (process.env.FRIENDS_FEED_WRITE_SNAPSHOT !== "1") return;
 
+	// 同一个站点可能同时出现在本地配置与远程列表里，按归一化域名去重
+	const deduped = new Map<string, FeedRecord>();
+	for (const record of records) {
+		if (record.feedUrls.length === 0 || record.items.length === 0) continue;
+		const key = normalizeSiteUrl(record.friend.siteurl);
+		const previous = deduped.get(key);
+		if (!previous || record.items.length > previous.items.length) {
+			deduped.set(key, record);
+		}
+	}
+
 	const payload: StoredFeedSnapshot = {
 		version: 2,
-		sources: records
-			.filter((record) => record.feedUrls.length > 0 && record.items.length > 0)
-			.map((record) => ({
-				friendUrl: record.friend.siteurl,
-				feedUrl: record.feedUrls[0],
-				feedUrls: record.feedUrls,
-				items: record.items.map((item) => ({
-					title: item.title,
-					link: item.link,
-					description: item.description,
-					publishedAt: item.publishedAt?.toISOString() ?? null,
-				})),
+		sources: [...deduped.values()].map((record) => ({
+			friendUrl: record.friend.siteurl,
+			feedUrl: record.feedUrls[0],
+			feedUrls: record.feedUrls,
+			items: record.items.map((item) => ({
+				title: item.title,
+				link: item.link,
+				description: item.description,
+				publishedAt: item.publishedAt?.toISOString() ?? null,
 			})),
+		})),
 	};
 	const serialized = `${JSON.stringify(payload, null, 2)}\n`;
 
@@ -344,10 +541,14 @@ async function writeFriendsFeedSnapshot(records: FeedRecord[]): Promise<void> {
 async function fetchText(
 	url: string,
 	accept: string,
+	requestOptions: { timeoutMs: number; attempts: number },
 ): Promise<FeedDocument | null> {
-	for (let attempt = 1; attempt <= FETCH_RETRY_ATTEMPTS; attempt += 1) {
+	for (let attempt = 1; attempt <= requestOptions.attempts; attempt += 1) {
 		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+		const timeout = setTimeout(
+			() => controller.abort(),
+			requestOptions.timeoutMs,
+		);
 		try {
 			const response = await fetch(url, {
 				signal: controller.signal,
@@ -379,7 +580,7 @@ async function fetchText(
 			clearTimeout(timeout);
 		}
 
-		if (attempt < FETCH_RETRY_ATTEMPTS) {
+		if (attempt < requestOptions.attempts) {
 			await new Promise((resolve) =>
 				setTimeout(resolve, FETCH_RETRY_DELAY_MS * attempt),
 			);
@@ -409,7 +610,10 @@ function findAlternateFeedUrls(html: string, siteUrl: string): string[] {
 	return [...new Set(urls)];
 }
 
-async function tryFeedUrls(urls: string[]): Promise<{
+async function tryFeedUrls(
+	urls: string[],
+	requestOptions: { timeoutMs: number; attempts: number },
+): Promise<{
 	documents: FeedDocument[];
 	items: ParsedFeedItem[];
 } | null> {
@@ -418,6 +622,7 @@ async function tryFeedUrls(urls: string[]): Promise<{
 			const document = await fetchText(
 				url,
 				"application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.8",
+				requestOptions,
 			);
 			if (!document) return null;
 			const items = parseFeed(document.text, document.url);
@@ -446,7 +651,10 @@ async function tryFeedUrls(urls: string[]): Promise<{
 	};
 }
 
-async function discoverFriendFeed(friend: FriendLink) {
+async function discoverFriendFeed(
+	friend: FriendLink,
+	requestOptions: { timeoutMs: number; attempts: number },
+) {
 	const explicitUrls = friend.rss
 		? (Array.isArray(friend.rss) ? friend.rss : [friend.rss])
 				.map((feedUrl) => resolveUrl(feedUrl, friend.siteurl))
@@ -456,16 +664,22 @@ async function discoverFriendFeed(friend: FriendLink) {
 	const directCandidates = explicitUrls.length
 		? explicitUrls
 		: DEFAULT_FEED_PATHS.map((path) => resolveUrl(path, friend.siteurl));
-	const directResult = await tryFeedUrls([...new Set(directCandidates)]);
+	const directResult = await tryFeedUrls(
+		[...new Set(directCandidates)],
+		requestOptions,
+	);
 	if (directResult) return directResult;
 
 	const homepage = await fetchText(
 		friend.siteurl,
 		"text/html, application/xhtml+xml;q=0.9",
+		requestOptions,
 	);
 	if (!homepage) return null;
 	const alternateUrls = findAlternateFeedUrls(homepage.text, homepage.url);
-	return alternateUrls.length > 0 ? tryFeedUrls(alternateUrls) : null;
+	return alternateUrls.length > 0
+		? tryFeedUrls(alternateUrls, requestOptions)
+		: null;
 }
 
 async function mapWithConcurrency<T, R>(
@@ -491,8 +705,13 @@ async function mapWithConcurrency<T, R>(
 
 async function refreshFriendsFeed(
 	friends: FriendLink[],
-	cachedOnly = false,
+	options: FriendsFeedOptions = {},
 ): Promise<FriendsFeedSnapshot> {
+	const { cachedOnly = false, writeSnapshot = true } = options;
+	const requestOptions = {
+		timeoutMs: options.timeoutMs ?? FETCH_TIMEOUT_MS,
+		attempts: options.attempts ?? FETCH_RETRY_ATTEMPTS,
+	};
 	const previousSnapshot = await readFriendsFeedSnapshot();
 	// 朋友圈按“日历日期”过滤未来文章：构建当天的文章全部保留，
 	// 只有日期晚于构建当天的文章才隐藏。这样不会误伤当天稍晚发布的文章。
@@ -515,7 +734,9 @@ async function refreshFriendsFeed(
 					stale: false,
 				};
 			}
-			const result = cachedOnly ? null : await discoverFriendFeed(friend);
+			const result = cachedOnly
+				? null
+				: await discoverFriendFeed(friend, requestOptions);
 			if (result) {
 				return {
 					friend,
@@ -574,7 +795,7 @@ async function refreshFriendsFeed(
 		(a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
 	);
 
-	if (!cachedOnly) await writeFriendsFeedSnapshot(records);
+	if (!cachedOnly && writeSnapshot) await writeFriendsFeedSnapshot(records);
 
 	const sources = records
 		.filter((record) => record.feedUrls.length > 0)
@@ -603,9 +824,11 @@ const feedLoads = new Map<
 >();
 export function loadFriendsFeed(
 	friends: FriendLink[],
-	options: { cachedOnly?: boolean } = {},
+	options: FriendsFeedOptions = {},
 ): Promise<FriendsFeedSnapshot> {
-	const key = `${Boolean(options.cachedOnly)}:${JSON.stringify(
+	const key = `${Boolean(options.cachedOnly)}:${options.timeoutMs ?? ""}:${
+		options.attempts ?? ""
+	}:${JSON.stringify(
 		friends.map((friend) => [
 			friend.siteurl,
 			friend.rss,
@@ -619,12 +842,10 @@ export function loadFriendsFeed(
 	}
 	const existing = feedLoads.get(key);
 	if (existing) return existing.result;
-	const result = refreshFriendsFeed(friends, options.cachedOnly).catch(
-		(error) => {
-			feedLoads.delete(key);
-			throw error;
-		},
-	);
+	const result = refreshFriendsFeed(friends, options).catch((error) => {
+		feedLoads.delete(key);
+		throw error;
+	});
 	feedLoads.set(key, { expiresAt: now + 5 * 60_000, result });
 	return result;
 }

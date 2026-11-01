@@ -10,12 +10,27 @@ process.env.FRIENDS_FEED_WRITE_SNAPSHOT = "1";
 export {};
 
 const { getEnabledFriends } = await import("../src/config/friendsConfig.ts");
-const { loadFriendsFeed } = await import("../src/utils/friends-feed.ts");
+const {
+	fetchRemoteFriends,
+	loadFriendsFeed,
+	remoteFriendToFriendLink,
+	REMOTE_FRIENDS_API_URL,
+} = await import("../src/utils/friends-feed.ts");
 
 const friends = getEnabledFriends();
-console.log(`开始抓取 ${friends.length} 个友链的 RSS…`);
+// 远程友链（/api/friends 下发的动态友链）同样纳入快照，
+// 构建期抓取失败时才能回落到这里缓存的 RSS 数据
+const remoteFriends = await fetchRemoteFriends(REMOTE_FRIENDS_API_URL);
+const allFriends = [
+	...friends,
+	...remoteFriends.map((remote) => remoteFriendToFriendLink(remote)),
+];
 
-const feed = await loadFriendsFeed(friends, { cachedOnly: false });
+console.log(
+	`开始抓取 ${friends.length} 个本地友链 + ${remoteFriends.length} 个远程友链的 RSS…`,
+);
+
+const feed = await loadFriendsFeed(allFriends, { cachedOnly: false });
 
 console.log(`完成：${feed.items.length} 条动态`);
 console.log(

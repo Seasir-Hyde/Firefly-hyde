@@ -101,10 +101,10 @@ export const friendsConfig: FriendLink[] = [
 		enabled: true,
 	},
 	{
-		title: "十三",
-		desc: "欲买桂花同载酒，终不似，少年游。",
+		title: "张萌萌",
+		desc: "春风得意马蹄疾 一日看尽长安花",
 		siteurl: "https://blog.nw177.cn",
-		imgurl: "https://img.nw177.cn/blog/100.assets/avatar.webp",
+		imgurl: "https://blog.nw177.cn/assets/avatar.webp",
 		tags: ["Astro"],
 		weight: 8,
 		enabled: true,
