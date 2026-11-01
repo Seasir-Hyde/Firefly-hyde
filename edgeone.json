@@ -88,6 +88,13 @@
         { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400" },
         { "key": "Pages-Cache-Control", "value": "public, max-age=86400" }
       ]
+    },
+    {
+      "source": "/build-info.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" },
+        { "key": "Pages-Cache-Control", "value": "no-store, max-age=0" }
+      ]
     }
   ],
   "caches": [
@@ -97,6 +104,7 @@
     { "source": "/robots.txt", "cacheTtl": 604800 },
     { "source": "/sitemap-index.xml", "cacheTtl": 86400 },
     { "source": "/llms.txt", "cacheTtl": 86400 },
+    { "source": "/build-info.json", "cacheTtl": 0 },
     { "source": "/_astro/*", "cacheTtl": 31536000 },
     { "source": "/assets/*", "cacheTtl": 31536000 },
     { "source": "/images/*", "cacheTtl": 31536000 },

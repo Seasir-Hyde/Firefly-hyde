@@ -25,6 +25,7 @@ import {
 	formatRemediationCountdown,
 	remediationSeconds,
 } from "@/utils/friend-remediation";
+import { normalizeFriendUrl } from "@/utils/friend-url";
 import {
 	buildFriendUpdateMap,
 	fetchRemoteFriends,
@@ -74,13 +75,6 @@ const projects: {
 	screenshot?: string;
 }[] = [];
 const allTags = [...new Set(items.flatMap((item) => item.tags || []))].sort();
-const normalizeFriendUrl = (url: string) =>
-	url
-		.trim()
-		.replace(/^https?:\/\//i, "")
-		.replace(/^www\./i, "")
-		.replace(/\/+$/, "")
-		.toLowerCase();
 const ownSiteUrl = normalizeFriendUrl(siteConfig.site_url);
 // 延迟快照数据来自 src/data/friends-latency-snapshot.json（文件已存在，直接使用真实数据）
 const latencySnapshot = friendsLatencySnapshot as FriendLatencySnapshot;
@@ -484,6 +478,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                       class:list={[
                         "friend-latency",
                         `friend-latency--${latencyState}`,
+                        latency.stale && "friend-latency--stale",
                       ]}
                       data-friend-latency-for={item.siteurl}
                       data-friend-latency-name={item.title}
@@ -1832,9 +1827,19 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 
   {/* latencyResults：构建时延迟快照注入浏览器端，供动态卡片（远程 API 友链）渲染延迟徽章
       remoteFriendUpdates：构建期抓取的远程友链 RSS 最新文章时间，供动态卡片渲染「最后更新」 */}
-  <script is:inline define:vars={{ latencyResults: latencySnapshot.results, remoteFriendUpdates, remoteFriendsApiUrl: REMOTE_FRIENDS_API_URL }}>
+  <script is:inline define:vars={{ latencyResults: latencySnapshot.results, latencyProbeLocation: latencySnapshot.probeLocation, remoteFriendUpdates, remoteFriendsApiUrl: REMOTE_FRIENDS_API_URL }}>
+    // 友链键归一化：主机名口径，与 src/utils/friend-url.ts 保持一致
+    // （改动时需同步该文件，否则查表会落空）
     var normalizeFriendUrl = function(url) {
-      return String(url || '').trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '').toLowerCase();
+      var raw = String(url || '').trim();
+      if (!raw) return '';
+      try {
+        var parsed = new URL(raw.indexOf('://') > -1 ? raw : 'https://' + raw);
+        var host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+        return parsed.port ? host + ':' + parsed.port : host;
+      } catch (e) {
+        return raw.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/.*$/, '').toLowerCase();
+      }
     };
     var escapeHtml = function(value) {
       return String(value == null ? '' : value)
@@ -1888,9 +1893,33 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       var renderFriendLatency = function() {
         var key = normalizeFriendUrl(item.siteUrl);
         var entry = key ? latencyResults[key] : undefined;
-        var state = entry && entry.state ? entry.state : 'checking';
-        var value = state === 'down' ? '失联' : (entry && entry.milliseconds ? entry.milliseconds + 'ms' : '待探测');
-        return '<span class="friend-latency friend-latency--' + state + '" data-friend-latency-for="' + item.siteUrl + '" data-friend-latency-name="' + item.title + '" data-friend-latency-state="' + state + '" title="' + item.title + '，最近一次东八区定时 GET 探测" aria-label="' + item.title + '，最近一次东八区定时 GET 探测">' +
+        if (!entry) {
+          // 没有探测记录：说明该站点未纳入探测队列，而不是「正在探测」
+          var pendingLabel = item.title + '，该站点未纳入延迟探测队列，暂无 HTTP 响应时间数据';
+          return '<span class="friend-latency friend-latency--checking" data-friend-latency-for="' + item.siteUrl + '" data-friend-latency-name="' + item.title + '" data-friend-latency-state="checking" title="' + escapeHtml(pendingLabel) + '" aria-label="' + escapeHtml(pendingLabel) + '">' +
+            '<span class="friend-latency-dot" aria-hidden="true"></span>' +
+            '<span data-friend-latency-value aria-live="polite">未探测</span>' +
+          '</span>';
+        }
+        var state = entry.state || 'checking';
+        var stale = false;
+        var checkedLabel = '';
+        if (entry.checkedAt) {
+          var checkedDate = new Date(entry.checkedAt);
+          if (!isNaN(checkedDate.getTime())) {
+            checkedLabel = checkedDate.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+            stale = Date.now() - checkedDate.getTime() > 48 * 3600 * 1000;
+          }
+        }
+        var value = state === 'down'
+          ? '失联'
+          : (entry.milliseconds ? entry.milliseconds + 'ms' : '未探测');
+        var source = (entry.probeLocation || latencyProbeLocation || '未知探测节点') + (checkedLabel ? '，探测于 ' + checkedLabel + '（北京时间）' : '');
+        var detail = state === 'down'
+          ? '最近一次 HTTP GET 探测' + value
+          : (entry.milliseconds ? 'HTTP GET 首次响应时间 ' + entry.milliseconds + ' 毫秒' : '暂无耗时数据');
+        var label = item.title + '，' + detail + '；' + source + (stale ? '，探测数据已过期' : '') + '。仅表示该探测节点的结果。';
+        return '<span class="friend-latency friend-latency--' + state + (stale ? ' friend-latency--stale' : '') + '" data-friend-latency-for="' + item.siteUrl + '" data-friend-latency-name="' + item.title + '" data-friend-latency-state="' + state + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">' +
           '<span class="friend-latency-dot" aria-hidden="true"></span>' +
           '<span data-friend-latency-value aria-live="polite">' + value + '</span>' +
         '</span>';
@@ -2618,12 +2647,14 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       box-shadow: 0 0 0.35rem color-mix(in srgb, currentColor 42%, transparent);
     }
 
+    /* 未纳入探测队列：静态灰点，不做脉冲动画——
+       页面端并不存在运行中的探测任务，脉冲会误导访客以为正在探测 */
     .friend-latency--checking {
-      color: #6daee2;
+      color: #8fa3b5;
     }
 
-    .friend-latency--checking .friend-latency-dot {
-      animation: friend-latency-pulse 1.2s ease-in-out infinite;
+    .friend-latency--stale {
+      opacity: 0.72;
     }
 
     .friend-latency--fast {
@@ -2664,19 +2695,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 
     :global(.dark) .friend-latency--down {
       color: #ffb9c7;
-    }
-
-    @keyframes friend-latency-pulse {
-      0%,
-      100% {
-        opacity: 0.42;
-        transform: scale(0.8);
-      }
-
-      50% {
-        opacity: 1;
-        transform: scale(1);
-      }
     }
 
     .friend-card {
@@ -2985,10 +3003,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       }
 
       .friend-card-status-overlay::before {
-        animation: none;
-      }
-
-      .friend-latency--checking .friend-latency-dot {
         animation: none;
       }
     }

@@ -8,6 +8,7 @@ import type {
 	RemoteFriendLink,
 } from "@/types/friendsConfig";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
+import { normalizeFriendUrl } from "@/utils/friend-url";
 import { getPostUrlBySlug } from "@/utils/url-utils";
 
 /**
@@ -134,13 +135,12 @@ type StoredFeedSnapshot = {
 	sources: StoredFeedRecord[];
 };
 
+/**
+ * 友链键归一化：统一走主机名口径，与页面查表、延迟快照保持一致。
+ * 详见 utils/friend-url.ts。
+ */
 function normalizeSiteUrl(url: string): string {
-	return url
-		.trim()
-		.replace(/^https?:\/\//i, "")
-		.replace(/^www\./i, "")
-		.replace(/\/+$/, "")
-		.toLowerCase();
+	return normalizeFriendUrl(url);
 }
 
 /**

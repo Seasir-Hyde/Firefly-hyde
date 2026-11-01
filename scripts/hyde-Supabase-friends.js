@@ -472,6 +472,16 @@ async function deleteFriend(id) {
   return resp.ok ? null : json({ success: false, message: "删除失败" }, 500);
 }
 
+/**
+ * 规整时间戳：数据库里存的是 Unix 毫秒（Date.now()），
+ * 空值统一返回 null，避免被当成 0 渲染成 1970 年。
+ */
+function toTimestamp(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
 function mapFriendBase(a) {
   const weightNum = Number(a.weight);
   return {
@@ -481,12 +491,16 @@ function mapFriendBase(a) {
     imgUrl: a.imgUrl,
     tags: a.tags || [],
     weight: Number.isFinite(weightNum) ? weightNum : 0,
+    // 友链记录的时间字段（Unix 毫秒）：updatedAt 为最后更新时间，createdAt 为登记时间。
+    // 前台据此在站点没有 RSS 时仍能展示「最后更新」，不再一律显示「RSS 暂无」。
+    updatedAt: toTimestamp(a.updatedAt),
+    createdAt: toTimestamp(a.createdAt),
   };
 }
 
 async function readFriends() {
   const rows = await apiJson(
-    `/rest/v1/friends?select=title,desc,siteUrl,imgUrl,tags,weight&status=eq.approved&order="weight".desc,createdAt.asc`,
+    `/rest/v1/friends?select=title,desc,siteUrl,imgUrl,tags,weight,updatedAt,createdAt&status=eq.approved&order="weight".desc,createdAt.asc`,
   );
   if (rows === null) return [];
   return (rows || []).map((a) => mapFriendBase(a));
@@ -1815,7 +1829,12 @@ async function handleRequest(request) {
     // 公开友链接口
     if (request.method === "GET" && pathname === `${API_PREFIX}/friends`) {
       const apps = await readFriends();
-      return json({ items: apps });
+      // 缓存 60 秒：友链列表变动不频繁，缓存可显著降低 Supabase 的读取压力
+      return json(
+        { success: true, items: apps, total: apps.length, generatedAt: Date.now() },
+        200,
+        { "Cache-Control": "public, max-age=60, s-maxage=60" },
+      );
     }
     // 游客提交友链（新增pending，自动推送通知）
     if (request.method === "POST" && pathname === `${API_PREFIX}/friends`) {

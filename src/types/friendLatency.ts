@@ -9,6 +9,8 @@ export type FriendProbeResult = {
 	failureReason?: string | null;
 	// 来自 Umami 的点击次数聚合
 	clicks?: number;
+	// 该条记录的探测节点：快照可能同时包含多个节点的结果
+	probeLocation?: string;
 };
 
 export type FriendLatencySnapshot = {

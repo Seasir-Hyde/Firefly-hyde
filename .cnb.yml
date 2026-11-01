@@ -65,12 +65,16 @@ main:
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           script: |
-            BUILD_ADMIN=1 pnpm build   #打包命令（包含 admin）    
+            BUILD_ADMIN=1 pnpm build   #打包命令（包含 admin）
         - name: 🚚 部署到EdgeOne Pages
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           image: node:22
           script: npx edgeone pages deploy ./dist --name firefly-hyde --token $EDGEONE_PAGES_API_TOKEN
+        - name: 🧪 部署后状态确认
+          # 轮询线上构建指纹，确认线上已更新到本次构建；
+          # 不通过会以非零退出码结束流水线，由 failStages 告警。
+          script: npx tsx scripts/verify-deploy.ts
 
 
 
@@ -164,3 +168,92 @@ main:
                       }
                   }
               }
+      # 任一阶段失败（构建 / 部署 / 部署后校验）时执行的告警阶段
+      failStages:
+        - name: 🚨 发布失败通知到钉钉
+          image: tencentcom/dingtalk-bot-msg:latest
+          settings:
+            secret: $SECRET
+            webhook: $WEBHOOK
+            at: "199********"
+            isAtAll: true
+            debug: true
+            c_type: "markdown"
+            content: |
+              > **❌ Firefly-Hyde 构建/部署失败！**
+              > **构建时间:** $CUSTOM_ENV_DATE_INFO
+              > **构建id:** $CNB_BUILD_ID
+              > **提交id:** $CNB_COMMIT_SHORT
+              > **构建分支:** $CNB_BRANCH
+              > **提交信息:** $CNB_COMMIT_MESSAGE_TITLE
+              > **提交者:** $CNB_COMMITTER
+              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)
+              > **排查建议:** 构建/部署阶段看流水线日志；「部署后状态确认」失败说明线上仍是旧版本，稍后重试或手动触发一次构建。
+
+  # ============================================================================
+  # 友链延迟定时探测（每天 08:17，Asia/Shanghai）
+  #
+  # 流程：定时触发 → 探测全部友链 → 提交快照到 main
+  #       → 自动触发上面的 push 流水线 → 构建 → 部署 EdgeOne → 状态确认
+  #
+  # 说明：
+  #   1. 定时表达式需与 src/config/friendsProbeConfig.ts 的 cron 保持一致
+  #   2. 快照提交到 main 会触发 push 流水线（正常部署，无需手动触发）
+  #   3. CNB 流水线内置临时令牌 CNB_TOKEN（结束即销毁），无需额外配置访问令牌
+  #   4. 探测脚本内置「整轮失败率」保护：探测器异常时整轮作废并以非零码退出
+  # ============================================================================
+  "crontab: 17 8 * * *":
+    - name: 🔍 友链延迟定时探测
+      imports: https://cnb.cool/W3C/Hyde/Firefly-Secret/-/blob/main/env.yml
+      runner:
+        cpus: 4
+      services:
+        - docker
+      docker:
+        image: docker.cnb.cool/znb/images/node:22
+        volumes:
+          - /data/.cache:copy-on-write
+      stages:
+        - name: 🕒 记录探测时间
+          script: echo -n $(date "+%Y-%m-%d %H:%M")
+          exports:
+            info: CUSTOM_ENV_DATE_INFO
+        - name: 💡 安装依赖
+          script: |
+            npm install -g pnpm && pnpm install --registry https://registry.npmjs.org
+        - name: 📡 探测友链延迟
+          # 含单站重试（指数退避）、请求限速、整轮失败率保护
+          script: npx tsx scripts/probe-friends.ts
+        - name: 📤 提交并推送快照
+          script: |
+            git config user.name "cnb-bot"
+            git config user.email "bot@cnb.cool"
+            git add src/data/friends-latency-snapshot.json
+            if git diff --cached --quiet; then
+              echo "快照无变化，无需提交"
+            else
+              git commit -m "chore: refresh friend latency snapshot"
+              if [ -n "$CNB_TOKEN" ]; then
+                git push "https://cnb:${CNB_TOKEN}@cnb.cool/W3C/Hyde/Firefly-hyde.git" HEAD:main
+              else
+                git push origin HEAD:main
+              fi
+            fi
+      # 探测失败（整轮异常 / 接口不可用 / 依赖安装失败）时告警
+      failStages:
+        - name: 🚨 探测失败通知到钉钉
+          image: tencentcom/dingtalk-bot-msg:latest
+          settings:
+            secret: $SECRET
+            webhook: $WEBHOOK
+            at: "199********"
+            isAtAll: true
+            debug: true
+            c_type: "markdown"
+            content: |
+              > **⚠️ 友链延迟探测失败！**
+              > **探测时间:** $CUSTOM_ENV_DATE_INFO
+              > **构建id:** $CNB_BUILD_ID
+              > **分支:** $CNB_BRANCH
+              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)
+              > **说明:** 本轮探测结果未写入快照，线上延迟数据保持上一轮不变；请查看流水线日志定位原因。

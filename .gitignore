@@ -4,6 +4,9 @@ dist/
 # generated vndb covers
 public/vndb-covers/
 
+# generated build fingerprint (build-time artifact)
+public/build-info.json
+
 # generated types
 .astro/
 

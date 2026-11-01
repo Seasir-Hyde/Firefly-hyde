@@ -10,7 +10,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "check": "astro check",
-    "build": "npx tsx scripts/generate-github-card-data.ts && npx tsx scripts/generate-lqips.ts && npx tsx scripts/generate-vndb-covers.ts && astro build && npx tsx scripts/prune-pio-assets.ts && npx tsx scripts/subset-fonts.ts && npx tsx scripts/minify-inline-scripts.ts && npx tsx scripts/run-pagefind.ts && npx tsx scripts/copy-edgeone-config.ts",
+    "build": "npx tsx scripts/generate-build-info.ts && npx tsx scripts/generate-github-card-data.ts && npx tsx scripts/generate-lqips.ts && npx tsx scripts/generate-vndb-covers.ts && astro build && npx tsx scripts/prune-pio-assets.ts && npx tsx scripts/subset-fonts.ts && npx tsx scripts/minify-inline-scripts.ts && npx tsx scripts/run-pagefind.ts && npx tsx scripts/copy-edgeone-config.ts",
     "preview": "astro preview",
     "astro": "astro",
     "type-check": "tsc --noEmit --isolatedDeclarations",
@@ -24,7 +24,9 @@
     "fill-descriptions": "npx tsx scripts/fill-descriptions/index.ts",
     "github-cards": "npx tsx scripts/generate-github-card-data.ts",
     "probe-friends": "npx tsx scripts/probe-friends.ts",
-    "refresh-friends-feed": "npx tsx scripts/refresh-friends-feed.ts"
+    "refresh-friends-feed": "npx tsx scripts/refresh-friends-feed.ts",
+    "generate-build-info": "npx tsx scripts/generate-build-info.ts",
+    "verify-deploy": "npx tsx scripts/verify-deploy.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
