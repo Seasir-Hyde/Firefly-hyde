@@ -56,6 +56,7 @@ export type FriendsPageConfig = {
 		desc: string; // 站点描述
 		url: string; // 站点链接
 		avatar: string; // 头像链接
+		rss?: string; // RSS 订阅地址
 	};
 	// 注意事项（申请表单下方展示）
 	notes?: Array<{ title: string; content: string }>;

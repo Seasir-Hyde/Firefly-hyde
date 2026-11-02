@@ -182,6 +182,7 @@ const siteInfo = friendsPageConfig.site ?? {
 	desc: "",
 	url: "",
 	avatar: "",
+	rss: "",
 };
 const notes = friendsPageConfig.notes ?? [];
 
@@ -189,7 +190,8 @@ const escapedSiteName = (siteInfo.name || "").replace(/'/g, "\\'");
 const escapedSiteDesc = (siteInfo.desc || "").replace(/'/g, "\\'");
 const escapedSiteUrl = (siteInfo.url || "").replace(/'/g, "\\'");
 const escapedSiteAvatar = (siteInfo.avatar || "").replace(/'/g, "\\'");
-const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedSiteName}\\n站点描述：${escapedSiteDesc}\\n站点链接：${escapedSiteUrl}\\n头像链接：${escapedSiteAvatar}');this.querySelectorAll('svg')[0].classList.add('hidden');this.querySelectorAll('svg')[1].classList.remove('hidden');setTimeout(()=>{this.querySelectorAll('svg')[0].classList.remove('hidden');this.querySelectorAll('svg')[1].classList.add('hidden')},1500)`;
+const escapedSiteRss = (siteInfo.rss || "").replace(/'/g, "\\'");
+const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedSiteName}\\n站点描述：${escapedSiteDesc}\\n站点链接：${escapedSiteUrl}\\n头像链接：${escapedSiteAvatar}\\nRSS：${escapedSiteRss}');this.querySelectorAll('svg')[0].classList.add('hidden');this.querySelectorAll('svg')[1].classList.remove('hidden');setTimeout(()=>{this.querySelectorAll('svg')[0].classList.remove('hidden');this.querySelectorAll('svg')[1].classList.add('hidden')},1500)`;
 ---
 
 <!-- 需要引入: MainGridLayout 的 bannerPageAiRecommendation 属性支持（111 原版横幅月度推荐）- 待手动更新，支持后传入 text: friendsAiRecommendation, segments: friendsAiRecommendationSegments -->
@@ -758,6 +760,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 { label: "站点描述", value: siteInfo.desc },
                 { label: "站点链接", value: siteInfo.url },
                 { label: "头像链接", value: siteInfo.avatar },
+                { label: "站点RSS", value: siteInfo.rss ?? "" },
               ].map((item) => (
                 <div class="flex items-center justify-between gap-2 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2">
                   <div class="min-w-0">

@@ -25,6 +25,7 @@ export const friendsPageConfig: FriendsPageConfig = {
 		desc: "人心中的成见是一座大山",
 		url: "https://seasir.top",
 		avatar: "https://seasir.top/assets/avatar.avif",
+		rss: "https://seasir.top/rss.xml",
 	},
 
 	// 注意事项
