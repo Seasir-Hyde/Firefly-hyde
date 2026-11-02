@@ -239,8 +239,85 @@ main:
                 git push origin HEAD:main
               fi
             fi
-      # 探测失败（整轮异常 / 接口不可用 / 依赖安装失败）时告警
+        - name: 📊 采集探测摘要
+          # 把探测脚本写出的摘要首行导出为 PROBE_SUMMARY，供后面的钉钉/飞书通知引用
+          script: |
+            SUMMARY_FILE="${PROBE_SUMMARY_FILE:-/tmp/firefly-friend-probe-summary.txt}"
+            if [ -f "$SUMMARY_FILE" ]; then
+              echo -n "$(head -n 1 "$SUMMARY_FILE")"
+            else
+              echo -n "探测未产出摘要，请查看流水线日志"
+            fi
+          exports:
+            info: PROBE_SUMMARY
+        - name: 📢 探测成功通知到钉钉
+          image: tencentcom/dingtalk-bot-msg:latest
+          settings:
+            secret: $SECRET
+            webhook: $WEBHOOK
+            at: "199********"
+            isAtAll: true
+            debug: true
+            c_type: "markdown"
+            content: |
+              > **🎉 友链延迟探测成功！**
+              > **探测时间:** $CUSTOM_ENV_DATE_INFO
+              > **探测结果:** $PROBE_SUMMARY
+              > **构建id:** $CNB_BUILD_ID
+              > **分支:** $CNB_BRANCH
+              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)
+              > **说明:** 延迟快照已提交到 main，自动触发构建部署，线上数据将在部署完成后生效。
+        - name: 📢 探测成功通知到飞书
+          image: tencentcom/feishu-message
+          settings:
+            robot: $ROBOT
+            msg_type: interactive
+            card: |
+              {
+                  "elements": [
+                      {
+                          "tag": "div",
+                          "text": {
+                              "tag": "lark_md",
+                              "content": "**探测时间**：$CUSTOM_ENV_DATE_INFO\n\n**探测结果**：$PROBE_SUMMARY\n\n**构建ID**：$CNB_BUILD_ID\n\n**分支**：$CNB_BRANCH\n\n**仓库地址**：[点击访问]($CNB_REPO_URL_HTTPS)"
+                          }
+                      },
+                      {
+                          "actions": [
+                              {
+                                  "tag": "button",
+                                  "text": {
+                                      "content": "访问网站 :爱慕:",
+                                      "tag": "lark_md"
+                                  },
+                                  "url": "https://seasir.top/",
+                                  "type": "default",
+                                  "value": {}
+                              }
+                          ],
+                          "tag": "action"
+                      }
+                  ],
+                  "header": {
+                      "title": {
+                          "content": "🎉 友链延迟探测成功",
+                          "tag": "plain_text"
+                      }
+                  }
+              }
+      # 探测失败（整轮异常 / 接口不可用 / 依赖安装失败 / 推送失败）时告警
       failStages:
+        - name: 📊 采集探测摘要（失败兜底）
+          # 失败分支同样取摘要；探测未跑完时给出兜底文案，避免通知里是空值
+          script: |
+            SUMMARY_FILE="${PROBE_SUMMARY_FILE:-/tmp/firefly-friend-probe-summary.txt}"
+            if [ -f "$SUMMARY_FILE" ]; then
+              echo -n "$(head -n 1 "$SUMMARY_FILE")"
+            else
+              echo -n "探测未产出摘要（探测未执行完成，请查看流水线日志）"
+            fi
+          exports:
+            info: PROBE_SUMMARY
         - name: 🚨 探测失败通知到钉钉
           image: tencentcom/dingtalk-bot-msg:latest
           settings:
@@ -251,9 +328,48 @@ main:
             debug: true
             c_type: "markdown"
             content: |
-              > **⚠️ 友链延迟探测失败！**
+              > **❌ 友链延迟探测失败！**
               > **探测时间:** $CUSTOM_ENV_DATE_INFO
+              > **探测结果:** $PROBE_SUMMARY
               > **构建id:** $CNB_BUILD_ID
               > **分支:** $CNB_BRANCH
               > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)
-              > **说明:** 本轮探测结果未写入快照，线上延迟数据保持上一轮不变；请查看流水线日志定位原因。
+              > **影响:** 本轮结果未写入快照，线上延迟数据保持上一轮不变；请查看流水线日志定位原因。
+        - name: 🚨 探测失败通知到飞书
+          image: tencentcom/feishu-message
+          settings:
+            robot: $ROBOT
+            msg_type: interactive
+            card: |
+              {
+                  "elements": [
+                      {
+                          "tag": "div",
+                          "text": {
+                              "tag": "lark_md",
+                              "content": "**探测时间**：$CUSTOM_ENV_DATE_INFO\n\n**探测结果**：$PROBE_SUMMARY\n\n**构建ID**：$CNB_BUILD_ID\n\n**分支**：$CNB_BRANCH\n\n**仓库地址**：[点击访问]($CNB_REPO_URL_HTTPS)"
+                          }
+                      },
+                      {
+                          "actions": [
+                              {
+                                  "tag": "button",
+                                  "text": {
+                                      "content": "访问网站 :爱慕:",
+                                      "tag": "lark_md"
+                                  },
+                                  "url": "https://seasir.top/",
+                                  "type": "default",
+                                  "value": {}
+                              }
+                          ],
+                          "tag": "action"
+                      }
+                  ],
+                  "header": {
+                      "title": {
+                          "content": "🚨 友链延迟探测失败",
+                          "tag": "plain_text"
+                      }
+                  }
+              }

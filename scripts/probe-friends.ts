@@ -1,4 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getEnabledFriends } from "../src/config/friendsConfig";
 import { friendsProbeConfig } from "../src/config/friendsProbeConfig";
@@ -29,6 +31,14 @@ const snapshotUrl = new URL(
 	"../src/data/friends-latency-snapshot.json",
 	import.meta.url,
 );
+
+/**
+ * 探测摘要文件路径。
+ * CI（Linux 容器）默认落在 /tmp，流水线用同一个路径读取并注入通知内容。
+ */
+const summaryFile =
+	process.env.PROBE_SUMMARY_FILE ??
+	join(tmpdir(), "firefly-friend-probe-summary.txt");
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -154,6 +164,65 @@ type ProbeTarget = {
 	source: "local" | "remote";
 };
 
+type ProbeSummary = {
+	status: "success" | "failed";
+	total: number;
+	failedCount: number;
+	successCount: number;
+	failureRatio: number;
+	downList: string[];
+	elapsedSeconds: string;
+	probeLocation: string;
+	reason: string | null;
+	distribution?: { fast: number; normal: number; slow: number; down: number };
+};
+
+/** 取出失联站点（最多 5 个），用于通知里点出具体对象 */
+function collectDownList(results: Record<string, FriendProbeResult>): string[] {
+	return Object.entries(results)
+		.filter(([, result]) => result.state === "down")
+		.map(([siteUrl]) => siteUrl)
+		.slice(0, 5);
+}
+
+/**
+ * 写出探测摘要文件。
+ *
+ * 第一行是给流水线通知用的一行摘要（CI 通过 exports 注入到消息模板），
+ * 其后是明细，便于在流水线日志里排查。写入失败不影响探测本身。
+ */
+async function writeSummaryFile(summary: ProbeSummary): Promise<void> {
+	const ratio = `${(summary.failureRatio * 100).toFixed(1)}%`;
+	const down =
+		summary.downList.length > 0
+			? ` · 失联站点：${summary.downList.join("、")}${summary.failedCount > summary.downList.length ? " 等" : ""}`
+			: "";
+	const headline =
+		summary.status === "success"
+			? `成功｜${summary.total} 站 · 快 ${summary.distribution?.fast ?? 0} / 正常 ${summary.distribution?.normal ?? 0} / 慢 ${summary.distribution?.slow ?? 0} / 失联 ${summary.failedCount} · 失败率 ${ratio} · 耗时 ${summary.elapsedSeconds}s · 快照已生成`
+			: `失败｜${summary.total} 站 · 失联 ${summary.failedCount} · 失败率 ${ratio} · 耗时 ${summary.elapsedSeconds}s · ${summary.reason ?? "探测未完成"}`;
+	const detail = [
+		`status=${summary.status}`,
+		`total=${summary.total}`,
+		`success=${summary.successCount}`,
+		`failed=${summary.failedCount}`,
+		`failureRatio=${ratio}`,
+		`elapsed=${summary.elapsedSeconds}s`,
+		`probeLocation=${summary.probeLocation}`,
+		`reason=${summary.reason ?? "-"}`,
+		`down=${summary.downList.join(",")}`,
+	].join("\n");
+	try {
+		await writeFile(summaryFile, `${headline}${down}\n${detail}\n`, "utf8");
+		console.info(`[友链探测] 摘要已写入 ${summaryFile}`);
+		console.info(`[友链探测] 摘要：${headline}`);
+	} catch (error) {
+		console.warn(
+			`[友链探测] 摘要写入失败：${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
+}
+
 /**
  * 收集待探测站点：本地配置 + 远程接口（/api/friends）下发的动态友链。
  * 远程友链此前从未入队，卡片只能显示「未探测」。
@@ -219,6 +288,7 @@ async function probeFriends(): Promise<void> {
 	);
 	const diagnosticOnly = args.includes("--diagnostic-only");
 	const probeLocation = probeLocationOfRun();
+	const elapsedSeconds = ((performance.now() - startedAt) / 1000).toFixed(1);
 
 	// 整轮健康度判定：失败率过高或成功数过低，说明是探测端（网络/机器）出问题，
 	// 而不是友链集体失联。这种情况下本轮结果整体作废、不写入快照，
@@ -229,6 +299,8 @@ async function probeFriends(): Promise<void> {
 	const successCount = total - failedCount;
 	const failureRatio = total > 0 ? failedCount / total : 0;
 	const degraded =
+		// 仅整轮探测才做健康度判定：单站手动诊断（--site=）失败属于预期结果
+		!selectedSite &&
 		total > 0 &&
 		(failureRatio > failureRatioThreshold || successCount < minSuccessCount);
 	if (degraded) {
@@ -237,6 +309,18 @@ async function probeFriends(): Promise<void> {
 				`超过阈值（失败率 ${(failureRatioThreshold * 100).toFixed(0)}% / 最少成功 ${minSuccessCount}）`,
 		);
 		console.error("[友链探测] 本轮结果作废，不写入快照（避免误报全站失联）");
+		// 失败也要留下摘要，流水线通知里才能说明失败原因与数据
+		await writeSummaryFile({
+			status: "failed",
+			total,
+			failedCount,
+			successCount,
+			failureRatio,
+			downList: collectDownList(results),
+			elapsedSeconds: elapsedSeconds,
+			probeLocation,
+			reason: `失败率 ${(failureRatio * 100).toFixed(1)}% 超过阈值 ${(failureRatioThreshold * 100).toFixed(0)}%，整轮结果作废，未写入快照`,
+		});
 		if (!diagnosticOnly) process.exit(1);
 	}
 
@@ -268,9 +352,8 @@ async function probeFriends(): Promise<void> {
 	}
 	const summary = { fast: 0, normal: 0, slow: 0, down: 0 };
 	for (const result of Object.values(results)) summary[result.state]++;
-	const elapsed = ((performance.now() - startedAt) / 1000).toFixed(1);
 	console.info(
-		`[友链探测] 完成 ${total} 个站点（${elapsed}s）：快 ${summary.fast} / 正常 ${summary.normal} / 慢 ${summary.slow} / 不可达 ${summary.down}（失败率 ${(failureRatio * 100).toFixed(1)}%）`,
+		`[友链探测] 完成 ${total} 个站点（${elapsedSeconds}s）：快 ${summary.fast} / 正常 ${summary.normal} / 慢 ${summary.slow} / 不可达 ${summary.down}（失败率 ${(failureRatio * 100).toFixed(1)}%）`,
 	);
 	console.info(
 		`[友链探测] summary total=${total} fast=${summary.fast} normal=${summary.normal} slow=${summary.slow} down=${summary.down} degraded=${degraded}`,
@@ -288,6 +371,20 @@ async function probeFriends(): Promise<void> {
 		);
 	if (problematic.length)
 		console.warn(`[友链探测] 需关注：${problematic.join("、")}`);
+
+	// 成功也写摘要：通知内容里的关键数字来自这里
+	await writeSummaryFile({
+		status: "success",
+		total,
+		failedCount,
+		successCount,
+		failureRatio,
+		downList: collectDownList(results),
+		elapsedSeconds,
+		probeLocation,
+		reason: null,
+		distribution: summary,
+	});
 }
 
 if (
