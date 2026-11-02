@@ -1,0 +1,268 @@
+---
+import { Icon } from "astro-icon/components";
+import { siteConfig } from "@/config/siteConfig";
+---
+
+<welcome-toast
+	class="welcome-toast"
+	aria-live="polite"
+	aria-atomic="true"
+	data-state="idle"
+	data-site-name={siteConfig.title}
+>
+	<div class="welcome-toast-icon" aria-hidden="true"><Icon is:inline name="material-symbols:waving-hand" /></div>
+	<div class="welcome-toast-copy">
+		<strong class="welcome-toast-title">欢迎来到{siteConfig.title}</strong>
+		<p class="welcome-toast-message">很高兴在这里遇见你。</p>
+	</div>
+	<button class="welcome-toast-close" type="button" aria-label="关闭欢迎提示">
+		×
+	</button>
+</welcome-toast>
+
+<style>
+	.welcome-toast {
+		position: fixed;
+		right: max(1.25rem, env(safe-area-inset-right));
+		bottom: max(1.25rem, env(safe-area-inset-bottom));
+		z-index: 1000;
+		display: grid;
+		width: min(24.5rem, calc(100vw - 2rem));
+		padding: 1.05rem 2.7rem 1.05rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
+		border-radius: 1rem;
+		grid-template-columns: auto 1fr;
+		align-items: center;
+		gap: 0.85rem;
+		background: color-mix(in srgb, var(--card-bg) 90%, transparent);
+		box-shadow:
+			0 1rem 2.5rem rgb(15 23 42 / 0.16),
+			inset 0 1px rgb(255 255 255 / 0.35);
+		opacity: 0;
+		pointer-events: none;
+		transform: translateY(calc(100% + 2rem)) scale(0.96);
+		backdrop-filter: blur(18px) saturate(1.2);
+		transition:
+			opacity 320ms ease,
+			transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.welcome-toast[data-state="visible"] {
+		opacity: 1;
+		pointer-events: auto;
+		transform: translateY(0) scale(1);
+	}
+
+	.welcome-toast-icon {
+		display: grid;
+		width: 2.7rem;
+		height: 2.7rem;
+		border-radius: 0.85rem;
+		place-items: center;
+		background:
+			radial-gradient(circle at 30% 20%, rgb(255 255 255 / 0.72), transparent 36%),
+			linear-gradient(135deg, color-mix(in srgb, var(--primary) 55%, white), var(--primary));
+		box-shadow: 0 0.6rem 1.4rem color-mix(in srgb, var(--primary) 22%, transparent);
+		color: white;
+		font-size: 1.35rem;
+	}
+
+	/* astro-icon 输出的内联 SVG 不带作用域属性，需用 :global 才能命中 */
+	.welcome-toast-icon :global(svg) {
+		width: 1.55rem;
+		height: 1.55rem;
+	}
+
+	.welcome-toast-copy {
+		min-width: 0;
+		padding-right: 0.2rem;
+	}
+
+	.welcome-toast-title {
+		display: block;
+		color: var(--content-regular);
+		font-size: 0.92rem;
+		line-height: 1.42;
+		overflow-wrap: anywhere;
+		white-space: normal;
+	}
+
+	.welcome-toast-message {
+		margin: 0.18rem 0 0;
+		color: var(--content-meta);
+		font-size: 0.78rem;
+		line-height: 1.58;
+		max-width: none;
+		max-height: none;
+		display: block;
+		overflow: visible;
+		text-overflow: clip;
+		-webkit-line-clamp: unset;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+		white-space: normal;
+	}
+
+	.welcome-toast-close {
+		position: absolute;
+		top: 0.55rem;
+		right: 0.65rem;
+		display: grid;
+		width: 1.7rem;
+		height: 1.7rem;
+		border: 0;
+		border-radius: 999px;
+		place-items: center;
+		background: transparent;
+		color: var(--content-meta);
+		cursor: pointer;
+		font-size: 1.2rem;
+		line-height: 1;
+		transition:
+			background 160ms ease,
+			color 160ms ease,
+			transform 160ms ease;
+	}
+
+	.welcome-toast-close:hover {
+		background: var(--btn-regular-bg);
+		color: var(--primary);
+		transform: rotate(8deg);
+	}
+
+	@media (max-width: 640px) {
+		.welcome-toast {
+			right: 1rem;
+			bottom: calc(5rem + env(safe-area-inset-bottom));
+			left: 1rem;
+			width: auto;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.welcome-toast {
+			transition: opacity 120ms linear;
+			transform: none;
+		}
+	}
+</style>
+
+<script>
+	import { serviceConfig } from "@/config/serviceConfig";
+	const welcomeSessionKey = "rain_welcome_seen_v1";
+
+	function getTimeGreeting(hour: number): string {
+		if (hour < 6) return "夜深了";
+		if (hour < 9) return "早上好";
+		if (hour < 12) return "上午好";
+		if (hour < 14) return "中午好";
+		if (hour < 18) return "下午好";
+		return "晚上好";
+	}
+
+	function readLocation(payload: unknown): string {
+		if (!payload || typeof payload !== "object") return "";
+		const data = payload as Record<string, unknown>;
+		const nested =
+			data.data && typeof data.data === "object"
+				? (data.data as Record<string, unknown>)
+				: data;
+
+		const candidates = [
+			nested.address,
+			nested.location,
+			nested.city,
+			data.address,
+			data.location,
+		];
+
+		return (
+			candidates.find(
+				(value): value is string =>
+					typeof value === "string" && value.trim().length > 0,
+			) ?? ""
+		).trim();
+	}
+
+	class WelcomeToast extends HTMLElement {
+		private showTimer?: number;
+		private closeTimer?: number;
+		private abortController?: AbortController;
+
+		connectedCallback() {
+			if (document.documentElement.dataset.siteTheme === "pure") return;
+			if (sessionStorage.getItem(welcomeSessionKey)) return;
+
+			const closeButton =
+				this.querySelector<HTMLButtonElement>(".welcome-toast-close");
+			closeButton?.addEventListener("click", () => this.close(), {
+				once: true,
+			});
+
+			this.showTimer = window.setTimeout(() => this.show(), 850);
+		}
+
+		disconnectedCallback() {
+			if (this.showTimer) window.clearTimeout(this.showTimer);
+			if (this.closeTimer) window.clearTimeout(this.closeTimer);
+			this.abortController?.abort();
+		}
+
+		private async show() {
+			sessionStorage.setItem(welcomeSessionKey, "true");
+
+			const title = this.querySelector<HTMLElement>(
+				".welcome-toast-title",
+			);
+			const message = this.querySelector<HTMLElement>(
+				".welcome-toast-message",
+			);
+			const greeting = getTimeGreeting(new Date().getHours());
+			// 站点名由服务端渲染进 data-site-name，避免把整份 siteConfig 打进客户端包
+			const siteName = this.dataset.siteName ?? "";
+
+			if (title) title.textContent = `${greeting}，欢迎来到${siteName}`;
+			this.dataset.state = "visible";
+			if (!serviceConfig.visitorLocationUrl) {
+				if (message) message.textContent = "很高兴在这里遇见你。";
+				this.closeTimer = window.setTimeout(() => this.close(), 6500);
+				return;
+			}
+
+			this.abortController = new AbortController();
+			const timeout = window.setTimeout(
+				() => this.abortController?.abort(),
+				3500,
+			);
+
+			try {
+				const response = await fetch(serviceConfig.visitorLocationUrl, {
+					signal: this.abortController.signal,
+				});
+				if (!response.ok) throw new Error("location unavailable");
+				const location = readLocation(await response.json());
+				if (message) {
+					message.textContent = location
+						? `来自 ${location}，很高兴遇见你。`
+						: "很高兴在这里遇见你。";
+				}
+			} catch {
+				if (message) message.textContent = "很高兴在这里遇见你。";
+			} finally {
+				window.clearTimeout(timeout);
+			}
+
+			this.closeTimer = window.setTimeout(() => this.close(), 6500);
+		}
+
+		private close() {
+			this.dataset.state = "closed";
+			this.abortController?.abort();
+			if (this.closeTimer) window.clearTimeout(this.closeTimer);
+		}
+	}
+
+	if (!customElements.get("welcome-toast")) {
+		customElements.define("welcome-toast", WelcomeToast);
+	}
+</script>
