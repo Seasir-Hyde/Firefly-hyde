@@ -9,9 +9,6 @@ export type FriendLink = {
 	weight: number; // 权重，数字越大排序越靠前
 	enabled: boolean; // 是否启用
 	// 以下为 Aemeath的friends 页面移植新增的可选字段
-	recommended?: boolean; // 是否使用推荐友链样式
-	recommendationReason?: string; // 推荐理由，用于友链评选说明
-	recommendedTier?: "full" | "degraded"; // 推荐友链层级，降级推荐仅保留静态卡片装饰
 	temporarilyUnavailable?: boolean; // 手动显示暂时失联状态
 	visibilityStatus?: "normal" | "temporarily_unavailable" | "policy_violation"; // 友链可见性状态
 	violationStartedAt?: number; // 违规整改期开始时间（Unix 秒）

@@ -122,7 +122,7 @@ export const friendsConfig: FriendLink[] = [
 	{
 		title: "楠枝小笺",
 		desc: "安安静静地存在，就已经很好了。",
-		siteurl: "https://www.nannax.top/",
+		siteurl: "https://www.nanzhiy.cn/",
 		imgurl:
 			"https://www.nanzhiy.cn/themes/Ethereal/assets/images/demo-avatar.png?image_process=resize,w_512&width=800",
 		tags: ["Astro"],

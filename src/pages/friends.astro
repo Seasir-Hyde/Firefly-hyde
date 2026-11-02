@@ -5,7 +5,6 @@ import MicrosoftClarity from "@components/analytics/MicrosoftClarity.astro";
 import Comment from "@components/comment/index.astro";
 import Markdown from "@components/common/Markdown.astro";
 import FriendAvatarMarquee from "@components/friends/FriendAvatarMarquee.astro";
-import FriendRecommendationGuide from "@components/friends/FriendRecommendationGuide.astro";
 import FriendsMagicLink from "@components/friends/FriendsMagicLink.astro";
 import { Icon } from "astro-icon/components";
 import {
@@ -120,60 +119,10 @@ const remoteFeed = remoteFriends.length
 // 注入给浏览器端：动态卡片按站点 URL 查表取「最后更新」
 const remoteFriendUpdates = remoteFeed ? buildFriendUpdateMap(remoteFeed) : {};
 
-// 推荐友链（不含本站），用于评选规范弹窗
-const recommendedFriends = items.filter(
-	(item) =>
-		item.recommended === true &&
-		normalizeFriendUrl(item.siteurl) !== ownSiteUrl,
-);
-
 // 页面标题和描述
 const title = friendsPageConfig.title || i18n(I18nKey.friends);
 const description =
 	friendsPageConfig.description || i18n(I18nKey.friendsDescription);
-
-const friendsAiRecommendationSegments: Array<{
-	text: string;
-	tone?: "default" | "accent";
-	href?: string;
-}> = [
-	{
-		text: "本月推荐：\n• ",
-	},
-	{ text: "AIOVTUE-雪", tone: "accent" },
-	{ text: "、" },
-	{ text: "Homulilly", tone: "accent" },
-	{ text: "、" },
-	{ text: "番茄主理人", tone: "accent" },
-	{ text: "、" },
-	{ text: "小曦的园子", tone: "accent" },
-	{ text: "、" },
-	{ text: "Detached", tone: "accent" },
-	{
-		text: "、",
-	},
-	{ text: "Ditto", tone: "accent" },
-	{ text: "、" },
-	{ text: "桃之夭夭", tone: "accent" },
-	{ text: "、" },
-	{ text: "爱吃猫的鱼", tone: "accent" },
-	{ text: "、" },
-	{ text: "Petrichor's Blog", tone: "accent" },
-	{ text: "、" },
-	{ text: "MingBlog", tone: "accent" },
-	{
-		text: "\n\n评选规则与完整推荐理由，见本期",
-	},
-	{
-		text: "《月刊》",
-		tone: "accent",
-		href: "/posts/monthly-2026-08/#评选规则",
-	},
-	{ text: "。" },
-];
-const friendsAiRecommendation = friendsAiRecommendationSegments
-	.map((segment) => segment.text)
-	.join("");
 
 // ==================== 自助申请友链模块（保留勿动） ====================
 // 站点信息和注意事项（带默认值）
@@ -194,7 +143,6 @@ const escapedSiteRss = (siteInfo.rss || "").replace(/'/g, "\\'");
 const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedSiteName}\\n站点描述：${escapedSiteDesc}\\n站点链接：${escapedSiteUrl}\\n头像链接：${escapedSiteAvatar}\\nRSS：${escapedSiteRss}');this.querySelectorAll('svg')[0].classList.add('hidden');this.querySelectorAll('svg')[1].classList.remove('hidden');setTimeout(()=>{this.querySelectorAll('svg')[0].classList.remove('hidden');this.querySelectorAll('svg')[1].classList.add('hidden')},1500)`;
 ---
 
-<!-- 需要引入: MainGridLayout 的 bannerPageAiRecommendation 属性支持（111 原版横幅月度推荐）- 待手动更新，支持后传入 text: friendsAiRecommendation, segments: friendsAiRecommendationSegments -->
 <MainGridLayout title={title} description={description}>
   <div
     class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32"
@@ -226,8 +174,9 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
           }
         </div>
 
-        {/* 右侧操作按钮：随机访问 + 自助申请 + 评选规范 + 神奇按钮，与标题同一行右对齐 */}
+        {/* 右侧操作按钮：神奇按钮 + 随机访问 + 申请友链，与标题同一行右对齐 */}
         <div class="friends-heading-actions">
+          <FriendsMagicLink />
           <button
             id="random-friend-btn"
             type="button"
@@ -256,20 +205,9 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
               <svg data-v-2d63c78e="" class="icon text-base" viewBox="0 13.8 1024 972" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10543" width="1em" height="1em"><path data-v-2d63c78e="" d="M535.630769 821.169231l-41.353846-5.907693s-27.569231-5.907692-41.353846-11.815384c-7.876923-1.969231-17.723077 0-23.630769 5.907692l-9.846154 9.846154c-57.107692 57.107692-149.661538 63.015385-208.738462 11.815385-66.953846-57.107692-68.923077-159.507692-7.876923-220.553847l149.661539-149.661538c19.692308-19.692308 43.323077-31.507692 66.953846-39.384615 31.507692-7.876923 64.984615-5.907692 94.523077 5.907692 17.723077 7.876923 35.446154 17.723077 51.2 33.476923 7.876923 7.876923 13.784615 15.753846 19.692307 25.6 7.876923 13.784615 25.6 15.753846 35.446154 3.938462l55.138462-55.138462c7.876923-7.876923 7.876923-19.692308 1.969231-29.538462-7.876923-11.815385-17.723077-21.661538-27.569231-31.507692-13.784615-13.784615-29.538462-27.569231-47.261539-37.415384-27.569231-17.723077-59.076923-29.538462-92.553846-35.446154-61.046154-11.815385-128-1.969231-183.138461 27.56923-21.661538 11.815385-43.323077 27.569231-61.046154 45.292308l-143.753846 143.753846C17.723077 622.276923 9.846154 791.630769 110.276923 897.969231c104.369231 114.215385 281.6 116.184615 389.907692 7.876923l49.23077-49.230769c13.784615-9.846154 3.938462-33.476923-13.784616-35.446154zM897.969231 114.215385c-108.307692-100.430769-277.661538-92.553846-380.061539 11.815384L472.615385 169.353846c-13.784615 13.784615-3.938462 37.415385 13.784615 39.384616 27.569231 1.969231 55.138462 7.876923 82.707692 15.753846 7.876923 1.969231 17.723077 0 23.63077-5.907693l9.846153-9.846153c57.107692-57.107692 149.661538-63.015385 208.738462-11.815385 66.953846 57.107692 68.923077 159.507692 7.876923 220.553846L669.538462 567.138462c-19.692308 19.692308-43.323077 31.507692-66.953847 39.384615-31.507692 7.876923-64.984615 5.907692-94.523077-5.907692-17.723077-7.876923-35.446154-17.723077-51.2-33.476923-7.876923-7.876923-13.784615-15.753846-19.692307-25.6-7.876923-13.784615-25.6-15.753846-35.446154-3.938462l-55.138462 55.138462c-7.876923 7.876923-7.876923 19.692308-1.96923 29.538461 7.876923 11.815385 17.723077 21.661538 27.56923 31.507692 13.784615 13.784615 31.507692 27.569231 47.261539 37.415385 27.569231 17.723077 59.076923 29.538462 90.584615 35.446154 61.046154 11.815385 128 1.969231 183.138462-27.569231 21.661538-11.815385 43.323077-27.569231 61.046154-45.292308l149.661538-149.661538c110.276923-108.307692 106.338462-285.538462-5.907692-389.907692z" fill="currentColor" p-id="10544"></path></svg>
               <span class="hidden sm:inline">申请友链</span>
             </button>
-            <FriendRecommendationGuide friends={recommendedFriends} />
-            <FriendsMagicLink />
         </div>
       </div>
 
-      
-      <!-- 需要引入: AiRecommendationNote 组件（111 原版 AI 月度推荐卡片，本项目暂无该组件）- 待手动更新，引入后取消下方注释并补充 import -->
-      <div class="friends-ai-recommendation-mobile">
-        <!-- <AiRecommendationNote
-          text={friendsAiRecommendation}
-		  segments={friendsAiRecommendationSegments}
-          class="friends-ai-recommendation--inline"
-        /> -->
-      </div>
 
       <!-- 友链头像跑马灯：快捷访问各友链站点，悬停预览站点截图 -->
       {
@@ -360,8 +298,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         {
 		items.map((item) => {
 			const isOwnSite = normalizeFriendUrl(item.siteurl) === ownSiteUrl;
-			const isRecommended = !isOwnSite && item.recommended === true;
-			const isDegradedRecommended = isRecommended && item.recommendedTier === "degraded";
 			const scheduledLatency = latencySnapshot.results[normalizeFriendUrl(item.siteurl)];
             const isTemporarilyUnavailable = item.temporarilyUnavailable === true;
             const latency = getFriendLatencyDisplay(latencySnapshot, item.siteurl);
@@ -410,13 +346,10 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 data-friend-unavailable-started-at={unavailableStartedAt || undefined}
                 data-friend-violation-started-at={violationStartedAt || undefined}
                 data-friend-own-site={String(isOwnSite)}
-                data-friend-recommended={String(isRecommended)}
                 data-friend-screenshot={item.screenshot}
                 aria-label={
                   isTemporarilyUnavailable
                     ? `${item.title}，短暂失联`
-                    : isRecommended
-                    ? `${item.title}，推荐友链`
                     : isOwnSite
                       ? `${item.title}，本站`
                       : item.title
@@ -425,8 +358,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                 class:list={[
                   "friend-card friend-list-card group rounded-xl relative overflow-visible",
                   isOwnSite && "friend-card--own",
-                  isRecommended && "friend-card--recommended",
-                  isDegradedRecommended && "friend-card--recommended-degraded",
                   isTemporarilyUnavailable && "friend-card--temporarily-unavailable",
                   isPolicyViolation && "friend-card--policy-violation",
                 ]}
@@ -445,13 +376,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                   data-friend-avatar-backdrop
                 />
                 <div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300" />
-                {
-                  isRecommended && !isDegradedRecommended && (
-                    <recommended-star-flow class="friend-recommended-flow" aria-hidden="true">
-                      <canvas class="friend-recommended-canvas"></canvas>
-                    </recommended-star-flow>
-                  )
-                }
               </div>
 
 
@@ -469,10 +393,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
               <div class="friend-card-content relative z-10 grow min-w-0 flex flex-col justify-center gap-0.5">
                 <div class="friend-card-heading">
                   <div
-                    class:list={[
-                      "friend-card-title font-bold text-base text-neutral-900 dark:text-neutral-100 transition-colors truncate",
-                      isRecommended && "friend-card-title--recommended",
-                    ]}
+                    class="friend-card-title font-bold text-base text-neutral-900 dark:text-neutral-100 transition-colors truncate"
                   >
                     {item.title}
                   </div>
@@ -520,15 +441,12 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
               {/* 卡片底部信息行：左侧「本站主理人 / 最近更新于」，右侧「探测次数」 */}
               <div class="friend-card-footer">
                 <div class="friend-card-footer__identity">
-                  {(isRecommended || isOwnSite) && (
+                  {isOwnSite && (
                   <span
-                  class:list={[
-                  "friend-recommended-badge",
-                  isOwnSite && "friend-site-owner-badge",
-                  ]}
+                  class="friend-site-badge friend-site-owner-badge"
                   aria-hidden="true"
                   >
-                  <span>{isOwnSite ? "本站主理人" : "推荐"}</span>
+                  <span>本站主理人</span>
                   </span>
                   )}
                   {rssUpdate ? (
@@ -1085,650 +1003,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       customElements.define("friend-filter", FriendFilter);
     }
 
-    if (!customElements.get("recommended-star-flow")) {
-      class RecommendedStarFlow extends HTMLElement {
-        constructor() {
-          super();
-          this.canvas = null;
-          this.context = null;
-          this.card = null;
-          this.particles = [];
-          this.width = 0;
-          this.height = 0;
-          this.pixelRatio = 1;
-          this.elapsed = 0;
-          this.lastTimestamp = 0;
-          this.animationFrame = 0;
-          this.resizeFrame = 0;
-          this.hoverAmount = 0;
-          this.hoverTarget = 0;
-          this.initialized = false;
-          this.resizeObserver = null;
-          this.initializeFrame = 0;
-
-          this.handleFrame = this.handleFrame.bind(this);
-          this.initialize = this.initialize.bind(this);
-          this.handleResize = this.handleResize.bind(this);
-          this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
-          this.handlePointerEnter = this.handlePointerEnter.bind(this);
-          this.handlePointerLeave = this.handlePointerLeave.bind(this);
-          this.handleFocusIn = this.handleFocusIn.bind(this);
-          this.handleFocusOut = this.handleFocusOut.bind(this);
-        }
-
-        connectedCallback() {
-          if (this.initialized) return;
-          if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", this.initialize, { once: true });
-            return;
-          }
-          // Swup 插入页面片段时，connectedCallback 可能早于 canvas 子节点完成。
-          // 放到下一帧，确保子节点已经就位后再初始化。
-          this.scheduleInitialize();
-        }
-
-        scheduleInitialize() {
-          if (this.initialized || !this.isConnected || this.initializeFrame) return;
-          this.initializeFrame = requestAnimationFrame(() => {
-            this.initializeFrame = 0;
-            this.initialize();
-          });
-        }
-
-        initialize() {
-          if (this.initialized || !this.isConnected) return;
-          this.canvas = this.querySelector(".friend-recommended-canvas");
-          this.context = this.canvas?.getContext("2d", { alpha: true }) || null;
-          this.card = this.closest(".friend-card--recommended");
-
-          if (!this.canvas || !this.context) {
-            // 片段仍在解析时再次排队，避免偶发地留下未初始化的空 canvas。
-            this.scheduleInitialize();
-            return;
-          }
-          this.initialized = true;
-
-          this.particles = this.createParticles();
-
-          this.card?.addEventListener("pointerenter", this.handlePointerEnter);
-          this.card?.addEventListener("pointerleave", this.handlePointerLeave);
-          this.card?.addEventListener("focusin", this.handleFocusIn);
-          this.card?.addEventListener("focusout", this.handleFocusOut);
-          document.addEventListener("visibilitychange", this.handleVisibilityChange);
-
-          if (typeof ResizeObserver !== "undefined") {
-            this.resizeObserver = new ResizeObserver(this.handleResize);
-            this.resizeObserver.observe(this);
-          } else {
-            window.addEventListener("resize", this.handleResize, { passive: true });
-          }
-
-          this.resizeFrame = requestAnimationFrame(this.handleResize);
-          this.updatePlayback();
-        }
-
-        disconnectedCallback() {
-          document.removeEventListener("DOMContentLoaded", this.initialize);
-          if (this.initializeFrame) {
-            cancelAnimationFrame(this.initializeFrame);
-            this.initializeFrame = 0;
-          }
-          this.stopAnimation();
-          cancelAnimationFrame(this.resizeFrame);
-          this.resizeObserver?.disconnect();
-          window.removeEventListener("resize", this.handleResize);
-          document.removeEventListener("visibilitychange", this.handleVisibilityChange);
-          this.card?.removeEventListener("pointerenter", this.handlePointerEnter);
-          this.card?.removeEventListener("pointerleave", this.handlePointerLeave);
-          this.card?.removeEventListener("focusin", this.handleFocusIn);
-          this.card?.removeEventListener("focusout", this.handleFocusOut);
-          this.initialized = false;
-        }
-
-        createParticles() {
-          let seed = 0x51a7c0de;
-          const random = () => {
-            seed = (seed * 1664525 + 1013904223) >>> 0;
-            return seed / 4294967296;
-          };
-          const layerPattern = [0, 1, 0, 2, 1, 0, 1, 2, 0, 1, 0, 2, 1, 0, 1, 2];
-          const ySlots = [0.2, 0.7, 0.43, 0.77, 0.17, 0.57, 0.32, 0.64, 0.82, 0.5, 0.25, 0.73, 0.16, 0.84, 0.39, 0.58];
-          const layers = [
-            { radius: [3.1, 4.35], alpha: [0.56, 0.7], float: [1.9, 3.5], curve: [2.1, 3.9], glow: [4, 7] },
-            { radius: [4.5, 6.25], alpha: [0.72, 0.88], float: [2.9, 5], curve: [3.5, 6], glow: [7, 11] },
-            { radius: [6.3, 8.35], alpha: [0.88, 1], float: [4, 6.4], curve: [4.8, 7.8], glow: [11, 16] },
-          ];
-          const between = (range) => range[0] + (range[1] - range[0]) * random();
-
-          return Array.from({ length: 16 }, (_, index) => {
-            const layer = layerPattern[index];
-            const profile = layers[layer];
-            return {
-              index,
-              layer,
-              phase: index / 16,
-              baseY: ySlots[index],
-              radius: between(profile.radius),
-              baseAlpha: between(profile.alpha),
-              floatAmplitude: between(profile.float),
-              curveAmplitude: between(profile.curve),
-              glow: between(profile.glow),
-              xDrift: 0.8 + random() * (1.3 + layer * 0.85),
-              driftFrequency: 0.62 + random() * 0.72,
-              curvePhase: random() * Math.PI * 2,
-              twinklePhase: random() * Math.PI * 2,
-              twinkleSpeed: 0.88 + random() * 1.05,
-              rotation: random() * Math.PI * 2,
-              rotationSpeed: (0.2 + random() * (0.18 + layer * 0.09)) * (random() > 0.5 ? 1 : -1),
-              hasTrail: layer > 0 || index % 4 === 0,
-              tailScale: 3.2 + random() * 1.7 + layer * 0.75,
-            };
-          }).sort((a, b) => a.layer - b.layer);
-        }
-
-        handleResize() {
-          cancelAnimationFrame(this.resizeFrame);
-          if (!this.isConnected || !this.canvas || !this.context) return;
-          const bounds = this.getBoundingClientRect();
-          const width = Math.max(1, Math.round(bounds.width));
-          const height = Math.max(1, Math.round(bounds.height));
-          const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-
-          if (
-            width !== this.width ||
-            height !== this.height ||
-            pixelRatio !== this.pixelRatio
-          ) {
-            this.width = width;
-            this.height = height;
-            this.pixelRatio = pixelRatio;
-            this.canvas.width = Math.round(width * pixelRatio);
-            this.canvas.height = Math.round(height * pixelRatio);
-            this.context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-          }
-
-          this.renderFrame();
-        }
-
-        handleFrame(timestamp) {
-          if (!this.shouldAnimate()) {
-            this.animationFrame = 0;
-            return;
-          }
-
-          const delta = this.lastTimestamp
-            ? Math.min(42, timestamp - this.lastTimestamp)
-            : 0;
-          this.lastTimestamp = timestamp;
-          this.hoverAmount +=
-            (this.hoverTarget - this.hoverAmount) * Math.min(1, delta / 180);
-          const speed = 1 + this.hoverAmount * 0.14;
-          this.elapsed += delta * speed;
-          this.renderFrame();
-          this.animationFrame = requestAnimationFrame(this.handleFrame);
-        }
-
-        renderFrame() {
-          if (!this.context || !this.width || !this.height) return;
-          const context = this.context;
-          context.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
-          context.clearRect(0, 0, this.width, this.height);
-
-          const time = this.elapsed / 1000;
-          const cycleDuration = 4600;
-          const beamDuration = 3800;
-          const beamProgress = (this.elapsed % beamDuration) / beamDuration;
-          const easedBeam = beamProgress * beamProgress * (3 - 2 * beamProgress);
-          const beamX = (-0.16 + easedBeam * 1.32) * this.width;
-          const beamSpread = Math.max(24, this.width * 0.13);
-
-          for (const particle of this.particles) {
-            const progress = (particle.phase + this.elapsed / cycleDuration) % 1;
-            const radius = particle.radius;
-            const enterDistance = Math.max(0, Math.min(1, progress / 0.14));
-            const exitDistance = Math.max(0, Math.min(1, (1 - progress) / 0.2));
-            const enterFade = enterDistance * enterDistance * (3 - 2 * enterDistance);
-            const exitFade = exitDistance * exitDistance * (3 - 2 * exitDistance);
-            const edgeFade = enterFade * exitFade;
-            const drift = Math.sin(time * particle.driftFrequency + particle.twinklePhase);
-            const curveAngle = progress * Math.PI * 2 + particle.curvePhase;
-            const rawX =
-              radius +
-              progress * Math.max(1, this.width - radius * 2) +
-              drift * particle.xDrift;
-            const x = Math.max(radius, Math.min(this.width - radius, rawX));
-            const rawY =
-              particle.baseY * this.height +
-              Math.sin(curveAngle) * particle.curveAmplitude +
-              Math.sin(progress * Math.PI * 2 - time * 0.72) *
-                (1.6 + particle.layer * 1.15) +
-              drift * particle.floatAmplitude;
-            const safeY = radius + Math.min(5, particle.glow * 0.34) + 2;
-            const y = Math.max(safeY, Math.min(this.height - safeY, rawY));
-            const beamDistance = x - beamX;
-            const beamBoost = Math.exp(
-              -(beamDistance * beamDistance) / (2 * beamSpread * beamSpread),
-            );
-            const twinkle =
-              0.9 +
-              Math.sin(time * particle.twinkleSpeed + particle.twinklePhase) * 0.08;
-            const scale =
-              0.94 +
-              twinkle * 0.06 +
-              beamBoost * 0.24 +
-              this.hoverAmount * 0.08;
-            const alpha = Math.min(
-              1,
-              particle.baseAlpha *
-                edgeFade *
-                (twinkle + beamBoost * 0.38 + this.hoverAmount * 0.13),
-            );
-            const rotation =
-              particle.rotation +
-              time * particle.rotationSpeed +
-              Math.sin(curveAngle) * 0.08;
-
-            if (particle.hasTrail) {
-              this.drawTrail(
-                context,
-                particle,
-                x,
-                y,
-                radius * scale,
-                curveAngle,
-                alpha,
-                beamBoost,
-              );
-            }
-
-            this.drawStar(
-              context,
-              particle,
-              x,
-              y,
-              radius * scale,
-              rotation,
-              alpha,
-              beamBoost,
-            );
-          }
-        }
-
-        drawWaveField(context, time) {
-          const width = this.width;
-          const height = this.height;
-          const hoverLift = 1 + this.hoverAmount * 0.12;
-          const travelProgress = (this.elapsed % 5600) / 5600;
-          const highlightCenter = (-0.22 + travelProgress * 1.44) * width;
-          const layers = [
-            {
-              center: 0.75,
-              amplitude: 0.155,
-              wavelength: 0.78,
-              thickness: 0.31,
-              phase: 2.7,
-              speed: 1.78,
-              fill: "255, 224, 129",
-              crest: "255, 241, 185",
-              fillAlpha: 0.16,
-              crestAlpha: 0.46,
-              lineWidth: 1.55,
-              glow: 10,
-            },
-            {
-              center: 0.56,
-              amplitude: 0.205,
-              wavelength: 0.57,
-              thickness: 0.265,
-              phase: 1.15,
-              speed: 2.2,
-              fill: "255, 210, 81",
-              crest: "255, 247, 201",
-              fillAlpha: 0.24,
-              crestAlpha: 0.82,
-              lineWidth: 2.35,
-              glow: 15,
-            },
-            {
-              center: 0.38,
-              amplitude: 0.145,
-              wavelength: 0.66,
-              thickness: 0.205,
-              phase: 4.35,
-              speed: 2.58,
-              fill: "255, 226, 119",
-              crest: "255, 253, 224",
-              fillAlpha: 0.13,
-              crestAlpha: 0.56,
-              lineWidth: 1.35,
-              glow: 11,
-            },
-          ];
-
-          context.save();
-          context.globalCompositeOperation = "source-over";
-
-          layers.forEach((layer, index) => {
-            const points = this.createWavePoints(layer, time, hoverLift);
-            const lowerPoints = points.map((point) => ({
-              x: point.x,
-              y:
-                point.y +
-                height * layer.thickness +
-                Math.sin(point.theta + 0.92) * height * layer.amplitude * 0.28,
-            }));
-
-            const fillGradient = context.createLinearGradient(
-              0,
-              height * (layer.center - layer.amplitude),
-              0,
-              height * (layer.center + layer.thickness + layer.amplitude),
-            );
-            fillGradient.addColorStop(0, `rgba(${layer.crest}, 0)`);
-            fillGradient.addColorStop(
-              0.18,
-              `rgba(${layer.crest}, ${layer.fillAlpha * (1 + this.hoverAmount * 0.18)})`,
-            );
-            fillGradient.addColorStop(
-              0.55,
-              `rgba(${layer.fill}, ${layer.fillAlpha * 0.72})`,
-            );
-            fillGradient.addColorStop(1, `rgba(${layer.fill}, 0)`);
-
-            context.beginPath();
-            context.moveTo(points[0].x, points[0].y);
-            points.slice(1).forEach((point) => context.lineTo(point.x, point.y));
-            for (let i = lowerPoints.length - 1; i >= 0; i -= 1) {
-              context.lineTo(lowerPoints[i].x, lowerPoints[i].y);
-            }
-            context.closePath();
-            context.fillStyle = fillGradient;
-            context.fill();
-
-            context.save();
-            context.beginPath();
-            context.moveTo(lowerPoints[0].x, lowerPoints[0].y);
-            lowerPoints
-              .slice(1)
-              .forEach((point) => context.lineTo(point.x, point.y));
-            context.strokeStyle = `rgba(${layer.fill}, ${layer.crestAlpha * 0.36})`;
-            context.lineWidth = Math.max(0.9, layer.lineWidth * 0.72);
-            context.lineCap = "round";
-            context.shadowColor = `rgba(${layer.fill}, 0.22)`;
-            context.shadowBlur = layer.glow * 0.65;
-            context.stroke();
-            context.restore();
-
-            const crestGradient = this.createCrestGradient(
-              context,
-              layer,
-              highlightCenter,
-            );
-            context.save();
-            context.beginPath();
-            context.moveTo(points[0].x, points[0].y);
-            points.slice(1).forEach((point) => context.lineTo(point.x, point.y));
-            context.strokeStyle = crestGradient;
-            context.lineWidth = layer.lineWidth + this.hoverAmount * 0.2;
-            context.lineCap = "round";
-            context.lineJoin = "round";
-            context.shadowColor = `rgba(${layer.crest}, ${0.24 + this.hoverAmount * 0.08})`;
-            context.shadowBlur = layer.glow + this.hoverAmount * 3;
-            context.stroke();
-            context.restore();
-
-            if (index === 1) {
-              this.drawCrestFoam(context, points, layer, highlightCenter);
-            }
-          });
-
-          context.restore();
-        }
-
-        createWavePoints(layer, time, hoverLift) {
-          const points = [];
-          const step = Math.max(3, Math.round(this.width / 92));
-          const wavelength = Math.max(88, this.width * layer.wavelength);
-          const breathing = 0.94 + Math.sin(time * 0.82 + layer.phase) * 0.06;
-          const amplitude =
-            Math.max(7, this.height * layer.amplitude) * hoverLift * breathing;
-          const centerY = this.height * layer.center;
-
-          for (let x = -step; x <= this.width + step; x += step) {
-            const theta =
-              (x / wavelength) * Math.PI * 2 - time * layer.speed + layer.phase;
-            const wave =
-              Math.sin(theta) +
-              Math.sin(theta * 2 - 0.68) * 0.22 +
-              Math.sin(theta * 3 + 0.42) * 0.07;
-            points.push({ x, y: centerY + wave * amplitude, theta });
-          }
-
-          return points;
-        }
-
-        createCrestGradient(context, layer, highlightCenter) {
-          const width = Math.max(1, this.width);
-          const center = highlightCenter / width;
-          const stops = [
-            [0, 0],
-            [0.06, layer.crestAlpha * 0.5],
-            [0.2, layer.crestAlpha * 0.82],
-            [0.82, layer.crestAlpha * 0.82],
-            [0.95, layer.crestAlpha * 0.42],
-            [1, 0],
-          ];
-          const highlightStops = [
-            [center - 0.2, layer.crestAlpha * 0.82],
-            [center - 0.09, Math.min(0.94, layer.crestAlpha * 1.58)],
-            [center, Math.min(1, layer.crestAlpha * 2.05)],
-            [center + 0.1, Math.min(0.9, layer.crestAlpha * 1.46)],
-            [center + 0.22, layer.crestAlpha * 0.78],
-          ];
-
-          highlightStops.forEach(([position, alpha]) => {
-            if (position > 0 && position < 1) stops.push([position, alpha]);
-          });
-          stops.sort((a, b) => a[0] - b[0]);
-
-          const gradient = context.createLinearGradient(0, 0, width, 0);
-          let lastPosition = -1;
-          stops.forEach(([position, alpha]) => {
-            const safePosition = Math.max(0, Math.min(1, position));
-            if (safePosition <= lastPosition) return;
-            gradient.addColorStop(
-              safePosition,
-              `rgba(${layer.crest}, ${alpha * (1 + this.hoverAmount * 0.12)})`,
-            );
-            lastPosition = safePosition;
-          });
-          return gradient;
-        }
-
-        drawCrestFoam(context, points, layer, highlightCenter) {
-          const spread = Math.max(58, this.width * 0.24);
-          context.save();
-          context.lineCap = "round";
-          context.lineJoin = "round";
-
-          for (let i = 2; i < points.length - 2; i += 1) {
-            const point = points[i];
-            const previous = points[i - 1];
-            const next = points[i + 1];
-            const isCrest = point.y < previous.y && point.y <= next.y;
-            if (!isCrest) continue;
-
-            const distance = point.x - highlightCenter;
-            const envelope = Math.exp(
-              -(distance * distance) / (2 * spread * spread),
-            );
-            const alpha = (0.18 + envelope * 0.58) * (1 + this.hoverAmount * 0.12);
-            const arcWidth = Math.max(16, this.width * 0.075);
-
-            context.beginPath();
-            context.moveTo(point.x - arcWidth, point.y + 2.2);
-            context.quadraticCurveTo(
-              point.x - arcWidth * 0.28,
-              point.y - 2.8,
-              point.x + arcWidth * 0.64,
-              point.y + 1.2,
-            );
-            context.strokeStyle = `rgba(${layer.crest}, ${Math.min(0.9, alpha)})`;
-            context.lineWidth = 1.1 + envelope * 0.45;
-            context.shadowColor = `rgba(${layer.crest}, ${0.28 + envelope * 0.32})`;
-            context.shadowBlur = 5 + envelope * 8;
-            context.stroke();
-          }
-
-          context.restore();
-        }
-
-        sampleWaveLift(x, time, layer) {
-          const wavelength = Math.max(88, this.width * (0.71 + layer * 0.065));
-          const theta =
-            (x / wavelength) * Math.PI * 2 -
-            time * (1.26 + layer * 0.11) +
-            1.15 +
-            layer * 0.78;
-          const wave =
-            Math.sin(theta) +
-            Math.sin(theta * 2 - 0.68) * 0.2 +
-            Math.sin(theta * 3 + 0.42) * 0.06;
-          return wave * (1.7 + layer * 1.05) * (1 + this.hoverAmount * 0.12);
-        }
-
-        drawTrail(context, particle, x, y, radius, curveAngle, alpha, beamBoost) {
-          const tailLength = radius * particle.tailScale;
-          const slope =
-            (particle.curveAmplitude * Math.PI * 2 * Math.cos(curveAngle)) /
-            Math.max(this.width, 1);
-          const startX = x - tailLength;
-          const startY = y - slope * tailLength;
-          const gradient = context.createLinearGradient(startX, startY, x, y);
-          gradient.addColorStop(0, "rgba(248, 197, 76, 0)");
-          gradient.addColorStop(
-            1,
-            `rgba(248, 192, 59, ${Math.min(0.7, alpha * (0.45 + beamBoost * 0.22))})`,
-          );
-
-          context.save();
-          context.globalCompositeOperation = "source-over";
-          context.strokeStyle = gradient;
-          context.lineWidth = Math.max(0.9, radius * 0.48);
-          context.lineCap = "round";
-          context.shadowColor = `rgba(244, 182, 47, ${0.38 + beamBoost * 0.3})`;
-          context.shadowBlur = 5 + beamBoost * 7;
-          context.beginPath();
-          context.moveTo(startX, startY);
-          context.quadraticCurveTo(
-            x - tailLength * 0.45,
-            y - slope * tailLength * 0.24,
-            x - radius * 0.7,
-            y,
-          );
-          context.stroke();
-          context.restore();
-        }
-
-        drawStar(context, particle, x, y, radius, rotation, alpha, beamBoost) {
-          const fillColors = ["255, 220, 125", "250, 200, 76", "246, 185, 50"];
-          const fill = fillColors[particle.layer];
-
-          context.save();
-          context.translate(x, y);
-          context.globalCompositeOperation = "source-over";
-          context.shadowColor = `rgba(241, 171, 31, ${0.48 + beamBoost * 0.3})`;
-          context.shadowBlur = particle.glow + beamBoost * 10 + this.hoverAmount * 3;
-          this.traceRoundedStar(context, radius, rotation, 0.18);
-          context.fillStyle = `rgba(${fill}, ${alpha})`;
-          context.fill();
-          context.strokeStyle = `rgba(255, 247, 193, ${Math.min(1, alpha + 0.16)})`;
-          context.lineWidth = 0.72 + particle.layer * 0.18;
-          context.stroke();
-          context.restore();
-        }
-
-        traceRoundedStar(context, outerRadius, rotation, rounding) {
-          const innerRadius = outerRadius * 0.48;
-          const points = Array.from({ length: 10 }, (_, index) => {
-            const radius = index % 2 === 0 ? outerRadius : innerRadius;
-            const angle = rotation - Math.PI / 2 + (index * Math.PI) / 5;
-            return {
-              x: Math.cos(angle) * radius,
-              y: Math.sin(angle) * radius,
-            };
-          });
-          const first = points[0];
-          const last = points[points.length - 1];
-
-          context.beginPath();
-          context.moveTo(
-            first.x + (last.x - first.x) * rounding,
-            first.y + (last.y - first.y) * rounding,
-          );
-
-          points.forEach((point, index) => {
-            const previous = points[(index + points.length - 1) % points.length];
-            const next = points[(index + 1) % points.length];
-            const beforeX = point.x + (previous.x - point.x) * rounding;
-            const beforeY = point.y + (previous.y - point.y) * rounding;
-            const afterX = point.x + (next.x - point.x) * rounding;
-            const afterY = point.y + (next.y - point.y) * rounding;
-            if (index > 0) context.lineTo(beforeX, beforeY);
-            context.quadraticCurveTo(point.x, point.y, afterX, afterY);
-          });
-          context.closePath();
-        }
-
-        shouldAnimate() {
-          // 这组粒子是推荐友链的核心视觉提示，不因系统“减少动态效果”而消失；
-          // 仅在页面进入后台时暂停，回到页面后由 visibilitychange 自动恢复。
-          return !document.hidden;
-        }
-
-        updatePlayback() {
-          if (this.shouldAnimate()) {
-            if (!this.animationFrame) {
-              this.lastTimestamp = 0;
-              this.animationFrame = requestAnimationFrame(this.handleFrame);
-            }
-          } else {
-            this.stopAnimation();
-            this.renderFrame();
-          }
-        }
-
-        stopAnimation() {
-          cancelAnimationFrame(this.animationFrame);
-          this.animationFrame = 0;
-          this.lastTimestamp = 0;
-        }
-
-        handleVisibilityChange() {
-          this.updatePlayback();
-        }
-
-        handlePointerEnter() {
-          this.hoverTarget = 1;
-        }
-
-        handlePointerLeave() {
-          this.hoverTarget = 0;
-        }
-
-        handleFocusIn() {
-          this.handlePointerEnter();
-        }
-
-        handleFocusOut(event) {
-          if (!this.card?.contains(event.relatedTarget)) {
-            this.handlePointerLeave();
-          }
-        }
-      }
-
-      customElements.define("recommended-star-flow", RecommendedStarFlow);
-    }
 
   </script>
 
@@ -1935,7 +1209,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
           }).join('') +
         '</div>';
       }
-      return '<a href="' + item.siteUrl + '" target="_blank" rel="noopener noreferrer" data-umami-event="friend-link-click" data-tags="' + (item.tags ? item.tags.join(',') : '') + '" class="friend-card friend-list-card group rounded-xl border border-(--line-divider) transition-all duration-300 relative overflow-hidden animate-fade-in-up">' +
+      return '<a href="' + item.siteUrl + '" target="_blank" rel="noopener noreferrer" data-umami-event="friend-link-click" data-tags="' + (item.tags ? item.tags.join(',') : '') + '" data-friend-site-url="' + item.siteUrl + '" data-friend-title="' + escapeHtml(item.title) + '" data-friend-dynamic="true" class="friend-card friend-list-card group rounded-xl border border-(--line-divider) transition-all duration-300 relative overflow-hidden animate-fade-in-up">' +
         '<div class="friend-card-surface absolute inset-0 rounded-xl overflow-hidden pointer-events-none">' +
           '<img class="friend-card-avatar-backdrop" src="' + item.imgUrl + '" alt="" aria-hidden="true" loading="lazy" decoding="async" data-friend-avatar-backdrop />' +
           '<div class="absolute inset-0 bg-(--primary) opacity-0 transition-opacity duration-300"></div>' +
@@ -1977,10 +1251,20 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         .then(function(data) {
           var friends = data.items || data.friends;
           if (Array.isArray(friends) && friends.length > 0) {
-            friends.sort(function(a, b) {
+            // 同域名去重：静态卡片（本地配置）里已有的站点不再重复插入动态卡片，
+            // 避免同一站点因为两个域名出现两张卡片（如站点迁移后新旧域名并存）
+            var existing = {};
+            grid.querySelectorAll('.friend-card[data-friend-site-url]:not([data-friend-dynamic])').forEach(function(card) {
+              var key = normalizeFriendUrl(card.getAttribute('data-friend-site-url'));
+              if (key) existing[key] = true;
+            });
+            var filtered = friends.filter(function(item) {
+              return !existing[normalizeFriendUrl(item.siteUrl)];
+            });
+            filtered.sort(function(a, b) {
               return (Number(b.weight) || 0) - (Number(a.weight) || 0);
             });
-            var html = friends.map(function(item) {
+            var html = filtered.map(function(item) {
               return renderFriendCard(item);
             }).join('');
             grid.insertAdjacentHTML('beforeend', html);
@@ -2385,17 +1669,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       color: #3f7185;
     }
 
-    .friend-card--recommended .friend-card-avatar {
-      border-color: color-mix(in srgb, #efbd46 48%, #fff1b8);
-      box-shadow:
-        0 0.18rem 0.55rem rgba(211, 154, 25, 0.13),
-        0 0 0.82rem rgba(244, 190, 54, 0.34);
-    }
-
-    .friend-card--recommended .friend-card-description {
-      color: #7d6b43;
-    }
-
     :global(.dark) .friend-card-avatar {
       border-color: color-mix(in srgb, var(--primary) 24%, var(--line-divider));
       box-shadow:
@@ -2416,17 +1689,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
 
     :root.dark .friend-card--own .friend-card-description {
       color: #b4e0f0;
-    }
-
-    :global(.dark) .friend-card--recommended .friend-card-avatar {
-      border-color: rgba(238, 191, 72, 0.58);
-      box-shadow:
-        0 0.18rem 0.62rem rgba(99, 70, 11, 0.24),
-        0 0 0.92rem rgba(232, 172, 34, 0.4);
-    }
-
-    :root.dark .friend-card--recommended .friend-card-description {
-      color: #ecd492;
     }
 
     .friend-site-preview {
@@ -2592,22 +1854,6 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       border-color: rgba(255, 255, 255, 0.3);
       background-color: transparent;
       --friend-click-count-ink: #d3e1ec;
-    }
-
-    .friend-card--recommended .friend-click-count {
-      color: #9a6a0b;
-    }
-
-    .friend-card--recommended .friend-click-count :global(svg) {
-      color: #d69712;
-    }
-
-    :root.dark .friend-card--recommended .friend-click-count {
-      --friend-click-count-ink: #f4cd6b;
-    }
-
-    :global(.dark) .friend-card--recommended .friend-click-count :global(svg) {
-      color: #f1be4c;
     }
 
     /* 探测延迟：位于卡片标题行右端，与站点名称并列展示，
@@ -3126,19 +2372,9 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       text-shadow: 0 0 0.75rem rgba(42, 157, 204, 0.34);
     }
 
-    .friend-card--recommended {
-      --friend-recommended-cycle: 3.8s;
-      isolation: isolate;
-      border-color: var(--friend-card-border-color);
-      background-color: color-mix(in srgb, #fff1b8 25%, transparent);
-      box-shadow:
-        0 0.42rem 1.18rem color-mix(in srgb, #e7b83e 24%, transparent),
-        0 0 1.08rem color-mix(in srgb, #e7b83e 14%, transparent);
-    }
-
-    /* 推荐 / 本站主理人徽章：随卡片内容流排在左下角，
-       与「最近更新于」等站点信息同处 meta 行，不再悬浮在卡片左上角。 */
-    .friend-recommended-badge {
+    /* 本站主理人徽章：随卡片内容流排在左下角，
+       与「最近更新于」等站点信息同处 meta 行。 */
+    .friend-site-badge {
       position: relative;
       z-index: 24;
       display: inline-flex;
@@ -3161,7 +2397,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       isolation: isolate;
     }
 
-    .friend-recommended-badge::before {
+    .friend-site-badge::before {
       position: absolute;
       inset: 0;
       z-index: -1;
@@ -3180,21 +2416,13 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       transition: transform 220ms ease, box-shadow 220ms ease;
     }
 
-    .friend-recommended-badge > * {
+    .friend-site-badge > * {
       position: relative;
       z-index: 1;
     }
 
-    .friend-recommended-icon {
-      width: 0.82rem;
-      height: 0.82rem;
-      color: #e09d13;
-      fill: currentColor;
-      filter: drop-shadow(0 0 0.12rem rgba(224, 157, 19, 0.25));
-    }
-
     /* 「本站主理人」在参考设计中是纯文字标识（无虚线边框、无底色），
-       与「推荐」徽章的方框样式区分开，视觉更轻。 */
+       视觉更轻。 */
     .friend-site-owner-badge {
       color: #176e98;
       padding: 0;
@@ -3219,13 +2447,13 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       filter: drop-shadow(0 0 0.12rem rgba(42, 155, 202, 0.24));
     }
 
-    .friend-card:hover .friend-recommended-badge,
-    .friend-card:focus-visible .friend-recommended-badge {
+    .friend-card:hover .friend-site-badge,
+    .friend-card:focus-visible .friend-site-badge {
       transform: none;
     }
 
-    .friend-card:hover .friend-recommended-badge::before,
-    .friend-card:focus-visible .friend-recommended-badge::before {
+    .friend-card:hover .friend-site-badge::before,
+    .friend-card:focus-visible .friend-site-badge::before {
       box-shadow:
         0 0.34rem 0.5rem rgba(17, 17, 25, 0.16),
         0 0.1rem 0.26rem rgba(17, 17, 25, 0.1),
@@ -3233,11 +2461,11 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       transform: translateY(-1px) rotate(-2deg);
     }
 
-    :global(.dark) .friend-recommended-badge {
+    :global(.dark) .friend-site-badge {
       color: #ffe39a;
     }
 
-    :global(.dark) .friend-recommended-badge::before {
+    :global(.dark) .friend-site-badge::before {
       border-color: color-mix(in srgb, #e9bd51 48%, rgba(255, 246, 219, 0.26));
       background: color-mix(in srgb, #8b641b 24%, transparent);
       box-shadow:
@@ -3259,424 +2487,11 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         inset 0 1px 0 rgba(213, 245, 255, 0.2);
     }
 
-    :global(.dark) .friend-recommended-icon {
-      color: #ffd56a;
-      filter: drop-shadow(0 0 0.14rem rgba(255, 213, 106, 0.28));
-    }
-
     :global(.dark) .friend-owner-icon {
       color: #87d8f5;
       filter: drop-shadow(0 0 0.14rem rgba(135, 216, 245, 0.28));
     }
 
-    .friend-card--recommended::before {
-      position: absolute;
-      inset: -0.4rem -0.55rem;
-      z-index: 0;
-      border-radius: 1rem;
-      content: "";
-      pointer-events: none;
-      background: linear-gradient(
-        105deg,
-        transparent 18%,
-        rgba(255, 232, 133, 0.08) 32%,
-        rgba(255, 202, 36, 0.68) 50%,
-        rgba(255, 241, 177, 0.14) 67%,
-        transparent 84%
-      );
-      filter: blur(0.7rem);
-      opacity: 0.76;
-      mix-blend-mode: screen;
-      animation: friend-recommended-outer-beam var(--friend-recommended-cycle) cubic-bezier(0.42, 0, 0.22, 1) infinite;
-    }
-
-    .friend-recommended-flow {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      display: block;
-      overflow: hidden;
-      pointer-events: none;
-      opacity: 1;
-      isolation: isolate;
-      contain: paint;
-      background: linear-gradient(
-        104deg,
-        transparent 0 18%,
-        rgba(255, 210, 61, 0.035) 28%,
-        rgba(255, 226, 112, 0.09) 39%,
-        rgba(255, 246, 184, 0.2) 50%,
-        rgba(255, 226, 112, 0.1) 62%,
-        rgba(255, 208, 52, 0.045) 76%,
-        transparent 94%
-      );
-      background-position: 130% 0;
-      background-size: 250% 100%;
-      animation: friend-recommended-surface-sheen var(--friend-recommended-cycle) cubic-bezier(0.42, 0, 0.22, 1) infinite;
-      transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .friend-recommended-canvas {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      display: block;
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      opacity: 0.98;
-    }
-
-    .friend-card--recommended:hover .friend-recommended-flow,
-    .friend-card--recommended:focus-visible .friend-recommended-flow {
-      opacity: 1;
-    }
-
-    .friend-recommended-flow::before,
-    .friend-recommended-flow::after {
-      position: absolute;
-      pointer-events: none;
-      content: "";
-    }
-
-    .friend-recommended-flow::before {
-      top: -88%;
-      bottom: -88%;
-      left: -64%;
-      z-index: 2;
-      width: 54%;
-      background:
-        linear-gradient(
-          105deg,
-          transparent 0 31%,
-          rgba(239, 173, 24, 0.2) 37%,
-          rgba(255, 220, 91, 0.58) 43%,
-          rgba(255, 255, 244, 0.98) 49%,
-          rgba(255, 241, 166, 0.82) 53%,
-          rgba(232, 153, 12, 0.3) 61%,
-          transparent 72%
-        ),
-        linear-gradient(
-          101deg,
-          transparent 8%,
-          rgba(248, 181, 29, 0.1) 25%,
-          rgba(255, 226, 111, 0.42) 50%,
-          rgba(245, 174, 19, 0.1) 75%,
-          transparent 92%
-        );
-      box-shadow:
-        0 0 0.75rem rgba(255, 226, 117, 0.5),
-        0 0 1.35rem rgba(235, 156, 13, 0.24);
-      filter: blur(0.16rem) saturate(1.08);
-      mix-blend-mode: normal;
-      transform: translate3d(-8%, 0, 0) skewX(-10deg);
-      transform-origin: center;
-      animation: friend-recommended-beam-primary var(--friend-recommended-cycle) cubic-bezier(0.32, 0.02, 0.24, 1) infinite;
-      will-change: transform, opacity;
-    }
-
-    .friend-recommended-flow::after {
-      top: -76%;
-      bottom: -76%;
-      left: -78%;
-      z-index: 1;
-      width: 78%;
-      background: linear-gradient(
-        104deg,
-        transparent 0 4%,
-        rgba(239, 163, 14, 0.035) 16%,
-        rgba(255, 210, 63, 0.12) 31%,
-        rgba(255, 239, 155, 0.38) 49%,
-        rgba(241, 168, 17, 0.16) 68%,
-        rgba(255, 239, 155, 0.06) 84%,
-        transparent 100%
-      );
-      -webkit-mask-image: linear-gradient(104deg, transparent 0%, #000 12%, #000 84%, transparent 100%);
-      mask-image: linear-gradient(104deg, transparent 0%, #000 12%, #000 84%, transparent 100%);
-      filter: blur(0.68rem) saturate(1.1);
-      mix-blend-mode: normal;
-      transform: translate3d(-6%, 0, 0) skewX(-8deg);
-      transform-origin: center;
-      animation: friend-recommended-beam-halo var(--friend-recommended-cycle) cubic-bezier(0.32, 0.02, 0.24, 1) infinite;
-      will-change: transform, opacity;
-    }
-
-    @keyframes friend-recommended-outer-beam {
-      0% {
-        transform: translate3d(-44%, 0, 0) scaleX(0.82);
-        opacity: 0;
-      }
-
-      12% {
-        opacity: 0.42;
-      }
-
-      58% {
-        opacity: 0.7;
-      }
-
-      88% {
-        opacity: 0.3;
-      }
-
-      100% {
-        transform: translate3d(44%, 0, 0) scaleX(1.08);
-        opacity: 0;
-      }
-    }
-
-    @keyframes friend-recommended-beam-primary {
-      0% {
-        transform: translate3d(-8%, 0, 0) skewX(-10deg);
-        opacity: 0;
-      }
-
-      10% {
-        opacity: 0.64;
-      }
-
-      46% {
-        opacity: 1;
-      }
-
-      83% {
-        opacity: 0.62;
-      }
-
-      100% {
-        transform: translate3d(348%, 0, 0) skewX(-10deg);
-        opacity: 0;
-      }
-    }
-
-    @keyframes friend-recommended-beam-halo {
-      0% {
-        transform: translate3d(-6%, 0, 0) skewX(-8deg) scaleX(0.9);
-        opacity: 0;
-      }
-
-      14% {
-        opacity: 0.28;
-      }
-
-      54% {
-        opacity: 0.68;
-      }
-
-      84% {
-        opacity: 0.52;
-      }
-
-      96% {
-        opacity: 0.22;
-      }
-
-      100% {
-        transform: translate3d(300%, 0, 0) skewX(-8deg) scaleX(1.08);
-        opacity: 0;
-      }
-    }
-
-    @keyframes friend-recommended-surface-sheen {
-      0% {
-        background-position: 130% 0;
-      }
-
-      100% {
-        background-position: -170% 0;
-      }
-    }
-
-    @keyframes friend-recommended-title-glow {
-      0%,
-      100% {
-        filter:
-          drop-shadow(0 0 0.08rem rgba(239, 175, 34, 0.24))
-          drop-shadow(0 0 0.18rem rgba(232, 153, 12, 0.12));
-      }
-
-      12% {
-        filter:
-          drop-shadow(0 0 0.14rem rgba(248, 190, 54, 0.46))
-          drop-shadow(0 0 0.3rem rgba(233, 158, 16, 0.22));
-      }
-
-      48% {
-        filter:
-          drop-shadow(0 0 0.22rem rgba(255, 217, 112, 0.92))
-          drop-shadow(0 0 0.52rem rgba(233, 151, 8, 0.58));
-      }
-
-      86% {
-        filter:
-          drop-shadow(0 0 0.13rem rgba(248, 190, 54, 0.4))
-          drop-shadow(0 0 0.28rem rgba(233, 158, 16, 0.18));
-      }
-    }
-
-    .friend-card--recommended .friend-card-surface::after {
-      position: absolute;
-      top: 50%;
-      right: -0.2rem;
-      z-index: 0;
-      width: 7.2rem;
-      height: 7.2rem;
-      content: "";
-      pointer-events: none;
-      background: linear-gradient(138deg, #f7c73f, #ffdc70 70%, #eea915);
-      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M60 14c4 0 7 3 9 7l10 21 24 4c4 1 7 3 8 7 1 3 0 7-3 10L90 80l4 24c1 4-1 8-4 10-3 2-7 2-11 0L60 102l-19 12c-4 2-8 2-11 0-3-2-5-6-4-10l4-24-18-17c-3-3-4-7-3-10 1-4 4-6 8-7l24-4 10-21c2-4 5-7 9-7Z' stroke-width='4'/%3E%3Cpath d='m23 26 2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6Zm79 65 1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5-4Z' stroke-width='2.5'/%3E%3C/g%3E%3C/svg%3E");
-      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M60 14c4 0 7 3 9 7l10 21 24 4c4 1 7 3 8 7 1 3 0 7-3 10L90 80l4 24c1 4-1 8-4 10-3 2-7 2-11 0L60 102l-19 12c-4 2-8 2-11 0-3-2-5-6-4-10l4-24-18-17c-3-3-4-7-3-10 1-4 4-6 8-7l24-4 10-21c2-4 5-7 9-7Z' stroke-width='4'/%3E%3Cpath d='m23 26 2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6Zm79 65 1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5-4Z' stroke-width='2.5'/%3E%3C/g%3E%3C/svg%3E");
-      -webkit-mask-position: center;
-      mask-position: center;
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      -webkit-mask-size: contain;
-      mask-size: contain;
-      opacity: 0.24;
-      transform: translateY(-50%) rotate(-8deg);
-      transition:
-        opacity 300ms ease,
-        transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    .friend-card--recommended:hover .friend-card-surface::after {
-      opacity: 0.36;
-      transform: translate(-0.2rem, -50%) rotate(-12deg) scale(1.05);
-    }
-
-    .friend-card:not(.friend-card--recommended):hover .friend-card-title,
-    .friend-card:not(.friend-card--recommended):focus-visible .friend-card-title {
-      color: var(--primary);
-    }
-
-    .friend-card--recommended .friend-card-title {
-      display: inline-flex;
-      align-items: center;
-      flex: 0 1 auto;
-      width: fit-content;
-      min-width: 0;
-      max-width: calc(100% - 1.75rem);
-      padding: 0.12rem 0.56rem 0.16rem;
-      overflow: hidden;
-      border: 1px solid color-mix(in srgb, #e8ae2d 46%, transparent);
-      border-radius: 0.72rem;
-      background: color-mix(in srgb, #fff2ae 68%, var(--card-bg));
-      box-shadow: 0 0 0.55rem color-mix(in srgb, #efb229 22%, transparent);
-      color: #c9870d;
-      font-weight: 850;
-      letter-spacing: 0.008em;
-      animation: friend-recommended-title-glow var(--friend-recommended-cycle) cubic-bezier(0.42, 0, 0.22, 1) infinite;
-      text-shadow:
-        0 1px 0 rgba(255, 248, 205, 0.96),
-        0 0 0.28rem rgba(248, 192, 56, 0.62),
-        0 0 0.72rem rgba(232, 159, 20, 0.38);
-      will-change: filter;
-    }
-
-    .friend-card--recommended:hover .friend-card-title,
-    .friend-card--recommended:focus-visible .friend-card-title {
-      color: #b87406;
-      text-shadow:
-        0 1px 0 rgba(255, 250, 215, 1),
-        0 0 0.34rem rgba(250, 191, 44, 0.78),
-        0 0 0.88rem rgba(226, 144, 10, 0.52);
-    }
-
-    .friend-card--recommended:hover {
-      border-color: var(--friend-card-hover-border-color);
-      background-color: color-mix(in srgb, #ffeda4 36%, transparent);
-      box-shadow:
-        0 0.58rem 1.42rem color-mix(in srgb, #e7b83e 31%, transparent),
-        0 0 1.42rem color-mix(in srgb, #e7b83e 19%, transparent);
-    }
-
-    .friend-card--recommended .friend-card-tag {
-      color: #8b620c;
-      border: 1px dashed color-mix(in srgb, #dba922 24%, transparent);
-      background: transparent;
-    }
-
-    :global(.dark) .friend-card--recommended {
-      border-color: var(--friend-card-border-color);
-      background-color: color-mix(in srgb, #7a5714 22%, transparent);
-      box-shadow:
-        0 0.42rem 1.18rem color-mix(in srgb, #d39b24 19%, transparent),
-        0 0 1.08rem color-mix(in srgb, #d39b24 12%, transparent);
-    }
-
-    :global(.dark) .friend-card--recommended .friend-card-title {
-      border-color: color-mix(in srgb, #e2ac3f 46%, transparent);
-      background: color-mix(in srgb, #8b6419 42%, var(--card-bg));
-      box-shadow: 0 0 0.58rem color-mix(in srgb, #d79a24 28%, transparent);
-      color: #f6cf67;
-      text-shadow:
-        0 1px 0 rgba(92, 56, 5, 0.74),
-        0 0 0.32rem rgba(255, 211, 102, 0.64),
-        0 0 0.82rem rgba(230, 157, 20, 0.46);
-    }
-
-    :global(.dark) .friend-card--recommended:hover .friend-card-title,
-    :global(.dark) .friend-card--recommended:focus-visible .friend-card-title {
-      color: #ffe39a;
-      text-shadow:
-        0 1px 0 rgba(84, 49, 3, 0.72),
-        0 0 0.38rem rgba(255, 222, 126, 0.78),
-        0 0 1rem rgba(232, 159, 22, 0.58);
-    }
-
-    :global(.dark) .friend-card--recommended:hover {
-      background-color: color-mix(in srgb, #8a6218 30%, transparent);
-    }
-
-    :global(.dark) .friend-card--own {
-      border-color: var(--friend-card-border-color);
-      background-color: color-mix(in srgb, var(--primary) 16%, transparent);
-      box-shadow:
-        0 0.42rem 1.18rem color-mix(in srgb, var(--primary) 17%, transparent),
-        0 0 1.08rem color-mix(in srgb, var(--primary) 12%, transparent);
-    }
-
-    :global(.dark) .friend-card--own:hover {
-      background-color: color-mix(in srgb, var(--primary) 22%, transparent);
-    }
-
-    :global(.dark) .friend-card--own .friend-card-title {
-      color: #73c9ef;
-      text-shadow: 0 0 0.6rem rgba(82, 185, 230, 0.24);
-    }
-
-    :global(.dark) .friend-card.friend-card--own:hover .friend-card-title,
-    :global(.dark) .friend-card.friend-card--own:focus-visible .friend-card-title {
-      color: #a7e2fb;
-      text-shadow: 0 0 0.8rem rgba(82, 185, 230, 0.38);
-    }
-
-    :global(.dark) .friend-card--own .friend-card-tag {
-      color: #a7def6;
-      border-color: rgba(70, 175, 221, 0.42);
-      background: transparent;
-    }
-
-    :global(.dark) .friend-card--recommended .friend-card-tag {
-      color: #f2cf78;
-      border-color: color-mix(in srgb, #d9a82e 24%, transparent);
-      background: transparent;
-    }
-
-    /* 降级推荐：保留黄色卡片与静态大星星，不启动扫光、流动层或标题发光。 */
-    .friend-card--recommended-degraded::before,
-    .friend-card--recommended-degraded::after {
-      animation: none;
-      opacity: 0;
-    }
-
-    .friend-card--recommended-degraded .friend-recommended-flow {
-      display: none;
-    }
-
-    .friend-card--recommended-degraded .friend-card-title {
-      animation: none;
-    }
 
   </style>
 

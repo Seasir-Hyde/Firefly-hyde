@@ -413,14 +413,33 @@ function looksLikeFeedDocument(text: string): boolean {
 	if (!head.trim()) return false;
 	// 明确是 HTML 文档的响应直接排除
 	if (head.includes("<!doctype html") || head.includes("<html")) return false;
+	// 必须有 feed 根元素才算 feed：
+	// 某些站点把 404 错误页做成 XML（如 EdgeOne 的 <Error><Tip>404 Not Found</Tip>），
+	// 之前仅凭 "<?xml" 会把它当成 feed 继续解析。
 	return (
 		head.includes("<rss") ||
 		head.includes("<feed") ||
 		head.includes("<rdf:rdf") ||
-		head.includes("<channel") ||
-		head.includes("<?xml")
+		head.includes("<channel")
 	);
 }
+
+/**
+ * 条目时间字段的候选标签。
+ * 除 RSS 2.0 的 pubDate、Atom 的 published/updated 外，
+ * 还有 Dublin Core / DCTerms 命名空间写法（部分博客主题默认输出这些），
+ * 之前只认无命名空间的标签，导致这类 feed 解析出条目却全部没有时间。
+ */
+const FEED_DATE_TAGS = [
+	"pubDate",
+	"published",
+	"updated",
+	"date",
+	"dc:date",
+	"dc:issued",
+	"dcterms.created",
+	"dcterms.modified",
+];
 
 function parseFeed(text: string, baseUrl: string): ParsedFeedItem[] {
 	if (!looksLikeFeedDocument(text)) return [];
@@ -441,9 +460,7 @@ function parseFeed(text: string, baseUrl: string): ParsedFeedItem[] {
 					"content",
 				]),
 			).slice(0, 320);
-			const publishedAt = parseDate(
-				extractTag(block, ["pubDate", "published", "updated", "date"]),
-			);
+			const publishedAt = parseDate(extractTag(block, FEED_DATE_TAGS));
 
 			return { title, link, description, publishedAt };
 		})
