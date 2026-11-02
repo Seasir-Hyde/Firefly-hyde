@@ -249,6 +249,17 @@ html {
         opacity: 0;
     }
 
+    /* 头像使用不透明白底，避免浅色插画与半透明卡片/暗色遮罩混在一起 */
+    .avatar-surface {
+        background-color: #fff;
+    }
+    .avatar-surface > .lqip-placeholder {
+        background: #fff !important;
+    }
+    .avatar-surface > .transition {
+        background-color: transparent !important;
+    }
+
 
     /* 开启边框和阴影效果时的样式 */
     .enable-card-border .card-base {

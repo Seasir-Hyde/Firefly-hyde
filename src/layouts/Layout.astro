@@ -157,6 +157,17 @@ if (isGeneratedOg) {
 }
 const ogImageAlt = propsOgImageAlt ?? pageTitle;
 
+// 本地预览判定：开发服务器或本机访问时不写入/不展示 Umami 公开统计
+const localPreviewHostnames = new Set([
+	"localhost",
+	"127.0.0.1",
+	"::1",
+	"0.0.0.0",
+]);
+const isLocalPreview =
+	import.meta.env.DEV ||
+	localPreviewHostnames.has(Astro.url.hostname.toLowerCase());
+
 // 使用固定的banner偏移量，position配置用于图片定位
 ---
 
@@ -190,6 +201,24 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
           replays={analyticsConfig.umamiAnalytics.replays}
           />
         )}
+        {/* 公开统计指标（访客/浏览量）统一挂载：负责填充页面上所有
+            [data-umami-stat] 元素（用户资料卡统计、页脚统计等），
+            挂载后页脚自带的统计脚本会跳过，避免同页双重请求。 */}
+        {analyticsConfig?.umamiAnalytics?.websiteId &&
+          analyticsConfig.umamiAnalytics.shareId &&
+          analyticsConfig.umamiAnalytics.shareApiBase && (
+            <MicrosoftClarity
+              shareId={analyticsConfig.umamiAnalytics.shareId}
+              shareApiBase={analyticsConfig.umamiAnalytics.shareApiBase}
+              historicalVisitors={
+                analyticsConfig.umamiAnalytics.historicalStats?.visitors
+              }
+              historicalPageviews={
+                analyticsConfig.umamiAnalytics.historicalStats?.pageviews
+              }
+              localPreview={isLocalPreview}
+            />
+          )}
         {analyticsConfig?.la51Analytics?.Id && (
             <La51Analytics
             analyticsId={analyticsConfig.la51Analytics.Id}

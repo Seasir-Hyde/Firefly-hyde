@@ -1,6 +1,7 @@
 ---
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
+import { analyticsConfig } from "@/config/analyticsConfig";
 import { profileConfig } from "@/config/profileConfig";
 import { encodeMailto, MAILTO_ONCLICK_SCRIPT } from "@/utils/email-utils";
 import { url } from "@/utils/url-utils";
@@ -9,88 +10,399 @@ interface Props {
 	class?: string;
 	style?: string;
 }
+
 const { style } = Astro.props;
 const className = Astro.props.class;
+const umamiAnalytics = analyticsConfig.umamiAnalytics;
+const showUmamiStats = Boolean(
+	umamiAnalytics?.websiteId &&
+		umamiAnalytics.shareId &&
+		umamiAnalytics.shareApiBase &&
+		umamiAnalytics.showSiteStats !== false,
+);
+
+// 社交链接：优先使用 profileConfig.links；未配置 RSS 时补上内置的 /rss.xml 入口
+const hasRssLink = profileConfig.links.some(
+	(link) => link.name.toLowerCase() === "rss",
+);
+const socialLinks = [
+	...profileConfig.links,
+	...(hasRssLink
+		? []
+		: [
+				{
+					name: "RSS",
+					icon: "material-symbols:rss-feed-rounded",
+					url: url("/rss.xml"),
+				},
+			]),
+];
 ---
 
-<div class:list={["card-base", "p-3", className]} style={style}>
-  <a
-    aria-label="Go to About Page"
-    href={url("/about/")}
-    class="group block relative mx-auto mt-1 lg:mx-0 lg:mt-0 mb-3
-       max-w-48 lg:max-w-none overflow-hidden rounded-xl active:scale-95"
-  >
-    <div
-      class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50
-        w-full h-full z-50 flex items-center justify-center"
-    >
-      <Icon
-        name="fa7-regular:address-card"
-        class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl"
-      />
-    </div>
-    <ImageWrapper
-      src={profileConfig.avatar || ""}
-      alt="Profile Image of the Author"
-      class="profile-avatar-image mx-auto lg:w-full h-full lg:mt-0"
-      loading="eager"
-      fetchpriority="high"
-      widths={[350]}
-      sizes="350px"
-    />
-  </a>
-  <div class="px-2">
-    <div
-      class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition"
-    >
-      {profileConfig.name}
-    </div>
-    <div
-      class="h-1 w-5 bg-(--primary) mx-auto rounded-full mb-2 transition"
-    >
-    </div>
-    <div class="text-center text-neutral-400 mb-2.5 transition">
-      {profileConfig.bio}
-    </div>
-        <div class="flex flex-wrap gap-2 justify-center mb-1">
-            {profileConfig.links.length > 1 && profileConfig.links.map(item =>
-                    {
-                    const showName = item.showName;
-                    const className = showName 
-                        ? "btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95" 
-                        : "btn-regular rounded-lg h-10 w-10 active:scale-90";
-
-                    if (item.url.startsWith("mailto:")) {
-                        const encodedEmail = encodeMailto(item.url);
-                        return <a rel="me" aria-label={item.name} href="#" data-encoded-email={encodedEmail} onclick={MAILTO_ONCLICK_SCRIPT},
-                                    class={className}>
-                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
-                            {showName && item.name}
-                        </a>
-                    } else {
-                        return <a rel="me" aria-label={item.name} href={item.url} target="_blank" class={className}>
-                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
-                            {showName && item.name}
-                        </a>
-                    }
-                    }
-            )}
-            {profileConfig.links.length == 1 && (function(item){
-                if (item.url.startsWith("mailto:")) {
-                        const encodedEmail = encodeMailto(item.url);
-                        return <a rel="me" aria-label={item.name} href="#" data-encoded-email={encodedEmail} onclick={MAILTO_ONCLICK_SCRIPT},
-                                    class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95">
-                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
-                            {item.name}
-                        </a>
-                    } else {
-                        return <a rel="me" aria-label={item.name} href={item.url} target="_blank"
-                                            class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95">
-                                <Icon name={item.icon} class="text-[1.5rem]"></Icon>
-                                {item.name}
-                            </a>
-                    }
-            })(profileConfig.links[0])}
-        </div>
-  </div>
+<div class:list={["profile-card", "card-base", className]} style={style}>
+	<div class="profile-cover" aria-hidden="true"></div>
+	<a class="profile-avatar-link" href={url("/about/")} aria-label={`查看${profileConfig.name}的介绍`}>
+		<ImageWrapper
+			src={profileConfig.avatar || ""}
+			alt={`${profileConfig.name}的头像`}
+			class="avatar-surface profile-avatar"
+			loading="eager"
+			fetchpriority="high"
+			widths={[96, 192]}
+			sizes="80px"
+		/>
+	</a>
+	<div class="profile-details">
+		<div class="profile-name">{profileConfig.name}</div>
+		{profileConfig.bio && <p class="profile-bio">{profileConfig.bio}</p>}
+		<nav class="profile-socials" aria-label="个人社交链接">
+			{socialLinks.map((item) =>
+				item.url.startsWith("copy:") ? (
+					<button
+						class="profile-social profile-copy-button"
+						type="button"
+						aria-label={item.name}
+						title={item.name}
+						data-copy-value={item.url.slice(5)}
+					>
+						<Icon is:inline name={item.icon} aria-hidden="true" />
+					</button>
+				) : item.url.startsWith("mailto:") ? (
+					<a
+						class="profile-social"
+						href="#"
+						aria-label={item.name}
+						title={item.name}
+						rel="me"
+						data-encoded-email={encodeMailto(item.url)}
+						onclick={MAILTO_ONCLICK_SCRIPT}
+					>
+						<Icon is:inline name={item.icon} aria-hidden="true" />
+					</a>
+				) : (
+					<a
+						class="profile-social"
+						href={item.url}
+						aria-label={item.name}
+						title={item.name}
+						target={item.name === "RSS" ? undefined : "_blank"}
+						rel={item.name === "RSS" ? undefined : "me noopener noreferrer"}
+					>
+						<Icon is:inline name={item.icon} aria-hidden="true" />
+					</a>
+				),
+			)}
+			<span class="profile-copy-toast" role="status" aria-live="polite"></span>
+		</nav>
+		{showUmamiStats && (
+			<div class="profile-stats" aria-label="站点访问统计">
+				<div class="profile-stat">
+					<span class="profile-stat-label"><Icon is:inline name="material-symbols:group-outline" aria-hidden="true" />累计访客</span>
+					<strong data-umami-stat="visitors" aria-live="polite">加载中</strong>
+				</div>
+				<div class="profile-stat">
+					<span class="profile-stat-label"><Icon is:inline name="material-symbols:visibility-outline-rounded" aria-hidden="true" />总浏览量</span>
+					<strong data-umami-stat="pageviews" aria-live="polite">加载中</strong>
+				</div>
+			</div>
+		)}
+	</div>
 </div>
+
+<style>
+	.profile-card {
+		position: relative;
+		isolation: isolate;
+		min-height: 16rem;
+		text-align: center;
+		background: var(--card-bg) !important;
+	}
+
+	.profile-cover {
+		height: 7.65rem;
+		background-image:
+			linear-gradient(to bottom, transparent 52%, var(--card-bg) 100%),
+			var(--profile-cover-image, url("/assets/images/profile-covers/profile-cover-01.webp"));
+		background-size: cover;
+	}
+
+	.profile-avatar-link {
+		position: relative;
+		z-index: 2;
+		display: block;
+		width: 5rem;
+		height: 5rem;
+		margin: -2.7rem auto 0;
+		border: 4px solid var(--card-bg);
+		border-radius: 50%;
+		overflow: hidden;
+		box-shadow: 0 4px 12px rgb(25 39 68 / 17%);
+		transition: transform 180ms ease-out;
+	}
+
+	.profile-avatar-link:hover {
+		transform: translateY(-2px);
+	}
+
+	.profile-avatar-link:focus-visible {
+		outline: 3px solid var(--primary);
+		outline-offset: 3px;
+	}
+
+	.profile-avatar {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		transform-origin: center;
+		animation: profile-avatar-breathe 4.2s ease-in-out infinite;
+	}
+
+	@keyframes profile-avatar-breathe {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+
+		50% {
+			transform: scale(1.035);
+		}
+	}
+
+	.profile-details {
+		padding: 0.55rem 0.7rem 0.8rem;
+	}
+
+	.profile-name {
+		color: var(--text-color);
+		font-size: 1.1rem;
+		font-weight: 700;
+		line-height: 1.4;
+	}
+
+	.profile-bio {
+		margin: 0.2rem 0 0;
+		color: var(--content-meta);
+		font-size: 0.76rem;
+		line-height: 1.5;
+	}
+
+	.profile-socials {
+		position: relative;
+		display: flex;
+		justify-content: center;
+		gap: 0.45rem;
+		margin-top: 1.1rem;
+	}
+
+	.profile-social {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.35rem;
+		height: 2.35rem;
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+		color: var(--text-color);
+		background: transparent;
+		cursor: pointer;
+		transition: color 160ms ease-out;
+	}
+
+	.profile-social:hover {
+		color: var(--primary);
+	}
+
+	.profile-social:focus-visible {
+		outline: 2px solid var(--primary);
+		outline-offset: 2px;
+	}
+
+	.profile-social :global(svg) {
+		width: 1.25rem;
+		height: 1.25rem;
+	}
+
+	.profile-stats {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.55rem;
+		margin-top: 0.8rem;
+	}
+
+	.profile-stat {
+		padding: 0.55rem 0.3rem;
+		border: 1px solid rgb(120 120 120 / 16%);
+		border-radius: 0.625rem;
+		background: transparent;
+		box-shadow:
+			0 2px 5px rgb(38 38 38 / 7%),
+			0 1px 2px rgb(38 38 38 / 4%),
+			inset 0 1px 0 rgb(255 255 255 / 80%),
+			inset 0 -1px 0 rgb(112 112 112 / 10%);
+		transition: box-shadow 220ms ease;
+	}
+
+	.profile-stat:hover {
+		border-style: dashed;
+		border-color: rgb(120 120 120 / 42%);
+		box-shadow:
+			0 3px 6px rgb(38 38 38 / 10%),
+			0 1px 2px rgb(38 38 38 / 5%),
+			inset 0 1px 0 rgb(255 255 255 / 90%),
+			inset 0 -1px 0 rgb(112 112 112 / 16%);
+	}
+
+	:global(.dark) .profile-stat {
+		border-color: rgb(224 224 224 / 20%);
+	}
+
+	:global(.dark) .profile-stat:hover {
+		border-color: rgb(230 230 230 / 42%);
+	}
+
+	.profile-stat-label {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.15rem;
+		color: var(--text-color);
+		font-size: 0.68rem;
+		font-weight: 600;
+	}
+
+	.profile-stat-label :global(svg) {
+		width: 0.95rem;
+		height: 0.95rem;
+		color: var(--primary);
+	}
+
+	.profile-stat strong {
+		display: block;
+		margin-top: 0.1rem;
+		color: var(--text-color);
+		font-size: 0.9rem;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.profile-copy-toast {
+		position: absolute;
+		bottom: calc(100% + 0.2rem);
+		left: 50%;
+		z-index: 3;
+		max-width: calc(100% - 1rem);
+		padding: 0.3rem 0.6rem;
+		border: 1px solid var(--line-divider);
+		border-radius: 0.5rem;
+		color: var(--text-color);
+		background: var(--card-bg);
+		box-shadow: 0 2px 6px rgb(25 39 68 / 10%);
+		font-size: 0.72rem;
+		font-weight: 500;
+		line-height: 1.45;
+		opacity: 0;
+		pointer-events: none;
+		transform: translateX(-50%);
+		transition: opacity 160ms ease-out;
+		white-space: nowrap;
+	}
+
+	.profile-copy-toast.is-visible {
+		opacity: 1;
+	}
+
+	:global(.profile-card.card-base::before) {
+		content: none !important;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.profile-avatar-link,
+		.profile-social,
+		.profile-copy-toast {
+			transition: none;
+		}
+
+		.profile-avatar {
+			animation: none;
+		}
+	}
+</style>
+
+<script>
+	const profileCoverImages = [
+		"/assets/images/profile-covers/profile-cover-01.webp",
+		"/assets/images/profile-covers/profile-cover-02.webp",
+	];
+	const coverWindow = window as Window & {
+		__fireflyProfileCover?: string;
+		__fireflyProfileCoverBound?: boolean;
+	};
+
+	function applyProfileCover(image: string) {
+		document.querySelectorAll<HTMLElement>(".profile-cover").forEach((cover) => {
+			cover.style.setProperty("--profile-cover-image", `url("${image}")`);
+		});
+	}
+
+	function getProfileCover() {
+		// A Swup visit can rerun this script, but it keeps the same Window.
+		// Choose again only when the visitor opens a new document.
+		if (profileCoverImages.includes(coverWindow.__fireflyProfileCover ?? "")) {
+			return coverWindow.__fireflyProfileCover!;
+		}
+		let previousCover = "";
+		try {
+			previousCover = sessionStorage.getItem("profile-cover-last-v2") ?? "";
+		} catch {
+			// Storage may be unavailable in private browsing contexts.
+		}
+
+		const choices = profileCoverImages.filter((image) => image !== previousCover);
+		const image = choices[Math.floor(Math.random() * choices.length)] ?? profileCoverImages[0];
+		coverWindow.__fireflyProfileCover = image;
+		try {
+			sessionStorage.setItem("profile-cover-last-v2", image);
+		} catch {
+			// The cover remains stable in this document when storage is unavailable.
+		}
+		return image;
+	}
+
+	applyProfileCover(getProfileCover());
+	if (!coverWindow.__fireflyProfileCoverBound) {
+		coverWindow.__fireflyProfileCoverBound = true;
+		const restoreProfileCover = () => applyProfileCover(getProfileCover());
+		// 覆盖 Astro 视图过渡与 Swup 两种换页机制，换页后重新套用当前封面
+		document.addEventListener("astro:after-swap", restoreProfileCover);
+		document.addEventListener("astro:page-load", restoreProfileCover);
+		document.addEventListener("swup:contentReplaced", restoreProfileCover);
+		document.addEventListener("swup:page:view", restoreProfileCover);
+	}
+
+	const toastTimers = new WeakMap<HTMLElement, number>();
+
+	document.addEventListener("click", async (event) => {
+		if (!(event.target instanceof Element)) return;
+		const button = event.target.closest<HTMLButtonElement>(".profile-copy-button");
+		if (!button) return;
+		const value = button.dataset.copyValue;
+		if (!value) return;
+
+		let copied = false;
+		try {
+			await navigator.clipboard.writeText(value);
+			copied = true;
+		} catch {
+			// Clipboard access can be denied or unavailable outside a secure context.
+		}
+
+		const toast = button.closest(".profile-socials")?.querySelector<HTMLElement>(".profile-copy-toast");
+		if (!toast) return;
+		toast.textContent = copied ? `${button.getAttribute("aria-label")}已复制` : "复制失败，请重试";
+		toast.style.left = `${button.offsetLeft + button.offsetWidth / 2}px`;
+		toast.classList.add("is-visible");
+		const previousTimer = toastTimers.get(toast);
+		if (previousTimer) window.clearTimeout(previousTimer);
+		toastTimers.set(toast, window.setTimeout(() => toast.classList.remove("is-visible"), 1800));
+	});
+</script>

@@ -1,15 +1,20 @@
 ---
 interface Props {
-	shareId: string;
-	shareApiBase: string;
+	/** Microsoft Clarity 站点 ID。当前脚本仅实现了 Umami 公开统计指标，
+	    Clarity 埋点尚未接入，此处先保留占位以兼容既有挂载写法。 */
+	clarityId?: string;
+	/** Umami 分享令牌；为空时脚本不发起任何公开统计请求 */
+	shareId?: string;
+	/** Umami 实例地址，公开统计接口基址 */
+	shareApiBase?: string;
 	historicalVisitors?: number;
 	historicalPageviews?: number;
 	localPreview?: boolean;
 }
 
 const {
-	shareId,
-	shareApiBase,
+	shareId = "",
+	shareApiBase = "",
 	historicalVisitors = 0,
 	historicalPageviews = 0,
 	localPreview = false,
@@ -48,9 +53,10 @@ const {
 		const animationClockKey = "__rainztAnalyticsAnimationClock";
 		let summaryCounterObserver;
 		const isLocalHost = localPreviewHosts.has(window.location.hostname.toLowerCase()) || window.location.protocol === "file:";
+		// 本地预览标记。注意：这里只用于「不触发友链点击的服务端同步」等副作用控制，
+		// 不再用来屏蔽统计读取——Umami 公开统计接口是只读的，本地开发同样需要看到真实数字
+		// （移植前页脚统计在本地就显示真实数字，屏蔽会造成体验倒退）。
 		const isLocalAnalytics = localPreview || isLocalHost;
-		const isAnalyticsPage = () => window.location.pathname.replace(/\/+$/u, "") === "/analytics";
-		const shouldBlockLocalStats = () => isLocalAnalytics && !isAnalyticsPage();
 		const getAnimationClock = () => {
 			const root = document.querySelector("[data-umami-dashboard]");
 			const current = window[animationClockKey];
@@ -73,17 +79,15 @@ const {
 		};
 
 		const markLocalPreview = () => {
-			if (!shouldBlockLocalStats()) return;
+			if (!isLocalAnalytics) return;
 			document.documentElement.dataset.analyticsMode = "local";
-			document.querySelectorAll("[data-umami-pageviews], [data-umami-stat]").forEach((element) => {
-				element.textContent = "不统计";
-			});
+			// Waline 浏览数在本地没有真实数据，直接隐藏
 			document.querySelectorAll(".waline-pageview-count").forEach((element) => {
 				element.parentElement?.setAttribute("hidden", "true");
 			});
 		};
 
-		if (shouldBlockLocalStats()) {
+		if (isLocalAnalytics) {
 			markLocalPreview();
 			const localPreviewObserver = new MutationObserver(() => {
 				if (!document.querySelector("[data-umami-pageviews], [data-umami-stat], [data-friend-clicks-value], .waline-pageview-count")) return;
@@ -379,18 +383,30 @@ const {
 			});
 		}
 
+		// Umami v2 的 /stats 接口返回嵌套结构 {value, prev}，旧版返回扁平数字。
+		// 两种都要兼容：直接 Number(stats.visitors) 遇到对象会得到 NaN，
+		// 静默兜底成 0，表现为「统计一直是 0」而不是报错。
+		function readStatValue(stats, key) {
+			const raw = stats?.[key];
+			if (typeof raw === "number") return raw;
+			if (raw && typeof raw === "object" && typeof raw.value === "number") {
+				return raw.value;
+			}
+			return 0;
+		}
+
 		function renderSiteStats(stats, todayStats) {
 			document.querySelectorAll('[data-umami-stat="todayVisitors"]').forEach((element) => {
-				if (todayStats) renderStatValue(element, todayStats.visitors);
+				if (todayStats) renderStatValue(element, readStatValue(todayStats, "visitors"));
 			});
 			document.querySelectorAll('[data-umami-stat="todayPageviews"]').forEach((element) => {
-				if (todayStats) renderStatValue(element, todayStats.pageviews);
+				if (todayStats) renderStatValue(element, readStatValue(todayStats, "pageviews"));
 			});
 			document.querySelectorAll('[data-umami-stat="visitors"]').forEach((element) => {
-				if (stats) renderStatValue(element, (Number(stats.visitors) || 0) + historicalVisitorCount);
+				if (stats) renderStatValue(element, readStatValue(stats, "visitors") + historicalVisitorCount);
 			});
 			document.querySelectorAll('[data-umami-stat="pageviews"]').forEach((element) => {
-				if (stats) renderStatValue(element, (Number(stats.pageviews) || 0) + historicalPageviewCount);
+				if (stats) renderStatValue(element, readStatValue(stats, "pageviews") + historicalPageviewCount);
 			});
 			renderFriendSitePageviews(stats);
 		}
@@ -399,7 +415,7 @@ const {
 		// 数值来自 Umami 站点总 PV（与页脚统计同源），超过一万按「万」缩写。
 		function renderFriendSitePageviews(stats) {
 			if (!stats) return;
-			const count = (Number(stats.pageviews) || 0) + historicalPageviewCount;
+			const count = readStatValue(stats, "pageviews") + historicalPageviewCount;
 			const text = count >= 10000 ? `${(count / 10000).toFixed(1)}w` : formatNumber(count);
 			document.querySelectorAll("[data-friend-site-pageviews]").forEach((element) => {
 				element.textContent = text;
@@ -521,25 +537,26 @@ const {
 			window.__rainztAnalyticsReplayBound = true;
 		}
 
+		// 统计接口不可用时显示 "--"（与项目原有的页脚统计约定一致），
+		// 不用「加载中」——那与初始状态无法区分，会让用户以为还在加载。
 		function markUnavailable() {
 			document.querySelectorAll("[data-umami-pageviews]").forEach((element) => {
-				element.textContent = "加载中";
+				element.textContent = "--";
 			});
 			document.querySelectorAll('[data-umami-stat="visitors"]').forEach((element) => {
-				element.textContent = "加载中";
+				element.textContent = "--";
 			});
 			document.querySelectorAll('[data-umami-stat="pageviews"]').forEach((element) => {
-				element.textContent = "加载中";
+				element.textContent = "--";
 			});
 			document.querySelectorAll('[data-umami-stat="todayVisitors"], [data-umami-stat="todayPageviews"]').forEach((element) => {
-				element.textContent = "加载中";
+				element.textContent = "--";
 			});
 		}
 
 		async function refresh(forceRefresh = false) {
-			const blockLocalStats = shouldBlockLocalStats();
-			const needsViews = !blockLocalStats && Boolean(document.querySelector("[data-umami-pageviews]"));
-			const statElements = blockLocalStats ? [] : [...document.querySelectorAll("[data-umami-stat]")];
+			const needsViews = Boolean(document.querySelector("[data-umami-pageviews]"));
+			const statElements = [...document.querySelectorAll("[data-umami-stat]")];
 			const needsStats = statElements.length > 0;
 			const needsTodayStats = statElements.some((element) =>
 				["todayVisitors", "todayPageviews"].includes(element.getAttribute("data-umami-stat")),
@@ -579,7 +596,7 @@ const {
 				if (friendClickCounts) renderFriendClickCounts(friendClickCounts);
 				if (!metrics && needsViews) {
 					document.querySelectorAll("[data-umami-pageviews]").forEach((element) => {
-						element.textContent = "加载中";
+						element.textContent = "--";
 					});
 				}
 			} catch {
