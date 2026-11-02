@@ -107,15 +107,16 @@ main:
             isAtAll: true
             debug: true # 新增: 是否启用调试模式
             c_type: "markdown" # 支持: text, markdown, link, actionCard, multiActionCard, feedCard
+            # 注意：content 每行行尾要保留两个空格（Markdown 硬换行），否则钉钉会把多行合并成一行；改这个块时勿删行尾空格
             content: |
-              > **🎉 Firefly-Hyde 又一次发布成功啦！**   
-              > **构建时间:** $CUSTOM_ENV_DATE_INFO          
+              > **🎉 Firefly-Hyde 又一次发布成功啦！**  
+              > **构建时间:** $CUSTOM_ENV_DATE_INFO  
               > **构建id:** $CNB_BUILD_ID  
-              > **提交id:** $CNB_COMMIT_SHORT            
-              > **构建分支:** $CNB_BRANCH            
-              > **提交信息:** $CNB_COMMIT_MESSAGE_TITLE            
-              > **提交者:** $CNB_COMMITTER            
-              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)            
+              > **提交id:** $CNB_COMMIT_SHORT  
+              > **构建分支:** $CNB_BRANCH  
+              > **提交信息:** $CNB_COMMIT_MESSAGE_TITLE  
+              > **提交者:** $CNB_COMMITTER  
+              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)  
               > **我的网站:** [seasir.top](https://seasir.top/)
 
         - name: 📢 发布通知到飞书
@@ -185,15 +186,16 @@ main:
             isAtAll: true
             debug: true
             c_type: "markdown"
+            # 注意：content 每行行尾要保留两个空格（Markdown 硬换行），否则钉钉会把多行合并成一行；改这个块时勿删行尾空格
             content: |
-              > **❌ Firefly-Hyde 流水线失败！**
-              > **构建时间:** $CUSTOM_ENV_DATE_INFO
-              > **构建id:** $CNB_BUILD_ID
-              > **提交id:** $CNB_COMMIT_SHORT
-              > **构建分支:** $CNB_BRANCH
-              > **提交信息:** $CNB_COMMIT_MESSAGE_TITLE
-              > **提交者:** $CNB_COMMITTER
-              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)
+              > **❌ Firefly-Hyde 流水线失败！**  
+              > **构建时间:** $CUSTOM_ENV_DATE_INFO  
+              > **构建id:** $CNB_BUILD_ID  
+              > **提交id:** $CNB_COMMIT_SHORT  
+              > **构建分支:** $CNB_BRANCH  
+              > **提交信息:** $CNB_COMMIT_MESSAGE_TITLE  
+              > **提交者:** $CNB_COMMITTER  
+              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)  
               > **排查建议:** ① 构建/部署阶段看流水线日志；② 「部署后状态确认」失败说明线上仍是旧版本，稍后重试或手动触发一次构建；③ 若失败步骤是「同步仓库到github」，仅代表 GitHub 镜像未更新，线上站点不受影响，稍后手动触发一次流水线即可。
 
   # ============================================================================
@@ -237,13 +239,33 @@ main:
             git add src/data/friends-latency-snapshot.json
             if git diff --cached --quiet; then
               echo "快照无变化，无需提交"
+              exit 0
+            fi
+            git commit -m "chore: refresh friend latency snapshot"
+            if [ -n "$CNB_TOKEN" ]; then
+              REMOTE_URL="https://cnb:${CNB_TOKEN}@cnb.cool/W3C/Hyde/Firefly-hyde.git"
             else
-              git commit -m "chore: refresh friend latency snapshot"
-              if [ -n "$CNB_TOKEN" ]; then
-                git push "https://cnb:${CNB_TOKEN}@cnb.cool/W3C/Hyde/Firefly-hyde.git" HEAD:main
-              else
-                git push origin HEAD:main
+              REMOTE_URL="origin"
+            fi
+            # 探测耗时一两分钟，期间往往有人提交代码，远端 main 会领先本地，
+            # 直接 push 会报 non-fast-forward（"tip of your current branch is behind"）。
+            # 这里先把快照提交 rebase 到远端最新提交上再推；绝不能用 force，
+            # 否则会覆盖掉期间别人的提交。
+            pushed=0
+            for attempt in 1 2 3; do
+              if git fetch "$REMOTE_URL" main \
+                 && git rebase FETCH_HEAD \
+                 && git push "$REMOTE_URL" HEAD:main; then
+                pushed=1
+                break
               fi
+              echo "第 $attempt 次推送失败，rebase 到远端最新后重试"
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 5
+            done
+            if [ "$pushed" -ne 1 ]; then
+              echo "连续 3 次推送失败，放弃本轮快照提交"
+              exit 1
             fi
         - name: 📊 采集探测摘要
           # 把探测脚本写出的摘要首行导出为 PROBE_SUMMARY，供后面的钉钉/飞书通知引用
@@ -265,13 +287,14 @@ main:
             isAtAll: true
             debug: true
             c_type: "markdown"
+            # 注意：content 每行行尾要保留两个空格（Markdown 硬换行），否则钉钉会把多行合并成一行；改这个块时勿删行尾空格
             content: |
-              > **🎉 友链延迟探测成功！**
-              > **探测时间:** $CUSTOM_ENV_DATE_INFO
-              > **探测结果:** $PROBE_SUMMARY
-              > **构建id:** $CNB_BUILD_ID
-              > **分支:** $CNB_BRANCH
-              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)
+              > **🎉 友链延迟探测成功！**  
+              > **探测时间:** $CUSTOM_ENV_DATE_INFO  
+              > **探测结果:** $PROBE_SUMMARY  
+              > **构建id:** $CNB_BUILD_ID  
+              > **分支:** $CNB_BRANCH  
+              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)  
               > **说明:** 延迟快照已提交到 main，自动触发构建部署，线上数据将在部署完成后生效。
         - name: 📢 探测成功通知到飞书
           image: tencentcom/feishu-message
@@ -333,13 +356,14 @@ main:
             isAtAll: true
             debug: true
             c_type: "markdown"
+            # 注意：content 每行行尾要保留两个空格（Markdown 硬换行），否则钉钉会把多行合并成一行；改这个块时勿删行尾空格
             content: |
-              > **❌ 友链延迟探测失败！**
-              > **探测时间:** $CUSTOM_ENV_DATE_INFO
-              > **探测结果:** $PROBE_SUMMARY
-              > **构建id:** $CNB_BUILD_ID
-              > **分支:** $CNB_BRANCH
-              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)
+              > **❌ 友链延迟探测失败！**  
+              > **探测时间:** $CUSTOM_ENV_DATE_INFO  
+              > **探测结果:** $PROBE_SUMMARY  
+              > **构建id:** $CNB_BUILD_ID  
+              > **分支:** $CNB_BRANCH  
+              > **仓库地址:** [$CNB_REPO_URL_HTTPS]($CNB_REPO_URL_HTTPS)  
               > **影响:** 本轮结果未写入快照，线上延迟数据保持上一轮不变；请查看流水线日志定位原因。
         - name: 🚨 探测失败通知到飞书
           image: tencentcom/feishu-message
