@@ -3,8 +3,8 @@ export type AnalyticsConfig = {
 	microsoftClarityId?: string; // Microsoft Clarity ID
 	umamiAnalytics?: {
 		websiteId?: string; // Umami Website ID
-		shareId?: string; // Umami 分享令牌（分享链接 /share/{shareId} 中的 ID），用于页脚公开统计查询
-		/** Umami 实例地址，例如 https://umami.seasir.top；公开统计接口的基址 */
+		shareId?: string; // Umami 分享令牌（分享链接 /share/{shareId} 中的 ID），用于公开统计查询
+		/** Umami 实例地址，例如 https://umami.520781.xyz；公开统计接口的基址 */
 		shareApiBase?: string;
 		/** 迁移前仅用于站内展示的历史累计，不会回写或伪造 Umami 数据 */
 		historicalStats?: {
@@ -13,6 +13,8 @@ export type AnalyticsConfig = {
 			/** 例如：含迁移前历史累计；浏览量为估算值 */
 			label?: string;
 		};
+		/** 文章页是否显示 Umami 浏览量，默认 true */
+		showPageViews?: boolean;
 		/** 是否在站点统计卡中显示 Umami 的累计访客与浏览量，默认 true */
 		showSiteStats?: boolean;
 		scriptUrl?: string; // Umami JS地址，支持使用自建

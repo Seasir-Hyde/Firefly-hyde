@@ -549,7 +549,8 @@ const formatTimeAgo = (date: Date): string => {
 
 <script>
 	// 处理 Markdown 内容中的连续图片，重新布局为网格
-	function processMarkdownImages(card: HTMLElement) {
+	function processMarkdownImages(card: Element) {
+		if (!(card instanceof HTMLElement)) return;
 		const markdownContent = card.querySelector('.moment-markdown-content');
 		if (!markdownContent) return;
 

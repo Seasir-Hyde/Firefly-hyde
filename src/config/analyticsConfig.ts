@@ -9,21 +9,23 @@ export const analyticsConfig: AnalyticsConfig = {
 	umamiAnalytics: {
 		// Umami Website ID
 		websiteId: "88b3aaa0-7626-4464-aa70-f684493f5f80",
-		// Umami 分享令牌（分享链接 https://umami.seasir.top/share/{shareId} 中的 ID），用于页脚公开统计查询
+		// Umami JS地址，支持使用自建
+		scriptUrl: "https://umami.seasir.top/script.js",
+		// Umami 会话回放脚本地址，支持使用自建
+		replaysScriptUrl: "https://umami.seasir.top/recorder.js",
+		// 公开分享链接对应的 Share ID（仅用于读取公开统计，不要填写管理员 Token）
 		shareId: "cp5SqrNUOxbulLZt",
-		// Umami 实例地址，公开统计接口（/api/share、/api/websites/*/stats）的基址
+		// Umami 实例的 API 地址（自建实例指向源站根地址，不含 /api）
 		shareApiBase: "https://umami.seasir.top",
 		// 迁移前的历史累计访客/浏览量，仅用于站内展示，不会回写 Umami
 		historicalStats: {
 			visitors: 0,
 			pageviews: 0,
 		},
+		// 文章页是否显示 Umami 浏览量
+		showPageViews: false,
 		// 是否在站点统计卡（用户资料组件等）中显示累计访客与浏览量
 		showSiteStats: true,
-		// Umami JS地址，支持使用自建
-		scriptUrl: "https://umami.seasir.top/script.js",
-		// Umami 会话回放脚本地址，支持使用自建
-		replaysScriptUrl: "https://umami.seasir.top/recorder.js",
 		// 是否追踪出站链接
 		trackOutboundLinks: true,
 		// 是否收集浏览器性能指标

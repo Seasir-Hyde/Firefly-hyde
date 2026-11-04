@@ -582,7 +582,7 @@ const COLLAPSED_HEIGHT = "9rem";
 
 		// 缓存管理
 		const cacheManager = {
-			set: function (key, data) {
+			set: function (key: string, data: unknown) {
 				try {
 					localStorage.setItem(key, JSON.stringify({
 						data,
@@ -595,7 +595,7 @@ const COLLAPSED_HEIGHT = "9rem";
 		};
 
 		// 获取天气数据 - 支持 IP 自动定位
-		async function fetchWeather(adcode, city, extended) {
+		async function fetchWeather(adcode: string, city: string, extended: boolean): Promise<any> {
 			const params = new URLSearchParams();
 			if (adcode) {
 				params.set("adcode", adcode);
@@ -637,7 +637,7 @@ const COLLAPSED_HEIGHT = "9rem";
 		}
 
 		// 天气图标映射
-		const weatherIcons = {
+		const weatherIcons: Record<string, string> = {
 			"100": "material-symbols:wb-sunny",
 			"101": "material-symbols:cloudy",
 			"102": "material-symbols:cloudy",
@@ -656,15 +656,16 @@ const COLLAPSED_HEIGHT = "9rem";
 			"210": "material-symbols:thunderstorm"
 		};
 
-		function getWeatherIcon(weatherIcon) {
-			return weatherIcons[weatherIcon] || "material-symbols:wb-sunny";
+		function getWeatherIcon(weatherIcon: string | number) {
+			return weatherIcons[String(weatherIcon)] || "material-symbols:wb-sunny";
 		}
 
 		// 更新UI
-		function updateUI(container, data, error = null) {
-			const loading = container.querySelector("[data-weather-loading]");
-			const errorEl = container.querySelector("[data-weather-error]");
-			const content = container.querySelector("[data-weather-content]");
+		function updateUI(container: Element, data: any, error: string | null = null) {
+			// 这几个节点由组件模板固定渲染，必定存在
+			const loading = container.querySelector("[data-weather-loading]")!;
+			const errorEl = container.querySelector("[data-weather-error]")!;
+			const content = container.querySelector("[data-weather-content]")!;
 			const errorMsg = container.querySelector("[data-error-message]");
 
 			// 隐藏加载状态
@@ -687,9 +688,9 @@ const COLLAPSED_HEIGHT = "9rem";
 			errorEl.classList.add("weather-hidden");
 
 			// 更新数据
-			const setData = (selector, value) => {
+			const setData = (selector: string, value: unknown) => {
 				const el = container.querySelector(selector);
-				if (el) el.textContent = value || "--";
+				if (el) el.textContent = value ? String(value) : "--";
 			};
 
 			setData("[data-city]", data.city);
@@ -760,7 +761,9 @@ const COLLAPSED_HEIGHT = "9rem";
 		}
 
 		// 初始化组件
-		function initWidget(container) {
+		function initWidget(el: Element) {
+			if (!(el instanceof HTMLElement)) return;
+			const container = el;
 			// 防止同一组件被多次脚本初始化（多实例 / 脚本重复时避免重复请求）
 			if (container.dataset.weatherInited === "true") return;
 			container.dataset.weatherInited = "true";
@@ -771,9 +774,9 @@ const COLLAPSED_HEIGHT = "9rem";
 			const extended = container.dataset.extended === "true";
 
 			const retryBtn = container.querySelector("[data-retry-btn]");
-			const content = container.querySelector("[data-weather-content]");
-			const loading = container.querySelector("[data-weather-loading]");
-			const errorEl = container.querySelector("[data-weather-error]");
+			const content = container.querySelector("[data-weather-content]")!;
+			const loading = container.querySelector("[data-weather-loading]")!;
+			const errorEl = container.querySelector("[data-weather-error]")!;
 
 			async function loadWeather() {
 				// 显示加载状态，隐藏其他状态
@@ -785,7 +788,7 @@ const COLLAPSED_HEIGHT = "9rem";
 					const data = await fetchWeather(adcode, city, extended);
 					updateUI(container, data);
 				} catch (e) {
-					updateUI(container, null, e.message || "获取天气信息失败");
+					updateUI(container, null, e instanceof Error ? e.message : "获取天气信息失败");
 				}
 			}
 

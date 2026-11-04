@@ -1,5 +1,4 @@
 ---
-import { Icon } from "astro-icon/components";
 import { siteConfig } from "@/config/siteConfig";
 ---
 
@@ -10,7 +9,7 @@ import { siteConfig } from "@/config/siteConfig";
 	data-state="idle"
 	data-site-name={siteConfig.title}
 >
-	<div class="welcome-toast-icon" aria-hidden="true"><Icon is:inline name="material-symbols:waving-hand" /></div>
+	<div class="welcome-toast-icon" aria-hidden="true">👋</div>
 	<div class="welcome-toast-copy">
 		<strong class="welcome-toast-title">欢迎来到{siteConfig.title}</strong>
 		<p class="welcome-toast-message">很高兴在这里遇见你。</p>
@@ -55,22 +54,9 @@ import { siteConfig } from "@/config/siteConfig";
 
 	.welcome-toast-icon {
 		display: grid;
-		width: 2.7rem;
-		height: 2.7rem;
-		border-radius: 0.85rem;
 		place-items: center;
-		background:
-			radial-gradient(circle at 30% 20%, rgb(255 255 255 / 0.72), transparent 36%),
-			linear-gradient(135deg, color-mix(in srgb, var(--primary) 55%, white), var(--primary));
-		box-shadow: 0 0.6rem 1.4rem color-mix(in srgb, var(--primary) 22%, transparent);
-		color: white;
-		font-size: 1.35rem;
-	}
-
-	/* astro-icon 输出的内联 SVG 不带作用域属性，需用 :global 才能命中 */
-	.welcome-toast-icon :global(svg) {
-		width: 1.55rem;
-		height: 1.55rem;
+		font-size: 1.5rem;
+		line-height: 1;
 	}
 
 	.welcome-toast-copy {

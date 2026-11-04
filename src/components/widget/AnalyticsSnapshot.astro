@@ -1,0 +1,673 @@
+---
+import { Icon } from "astro-icon/components";
+import WidgetLayout from "@/components/common/WidgetLayout.astro";
+import { analyticsConfig } from "@/config";
+import type { WidgetComponentConfig } from "@/types/config";
+
+interface Props {
+	class?: string;
+	style?: string;
+	widgetConfig?: WidgetComponentConfig;
+}
+
+const { class: className, style, widgetConfig } = Astro.props;
+const showTitle = widgetConfig?.showTitle !== false;
+const umamiAnalytics = analyticsConfig.umamiAnalytics;
+const shareId = umamiAnalytics?.shareId ?? "";
+const shareApiBase = umamiAnalytics?.shareApiBase ?? "";
+const historicalVisitors = umamiAnalytics?.historicalStats?.visitors ?? 0;
+const historicalPageviews = umamiAnalytics?.historicalStats?.pageviews ?? 0;
+const hasPublicStats = Boolean(
+	umamiAnalytics?.websiteId && shareId && shareApiBase,
+);
+---
+
+<WidgetLayout showTitle={false} id="analytics-snapshot" class={className} style={style}>
+	<div
+		class="analytics-snapshot"
+		data-analytics-snapshot
+		data-share-id={shareId}
+		data-api-base={shareApiBase}
+		data-historical-visitors={historicalVisitors}
+		data-historical-pageviews={historicalPageviews}
+		data-ready={hasPublicStats ? "true" : "false"}
+	>
+		{showTitle && (
+			<header class="analytics-snapshot__header">
+				<div>
+					<p class="analytics-snapshot__kicker">VISITORS / DEVICES</p>
+					<h2 id="analytics-snapshot-distribution-title">设备与浏览器</h2>
+					<p>访客从哪里来</p>
+				</div>
+				<Icon is:inline name="material-symbols:devices-rounded" aria-hidden="true" />
+			</header>
+		)}
+		<section class="analytics-snapshot__distribution" aria-labelledby="analytics-snapshot-distribution-title">
+			<div class="analytics-snapshot__breakdown" data-snapshot-breakdown="device" aria-label="设备分布">
+				<div class="analytics-snapshot__breakdown-title"><span>设备分布</span></div>
+				<div class="analytics-snapshot__breakdown-body">
+					<div class="analytics-snapshot__donut" data-snapshot-donut aria-hidden="true">
+						<svg class="analytics-snapshot__donut-svg" data-snapshot-donut-svg viewBox="0 0 100 100" focusable="false"></svg>
+						<span><Icon is:inline name="material-symbols:desktop-windows-rounded" /></span>
+					</div>
+					<div class="analytics-snapshot__legend" data-snapshot-legend>
+						<div class="analytics-snapshot__skeleton"></div>
+						<div class="analytics-snapshot__skeleton"></div>
+						<div class="analytics-snapshot__skeleton"></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="analytics-snapshot__breakdown" data-snapshot-breakdown="browser" aria-label="浏览器分布">
+				<div class="analytics-snapshot__breakdown-title"><span>浏览器偏好</span></div>
+				<div class="analytics-snapshot__breakdown-body">
+					<div class="analytics-snapshot__donut" data-snapshot-donut aria-hidden="true">
+						<svg class="analytics-snapshot__donut-svg" data-snapshot-donut-svg viewBox="0 0 100 100" focusable="false"></svg>
+						<span><Icon is:inline name="material-symbols:language" /></span>
+					</div>
+					<div class="analytics-snapshot__legend" data-snapshot-legend>
+						<div class="analytics-snapshot__skeleton"></div>
+						<div class="analytics-snapshot__skeleton"></div>
+						<div class="analytics-snapshot__skeleton"></div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+</WidgetLayout>
+
+<script is:inline define:vars={{ shareId, shareApiBase }}>
+	(() => {
+		const runtimeKey = "__rainztAnalyticsSnapshotRuntime";
+		const runtime = window[runtimeKey] || { inFlight: false, initialized: false };
+		window[runtimeKey] = runtime;
+		const dayMs = 24 * 60 * 60 * 1000;
+		const rangeDays = 30;
+		const apiBase = String(shareApiBase || "").replace(/\/+$/, "");
+		const localHosts = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0"]);
+		const formatNumber = (value) => new Intl.NumberFormat("zh-CN").format(Math.max(0, Math.round(Number(value) || 0)));
+		const visualDuration = 4500;
+		const snapshotAnimationFrames = new WeakMap();
+		const snapshotAnimationPending = new WeakMap();
+		const snapshotOverlayTimers = new WeakMap();
+		const animationClockKey = "__rainztAnalyticsAnimationClock";
+		let snapshotVisibilityObserver;
+		const easeCountProgress = (progress) => progress < 0.18
+			? 0.08 * Math.pow(progress / 0.18, 2)
+			: progress < 0.9
+				? 0.08 + 0.82 * ((progress - 0.18) / 0.72)
+				: 0.9 + 0.1 * (1 - Math.pow(1 - ((progress - 0.9) / 0.1), 3));
+		const getAnimationClock = () => {
+			const root = document.querySelector("[data-umami-dashboard]");
+			const current = window[animationClockKey];
+			if (current?.root === root) return current;
+			const clock = {
+				root,
+				duration: visualDuration,
+				startedAt: null,
+				start() {
+					if (this.startedAt === null) this.startedAt = performance.now();
+					return this.startedAt;
+				},
+				replay() {
+					this.startedAt = null;
+					window.dispatchEvent(new CustomEvent("rainzt-analytics-animation-replay"));
+				},
+			};
+			window[animationClockKey] = clock;
+			return clock;
+		};
+		const getRoots = () => [...document.querySelectorAll("[data-analytics-snapshot]")];
+		const getPeriodRoots = () => [...document.querySelectorAll("[data-analytics-period]")];
+		const readRows = (value) => (Array.isArray(value) ? value : value?.data || []);
+		const isLocalPreview = () => localHosts.has(window.location.hostname.toLowerCase()) || window.location.protocol === "file:";
+
+		const setText = (root, selector, value) => {
+			root.querySelectorAll(selector).forEach((element) => {
+				element.textContent = value;
+			});
+		};
+
+		const fetchJson = async (url, options = {}, timeoutMs = 7000) => {
+			const controller = new AbortController();
+			const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+			try {
+				const response = await fetch(url, { cache: "no-store", ...options, signal: controller.signal });
+				if (!response.ok) throw new Error(`umami ${response.status}`);
+				return await response.json();
+			} finally {
+				window.clearTimeout(timer);
+			}
+		};
+
+		const readCache = (key, ttl) => {
+			try {
+				const cached = JSON.parse(localStorage.getItem(key) || "null");
+				return cached?.timestamp && Date.now() - cached.timestamp < ttl ? cached.value : null;
+			} catch {
+				return null;
+			}
+		};
+
+		const writeCache = (key, value) => {
+			try {
+				localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), value }));
+			} catch {
+				// 无痕模式或禁用本地存储时，继续使用本次请求的数据。
+			}
+		};
+
+		const fetchShare = async () => {
+			const cached = readCache(`rainzt:umami:share:${shareId}`, dayMs);
+			if (cached?.websiteId && cached?.token) return cached;
+			let lastError;
+			for (const path of [`/api/share/${encodeURIComponent(shareId)}`, `/api/share/id/${encodeURIComponent(shareId)}`]) {
+				try {
+					const share = await fetchJson(`${apiBase}${path}`);
+					if (share?.websiteId && share?.token) {
+						writeCache(`rainzt:umami:share:${shareId}`, share);
+						return share;
+					}
+				} catch (error) {
+					lastError = error;
+				}
+			}
+			throw lastError || new Error("public share unavailable");
+		};
+
+		const showStatus = (root, state, text) => {
+			const status = root.querySelector("[data-snapshot-status]");
+			if (status) status.dataset.state = state;
+			setText(root, "[data-snapshot-status-text]", text);
+		};
+
+		const showMessage = (root, message) => {
+			root.querySelectorAll("[data-snapshot-breakdown]").forEach((container) => {
+				const donut = container.querySelector("[data-snapshot-donut]");
+				const svg = container.querySelector("[data-snapshot-donut-svg]");
+				const legend = container.querySelector("[data-snapshot-legend]");
+				svg?.replaceChildren();
+				donut?.classList.add("is-empty");
+				if (!legend) return;
+				const text = document.createElement("p");
+				text.className = "analytics-snapshot__message";
+				text.textContent = message;
+				legend.replaceChildren(text);
+			});
+		};
+
+		const isVisible = (element) => {
+			const rect = element.getBoundingClientRect();
+			return rect.bottom > 0 && rect.top < window.innerHeight;
+		};
+
+		const applySnapshotAnimationFrame = (root, values, progress) => {
+			const eased = easeCountProgress(progress);
+			setText(root, '[data-snapshot-stat="pageviews"]', formatNumber(values.pageviews * eased));
+			setText(root, '[data-snapshot-stat="visitors"]', formatNumber(values.visitors * eased));
+			setText(root, '[data-snapshot-stat="activeDays"]', `${Math.round(values.activeDays * eased)}/${rangeDays}`);
+			setText(root, '[data-snapshot-stat="peak"]', formatNumber(values.peak * eased));
+			root.querySelectorAll("[data-snapshot-change-target]").forEach((element) => {
+				const target = Number(element.dataset.snapshotChangeTarget) || 0;
+				const sign = element.dataset.snapshotChangeSign || "↑";
+				element.textContent = `${sign} ${Math.round(target * eased)}% 较上周期`;
+			});
+			root.querySelectorAll("[data-snapshot-legend-index]").forEach((item) => {
+				const target = Number(item.dataset.snapshotTargetPercent) || 0;
+				const value = item.querySelector("strong");
+				if (value) value.textContent = `${Math.round(target * eased)}%`;
+			});
+			root.querySelectorAll("[data-snapshot-donut-svg]").forEach((svg) => {
+				svg.style.setProperty("--snapshot-donut-progress", `${(eased * 360).toFixed(2)}deg`);
+			});
+		};
+
+		const startSnapshotAnimation = (root, values) => {
+			const previousFrame = snapshotAnimationFrames.get(root);
+			if (previousFrame) cancelAnimationFrame(previousFrame);
+			const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+			if (reducedMotion) {
+				applySnapshotAnimationFrame(root, values, 1);
+				return;
+			}
+			const animationClock = getAnimationClock();
+			const startedAt = animationClock.start();
+			const tick = (timestamp) => {
+				const progress = Math.min(1, (timestamp - startedAt) / animationClock.duration);
+				applySnapshotAnimationFrame(root, values, progress);
+				if (progress < 1) {
+					const frame = requestAnimationFrame(tick);
+					snapshotAnimationFrames.set(root, frame);
+					return;
+				}
+				applySnapshotAnimationFrame(root, values, 1);
+				snapshotAnimationFrames.delete(root);
+			};
+			const frame = requestAnimationFrame(tick);
+			snapshotAnimationFrames.set(root, frame);
+		};
+
+		const queueSnapshotAnimation = (root, values) => {
+			snapshotAnimationPending.set(root, values);
+			applySnapshotAnimationFrame(root, values, 0);
+			if (isVisible(root)) {
+				startSnapshotAnimation(root, values);
+				return;
+			}
+			if (!("IntersectionObserver" in window)) return;
+			if (!snapshotVisibilityObserver) {
+				snapshotVisibilityObserver = new IntersectionObserver((entries) => {
+					entries.forEach((entry) => {
+						if (!entry.isIntersecting) return;
+						const pending = snapshotAnimationPending.get(entry.target);
+						if (pending) startSnapshotAnimation(entry.target, pending);
+						snapshotVisibilityObserver.unobserve(entry.target);
+					});
+				}, { threshold: 0.18 });
+			}
+			snapshotVisibilityObserver.observe(root);
+		};
+		if (!runtime.replayBound) {
+			window.addEventListener("rainzt-analytics-animation-replay", () => {
+				[...getRoots(), ...getPeriodRoots()].forEach((root) => {
+					const values = snapshotAnimationPending.get(root);
+					if (values) queueSnapshotAnimation(root, values);
+				});
+			});
+			runtime.replayBound = true;
+		}
+
+		const polarPoint = (radius, angle) => {
+			const radians = ((angle - 90) * Math.PI) / 180;
+			return [50 + radius * Math.cos(radians), 50 + radius * Math.sin(radians)];
+		};
+
+		const describeDonutSlice = (startAngle, endAngle) => {
+			const outerStart = polarPoint(46, startAngle);
+			const outerEnd = polarPoint(46, endAngle);
+			const innerStart = polarPoint(25, startAngle);
+			const innerEnd = polarPoint(25, endAngle);
+			const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+			return [
+				`M ${outerStart[0].toFixed(3)} ${outerStart[1].toFixed(3)}`,
+				`A 46 46 0 ${largeArc} 1 ${outerEnd[0].toFixed(3)} ${outerEnd[1].toFixed(3)}`,
+				`L ${innerEnd[0].toFixed(3)} ${innerEnd[1].toFixed(3)}`,
+				`A 25 25 0 ${largeArc} 0 ${innerStart[0].toFixed(3)} ${innerStart[1].toFixed(3)}`,
+				"Z",
+			].join(" ");
+		};
+
+		const setBreakdownActive = (container, index) => {
+			const svg = container.querySelector("[data-snapshot-donut-svg]");
+			const overlay = svg?.querySelector("[data-snapshot-active-overlay]");
+			const activeKey = index === null ? "" : String(index);
+			const previousTimer = snapshotOverlayTimers.get(container);
+			if (previousTimer) clearTimeout(previousTimer);
+			container.dataset.snapshotActiveIndex = activeKey;
+			const activeSegment = index === null
+				? null
+				: [...container.querySelectorAll("[data-snapshot-segment-index]")]
+					.find((segment) => Number(segment.dataset.snapshotSegmentIndex) === index);
+			container.querySelectorAll("[data-snapshot-segment-index]").forEach((segment) => {
+				segment.dataset.active = "false";
+			});
+			container.querySelectorAll("[data-snapshot-legend-index]").forEach((item) => {
+				item.dataset.active = activeKey && item.dataset.snapshotLegendIndex === activeKey ? "true" : "false";
+			});
+			if (!overlay || !activeSegment) {
+				if (overlay) overlay.dataset.active = "false";
+				return;
+			}
+
+			const activateOverlay = () => {
+				if (container.dataset.snapshotActiveIndex !== activeKey) return;
+				overlay.setAttribute("d", activeSegment.getAttribute("d") || "");
+				overlay.style.fill = activeSegment.style.fill;
+				container.dataset.snapshotRenderedIndex = activeKey;
+				requestAnimationFrame(() => requestAnimationFrame(() => {
+					if (container.dataset.snapshotActiveIndex === activeKey) overlay.dataset.active = "true";
+				}));
+			};
+
+			// Fade the previous foreground slice out before changing its path. If the
+			// path is changed while it is active, the new slice appears instantly.
+			const previousRenderedKey = container.dataset.snapshotRenderedIndex || "";
+			if (previousRenderedKey && previousRenderedKey !== activeKey) {
+				overlay.dataset.active = "false";
+				const timer = window.setTimeout(() => {
+					snapshotOverlayTimers.delete(container);
+					activateOverlay();
+				}, 260);
+				snapshotOverlayTimers.set(container, timer);
+				return;
+			}
+			activateOverlay();
+		};
+
+const formatBreakdownLabel = (value) => {
+  const label = String(value || "未知").trim() || "未知"
+  if (label.toLowerCase() === "ios") return "iOS"
+  return label.replace(/^[a-z]/u, (letter) => letter.toUpperCase())
+}
+
+const normalizeBreakdown = (rows) => {
+  const normalized = rows
+    .map((row) => ({ label: formatBreakdownLabel(row?.x), value: Number(row?.y) || 0 }))
+				.filter((row) => row.value >= 0)
+				.sort((a, b) => b.value - a.value)
+			const positiveRows = normalized.filter((row) => row.value > 0);
+			const topRows = positiveRows.slice(0, 4);
+			const otherValue = positiveRows.slice(4).reduce((sum, row) => sum + row.value, 0);
+			if (otherValue > 0) topRows.push({ label: "其他", value: otherValue });
+			normalized.filter((row) => row.value === 0).slice(0, Math.max(0, 4 - topRows.length)).forEach((row) => topRows.push(row));
+			const total = positiveRows.reduce((sum, row) => sum + row.value, 0) || 1;
+			return topRows.map((row) => ({ ...row, ratio: row.value / total }));
+		};
+
+		const renderBreakdown = (root, kind, rows) => {
+			const container = root.querySelector(`[data-snapshot-breakdown="${kind}"]`);
+			if (!container) return;
+			if (!container.dataset.snapshotInteractionBound) {
+				container.dataset.snapshotInteractionBound = "true";
+				container.addEventListener("pointerleave", () => setBreakdownActive(container, null));
+				container.addEventListener("focusout", (event) => {
+					if (!container.contains(event.relatedTarget)) setBreakdownActive(container, null);
+				});
+			}
+			const donut = container.querySelector("[data-snapshot-donut]");
+			const svg = container.querySelector("[data-snapshot-donut-svg]");
+			const legend = container.querySelector("[data-snapshot-legend]");
+			if (!donut || !svg || !legend) return;
+			const normalized = normalizeBreakdown(rows);
+			const palette = kind === "browser"
+				? ["#b89cff", "#ffd78a", "#8ddde2", "#ffb08f", "#f6a8d0"]
+				: ["#8ec5ff", "#9fe4c6", "#ffd18a", "#c7b0ff", "#ffb2c0"];
+			let angle = 0;
+			const fragment = document.createDocumentFragment();
+			const segmentFragment = document.createDocumentFragment();
+			normalized.forEach((row, index) => {
+				const color = palette[index % palette.length];
+				const start = angle;
+				angle += row.ratio * 360 || (normalized.length === 1 ? 359.999 : 0);
+				if (row.ratio > 0) {
+					const segment = document.createElementNS("http://www.w3.org/2000/svg", "path");
+					segment.classList.add("analytics-snapshot__donut-segment");
+					segment.dataset.snapshotSegmentIndex = String(index);
+					segment.style.fill = color;
+					segment.setAttribute("d", describeDonutSlice(start, angle));
+					segment.addEventListener("pointerenter", () => setBreakdownActive(container, index));
+					segment.addEventListener("pointerleave", () => setBreakdownActive(container, null));
+					segmentFragment.append(segment);
+				}
+
+				const item = document.createElement("button");
+				item.type = "button";
+				item.className = "analytics-snapshot__legend-item";
+				item.dataset.snapshotLegendIndex = String(index);
+				item.dataset.snapshotTargetPercent = String(Math.round(row.ratio * 100));
+				item.setAttribute("aria-label", `${row.label} ${Math.round(row.ratio * 100)}%`);
+				const dot = document.createElement("i");
+				dot.style.backgroundColor = color;
+				const label = document.createElement("span");
+				label.textContent = row.label;
+				label.title = row.label;
+				const value = document.createElement("strong");
+				value.textContent = "0%";
+				item.append(dot, label, value);
+				item.addEventListener("pointerenter", () => setBreakdownActive(container, index));
+				item.addEventListener("pointerleave", () => setBreakdownActive(container, null));
+				item.addEventListener("focus", () => setBreakdownActive(container, index));
+				item.addEventListener("blur", () => setBreakdownActive(container, null));
+				fragment.append(item);
+			});
+
+			donut.classList.toggle("is-empty", normalized.length === 0 || !normalized.some((row) => row.ratio > 0));
+			svg.style.setProperty("--snapshot-donut-progress", "0deg");
+			const previousOverlayTimer = snapshotOverlayTimers.get(container);
+			if (previousOverlayTimer) clearTimeout(previousOverlayTimer);
+			snapshotOverlayTimers.delete(container);
+			delete container.dataset.snapshotActiveIndex;
+			delete container.dataset.snapshotRenderedIndex;
+			svg.replaceChildren(segmentFragment);
+			const activeOverlay = document.createElementNS("http://www.w3.org/2000/svg", "path");
+			activeOverlay.classList.add("analytics-snapshot__donut-segment", "analytics-snapshot__donut-active-overlay");
+			activeOverlay.dataset.snapshotActiveOverlay = "true";
+			activeOverlay.dataset.active = "false";
+			activeOverlay.setAttribute("aria-hidden", "true");
+			activeOverlay.style.pointerEvents = "none";
+			svg.append(activeOverlay);
+			legend.replaceChildren(fragment);
+		};
+
+		const renderChange = (root, name, current, previous) => {
+			const element = root.querySelector(`[data-snapshot-change="${name}"]`);
+			if (!element) return;
+			delete element.dataset.snapshotChangeTarget;
+			delete element.dataset.snapshotChangeSign;
+			if (previous <= 0) {
+				element.textContent = current > 0 ? "本周期新增" : "暂无数据";
+				return;
+			}
+			const change = Math.round(((current - previous) / previous) * 100);
+			element.dataset.snapshotChangeTarget = String(Math.abs(change));
+			element.dataset.snapshotChangeSign = change >= 0 ? "↑" : "↓";
+			element.textContent = `${change >= 0 ? "↑" : "↓"} 0% 较上周期`;
+			element.dataset.direction = change >= 0 ? "up" : "down";
+		};
+
+		const renderSnapshot = (root, payload) => {
+			const { currentStats, previousStats, pageviews, devices, browsers } = payload;
+			const currentPageviews = Math.max(0, Number(currentStats?.pageviews) || 0);
+			const currentVisitors = Math.max(0, Number(currentStats?.visitors) || 0);
+			const dailyRows = readRows(pageviews?.pageviews).map((row) => Number(row?.y) || 0);
+			const activeDays = dailyRows.filter((value) => value > 0).length;
+			const peak = Math.max(0, ...dailyRows);
+
+			renderChange(root, "pageviews", currentPageviews, Number(previousStats?.pageviews) || 0);
+			renderChange(root, "visitors", currentVisitors, Number(previousStats?.visitors) || 0);
+			renderBreakdown(root, "device", readRows(devices));
+			renderBreakdown(root, "browser", readRows(browsers));
+			queueSnapshotAnimation(root, { pageviews: currentPageviews, visitors: currentVisitors, activeDays, peak });
+			const localPreview = isLocalPreview();
+			showStatus(root, localPreview ? "local" : "online", localPreview ? "本地预览 · 已更新" : "刚刚更新");
+		};
+
+		const renderPeriodSummary = (root, payload) => {
+			const { currentStats, previousStats, pageviews } = payload;
+			const currentPageviews = Math.max(0, Number(currentStats?.pageviews) || 0);
+			const currentVisitors = Math.max(0, Number(currentStats?.visitors) || 0);
+			const dailyRows = readRows(pageviews?.pageviews).map((row) => Number(row?.y) || 0);
+			const activeDays = dailyRows.filter((value) => value > 0).length;
+			const peak = Math.max(0, ...dailyRows);
+
+			renderChange(root, "pageviews", currentPageviews, Number(previousStats?.pageviews) || 0);
+			renderChange(root, "visitors", currentVisitors, Number(previousStats?.visitors) || 0);
+			queueSnapshotAnimation(root, { pageviews: currentPageviews, visitors: currentVisitors, activeDays, peak });
+			const localPreview = isLocalPreview();
+			showStatus(root, localPreview ? "local" : "online", localPreview ? "本地预览 · 已更新" : "刚刚更新");
+		};
+
+		const markUnavailable = (root) => {
+			setText(root, '[data-snapshot-stat="pageviews"], [data-snapshot-stat="visitors"], [data-snapshot-stat="activeDays"], [data-snapshot-stat="peak"]', "暂不可用");
+			setText(root, "[data-snapshot-change]", "稍后重试");
+			showMessage(root, "访问分布暂时不可用");
+			showStatus(root, "offline", "暂不可用");
+		};
+
+		const markPeriodUnavailable = (root) => {
+			setText(root, '[data-snapshot-stat="pageviews"], [data-snapshot-stat="visitors"], [data-snapshot-stat="activeDays"], [data-snapshot-stat="peak"]', "暂不可用");
+			setText(root, "[data-snapshot-change]", "稍后重试");
+			showStatus(root, "offline", "暂不可用");
+		};
+
+		const load = async () => {
+			if (runtime.inFlight || (!getRoots().length && !getPeriodRoots().length)) return;
+			const roots = getRoots();
+			const periodRoots = getPeriodRoots();
+			if (!apiBase || !shareId || roots.every((root) => root.dataset.ready !== "true")) {
+				roots.forEach((root) => markUnavailable(root));
+				periodRoots.forEach((root) => markPeriodUnavailable(root));
+				return;
+			}
+			runtime.inFlight = true;
+			roots.forEach((root) => showStatus(root, "loading", "读取中"));
+			periodRoots.forEach((root) => showStatus(root, "loading", "读取中"));
+			try {
+				const share = await fetchShare();
+				const endAt = Date.now();
+				const startAt = endAt - rangeDays * dayMs;
+				const previousEndAt = startAt;
+				const previousStartAt = previousEndAt - rangeDays * dayMs;
+				const headers = {
+					"x-umami-share-token": share.token,
+					"x-umami-share-context": "1",
+				};
+				const buildUrl = (path, start, end, params = {}) => {
+					const url = new URL(`${apiBase}/api/websites/${share.websiteId}/${path}`);
+					url.searchParams.set("startAt", String(start));
+					url.searchParams.set("endAt", String(end));
+					Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));
+					return url;
+				};
+				const cacheKey = `rainzt:umami:analytics-snapshot:${share.websiteId}:30`;
+				const cached = readCache(cacheKey, 2 * 60 * 1000);
+				const payload = cached || await Promise.all([
+					fetchJson(buildUrl("stats", startAt, endAt), { headers }),
+					fetchJson(buildUrl("stats", previousStartAt, previousEndAt), { headers }),
+					fetchJson(buildUrl("pageviews", startAt, endAt, { unit: "day", timezone: "Asia/Shanghai" }), { headers }),
+					fetchJson(buildUrl("metrics", startAt, endAt, { type: "device", limit: 10 }), { headers }),
+					fetchJson(buildUrl("metrics", startAt, endAt, { type: "browser", limit: 10 }), { headers }),
+				]).then(([currentStats, previousStats, pageviews, devices, browsers]) => ({ currentStats, previousStats, pageviews, devices, browsers }));
+			if (!cached) writeCache(cacheKey, payload);
+				roots.forEach((root) => renderSnapshot(root, payload));
+				periodRoots.forEach((root) => renderPeriodSummary(root, payload));
+			} catch {
+				roots.forEach((root) => markUnavailable(root));
+				periodRoots.forEach((root) => markPeriodUnavailable(root));
+			} finally {
+				runtime.inFlight = false;
+			}
+		};
+
+		if (!runtime.initialized) {
+			runtime.initialized = true;
+			document.addEventListener("astro:page-load", load);
+			document.addEventListener("swup:contentReplaced", load);
+		}
+		load();
+	})();
+</script>
+
+<style is:global>
+	.analytics-snapshot {
+		--snapshot-blue: #4d86e8;
+		--snapshot-pink: #d777c9;
+		--snapshot-mint: #39b99a;
+		--snapshot-gold: #df9e45;
+		/* 全局未给 body 设置文字色（默认黑色），color: inherit 的图例文字会继承成黑色，
+		   暗色模式下不可读，这里显式给出基础文字色 */
+		color: var(--text-color);
+	}
+	/* 暗色模式下全局 --deep-text 仍是亮色模式的深值，这里覆盖为暗色主题的亮色 */
+	:root.dark .analytics-snapshot {
+		--deep-text: oklch(0.92 0.015 var(--hue));
+	}
+	/* The hover scale needs a little breathing room beyond the chart's base box. */
+	widget-layout[data-id="analytics-snapshot"],
+	#analytics-snapshot.collapse-wrapper,
+	.analytics-snapshot__distribution,
+	.analytics-snapshot__breakdown,
+	.analytics-snapshot__breakdown-body { overflow: visible; }
+
+	.analytics-snapshot__intro,
+	.analytics-snapshot__header,
+	.analytics-snapshot__breakdown-title,
+	.analytics-snapshot__bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.6rem;
+	}
+
+	.analytics-snapshot__intro { margin: -0.15rem 0 0.55rem; }
+	.analytics-snapshot__header { margin: -0.1rem 0 0.95rem; }
+	.analytics-snapshot__header > div { min-width: 0; }
+	.analytics-snapshot__header > svg { flex: 0 0 auto; color: var(--snapshot-blue); font-size: 1.2rem; }
+	.analytics-snapshot__kicker { margin: 0 0 0.42rem; color: var(--snapshot-blue); font-size: 0.58rem; font-weight: 800; letter-spacing: 0.1em; line-height: 1; }
+	.analytics-snapshot__header h2 { margin: 0; color: var(--deep-text); font-size: 0.96rem; font-weight: 820; line-height: 1.2; }
+	.analytics-snapshot__header p:last-child { margin: 0.32rem 0 0; color: var(--content-meta); font-size: 0.62rem; line-height: 1.4; }
+	.analytics-snapshot__intro strong { display: block; font-size: 0.8rem; font-weight: 800; }
+	.analytics-snapshot__intro span,
+	.analytics-snapshot__breakdown-title small { display: block; margin-top: 0.18rem; color: var(--content-meta); font-size: 0.62rem; }
+	.analytics-snapshot__intro a { display: inline-flex; align-items: center; gap: 0.18rem; padding: 0.22rem 0.36rem; border-radius: 0.4rem; color: var(--primary); font-size: 0.65rem; font-weight: 750; text-decoration: none; }
+	.analytics-snapshot__intro a:hover,
+	.analytics-snapshot__intro a:focus-visible { background: color-mix(in srgb, var(--primary) 10%, transparent); outline: none; }
+
+	.analytics-snapshot__status { display: inline-flex; align-items: center; gap: 0.32rem; margin-bottom: 0.18rem; color: var(--content-meta); font-size: 0.6rem; }
+	.analytics-snapshot__status > span:first-child { width: 0.38rem; height: 0.38rem; border-radius: 50%; background: var(--content-meta); }
+	.analytics-snapshot__status[data-state="online"] { color: var(--snapshot-mint); }
+	.analytics-snapshot__status[data-state="online"] > span:first-child { background: var(--snapshot-mint); }
+	.analytics-snapshot__status[data-state="local"] { color: var(--snapshot-gold); }
+	.analytics-snapshot__status[data-state="local"] > span:first-child { background: var(--snapshot-gold); }
+	.analytics-snapshot__status[data-state="offline"] { color: #c56655; }
+	.analytics-snapshot__status[data-state="offline"] > span:first-child { background: #c56655; }
+	.analytics-snapshot__status[data-state="loading"] > span:first-child { animation: analytics-snapshot-pulse 1.15s ease-in-out infinite; }
+
+	.analytics-snapshot__metrics { display: grid; gap: 0; }
+	.analytics-snapshot__metric { position: relative; display: grid; grid-template-columns: 1.65rem minmax(0, 1fr) auto; align-items: center; gap: 0.55rem; min-width: 0; margin-inline: -0.36rem; padding: 0.54rem 0.36rem; border-top: 1px solid color-mix(in srgb, var(--line-divider) 78%, transparent); border-radius: 0.72rem; transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease; }
+	.analytics-snapshot__metric--blue { --metric-accent: var(--snapshot-blue); }
+	.analytics-snapshot__metric--pink { --metric-accent: var(--snapshot-pink); }
+	.analytics-snapshot__metric--mint { --metric-accent: var(--snapshot-mint); }
+	.analytics-snapshot__metric--gold { --metric-accent: var(--snapshot-gold); }
+	.analytics-snapshot__metric::before { position: absolute; top: 0.54rem; bottom: 0.54rem; left: 0.12rem; width: 0.16rem; border-radius: 999px; background: var(--metric-accent); content: ""; opacity: 0; transform: scaleY(0.35); transform-origin: center; transition: opacity 180ms ease, transform 180ms ease; }
+	.analytics-snapshot__metric:hover { background: color-mix(in srgb, var(--metric-accent) 6%, var(--card-bg)); box-shadow: 0 0.5rem 1.15rem color-mix(in srgb, var(--metric-accent) 13%, transparent); transform: translateY(-1px); }
+	.analytics-snapshot__metric:hover::before { opacity: 0.78; transform: scaleY(1); }
+	.analytics-snapshot__metric-icon { display: grid; width: 1.65rem; height: 1.65rem; place-items: center; border-radius: 0.52rem; font-size: 0.92rem; transition: transform 180ms ease, box-shadow 180ms ease; }
+	.analytics-snapshot__metric:hover .analytics-snapshot__metric-icon { box-shadow: 0 0.3rem 0.7rem color-mix(in srgb, var(--metric-accent) 18%, transparent); transform: scale(1.08) rotate(-3deg); }
+	.analytics-snapshot__metric-icon--blue { color: var(--snapshot-blue); background: color-mix(in srgb, var(--snapshot-blue) 11%, var(--card-bg)); }
+	.analytics-snapshot__metric-icon--pink { color: var(--snapshot-pink); background: color-mix(in srgb, var(--snapshot-pink) 11%, var(--card-bg)); }
+	.analytics-snapshot__metric-icon--mint { color: var(--snapshot-mint); background: color-mix(in srgb, var(--snapshot-mint) 11%, var(--card-bg)); }
+	.analytics-snapshot__metric-icon--gold { color: var(--snapshot-gold); background: color-mix(in srgb, var(--snapshot-gold) 13%, var(--card-bg)); }
+	.analytics-snapshot__metric-copy { display: grid; gap: 0.08rem; min-width: 0; }
+	.analytics-snapshot__metric-copy > span { color: var(--text-color); font-size: 0.72rem; font-weight: 700; }
+	.analytics-snapshot__metric-copy small { overflow: hidden; color: var(--content-meta); font-size: 0.58rem; text-overflow: ellipsis; white-space: nowrap; }
+	.analytics-snapshot__metric-copy small[data-direction="up"] { color: var(--snapshot-mint); }
+	.analytics-snapshot__metric-copy small[data-direction="down"] { color: #c56655; }
+	.analytics-snapshot__metric > strong { color: var(--deep-text); font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+
+	.analytics-snapshot__distribution { margin-top: 0; padding-top: 0; border-top: 0; }
+	.analytics-snapshot__breakdown { display: grid; gap: 0.48rem; margin-top: 0.85rem; }
+	.analytics-snapshot__breakdown + .analytics-snapshot__breakdown { margin-top: 1rem; }
+	.analytics-snapshot__breakdown-title { justify-content: flex-start; align-items: baseline; }
+	.analytics-snapshot__breakdown-title span { margin: 0; color: var(--text-color); font-size: 0.68rem; font-weight: 780; }
+	.analytics-snapshot__breakdown-body { display: grid; grid-template-columns: minmax(5rem, 0.85fr) minmax(0, 1.15fr); align-items: center; gap: 0.65rem; }
+	.analytics-snapshot__donut { position: relative; display: grid; width: min(6.1rem, 100%); aspect-ratio: 1; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--muted) 28%, var(--card-bg)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--card-bg) 65%, transparent); }
+	.analytics-snapshot__donut::after { position: absolute; width: 53%; aspect-ratio: 1; border-radius: 50%; background: var(--card-bg); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line-divider) 60%, transparent); content: ""; }
+	.analytics-snapshot__donut-svg { --snapshot-donut-progress: 0deg; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; mask-image: conic-gradient(from 0deg, #000 0deg var(--snapshot-donut-progress), transparent var(--snapshot-donut-progress) 360deg); -webkit-mask-image: conic-gradient(from 0deg, #000 0deg var(--snapshot-donut-progress), transparent var(--snapshot-donut-progress) 360deg); }
+	.analytics-snapshot__donut-segment { cursor: pointer; opacity: 0.96; outline: none; stroke: var(--card-bg); stroke-width: 1.5; stroke-linejoin: round; transform-box: fill-box; transform-origin: center; will-change: transform, filter; transition: transform 820ms cubic-bezier(0.42, 0, 0.58, 1), opacity 680ms ease-in-out, filter 820ms cubic-bezier(0.42, 0, 0.58, 1), stroke-width 760ms cubic-bezier(0.42, 0, 0.58, 1); }
+	.analytics-snapshot__donut-active-overlay { pointer-events: none; opacity: 0; }
+	.analytics-snapshot__donut-segment[data-active="true"] { opacity: 1; filter: drop-shadow(0 0.18rem 0.26rem color-mix(in srgb, var(--deep-text) 18%, transparent)); transform: scale(1.14); stroke-width: 2.4; }
+	.analytics-snapshot__donut > span { z-index: 1; display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; color: color-mix(in srgb, var(--deep-text) 74%, var(--primary)); background: color-mix(in srgb, var(--card-bg) 78%, transparent); font-size: 1.28rem; pointer-events: none; }
+	.analytics-snapshot__donut.is-empty { opacity: 0.5; }
+	.analytics-snapshot__legend { display: grid; gap: 0.38rem; min-width: 0; }
+	.analytics-snapshot__legend-item { display: grid; grid-template-columns: 0.42rem minmax(0, 1fr) auto; align-items: center; gap: 0.38rem; width: 100%; min-width: 0; padding: 0.2rem 0.28rem; border: 0; border-radius: 0.48rem; color: var(--text-color); background: transparent; font: inherit; text-align: left; cursor: pointer; will-change: transform, box-shadow; transition: transform 600ms cubic-bezier(0.42, 0, 0.58, 1), background-color 520ms ease-in-out, box-shadow 600ms cubic-bezier(0.42, 0, 0.58, 1); }
+	.analytics-snapshot__legend-item:hover,
+	.analytics-snapshot__legend-item:focus-visible,
+	.analytics-snapshot__legend-item[data-active="true"] { background: color-mix(in srgb, var(--primary) 10%, var(--card-bg)); box-shadow: 0 0.3rem 0.7rem color-mix(in srgb, var(--primary) 12%, transparent); transform: translateY(-1px); }
+	.analytics-snapshot__legend-item:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent); outline-offset: 2px; }
+	.analytics-snapshot__legend-item > i { width: 0.42rem; height: 0.42rem; border-radius: 50%; }
+	.analytics-snapshot__legend-item[data-active="true"] > i { transform: scale(1.18); }
+	.analytics-snapshot__legend-item > span { overflow: hidden; color: var(--content-meta); font-size: 0.64rem; text-overflow: ellipsis; white-space: nowrap; }
+	.analytics-snapshot__legend-item > strong { color: var(--deep-text); font-size: 0.66rem; font-variant-numeric: tabular-nums; }
+	.analytics-snapshot__skeleton { display: grid; grid-template-columns: 0.42rem minmax(2.5rem, 1fr) 1.5rem; align-items: center; gap: 0.38rem; min-height: 0.55rem; }
+	.analytics-snapshot__skeleton::before,
+	.analytics-snapshot__skeleton::after { display: block; height: 0.42rem; border-radius: 999px; background: color-mix(in srgb, var(--muted) 76%, transparent); animation: analytics-snapshot-pulse 1.25s ease-in-out infinite; content: ""; }
+	.analytics-snapshot__skeleton::before { width: 0.42rem; }
+	.analytics-snapshot__skeleton::after { width: 100%; }
+	.analytics-snapshot__message { grid-column: 1 / -1; margin: 0; color: var(--content-meta); font-size: 0.64rem; line-height: 1.5; }
+
+	@keyframes analytics-snapshot-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
+	@media (prefers-reduced-motion: reduce) {
+		.analytics-snapshot *, .analytics-snapshot *::before, .analytics-snapshot *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+	}
+</style>

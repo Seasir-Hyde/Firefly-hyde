@@ -56,8 +56,8 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		url: "#",
 		icon: "material-symbols:bolt-outline",
 		children: [
-			// 朋友圈 
-			LinkPresets.Moments, 
+			// 朋友圈
+			LinkPresets.Moments,
 
 			// 动态
 			LinkPresets.Dynamic,
@@ -128,7 +128,12 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			LinkPresets.Skills,
 
 			{
-				name: "统计",
+				name: "站点统计",
+				url: "/analytics/",
+				icon: "material-symbols:monitoring-rounded",
+			},
+			{
+				name: "umami统计",
 				url: "https://umami.seasir.top/share/cp5SqrNUOxbulLZt/seasir.top",
 				external: true,
 				icon: "fa7-solid:chart-simple",
