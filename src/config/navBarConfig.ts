@@ -56,8 +56,11 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		url: "#",
 		icon: "material-symbols:bolt-outline",
 		children: [
-			// 朋友圈
+			// 朋友圈（友链 RSS 聚合）
 			LinkPresets.Moments,
+
+			// 说说
+			LinkPresets.Diary,
 
 			// 动态
 			LinkPresets.Dynamic,
@@ -328,6 +331,11 @@ export const LinkPresets: Record<string, NavBarLink> = {
 	Moments: {
 		name: "朋友圈",
 		url: "/moments/",
+		icon: "material-symbols:rss-feed-rounded",
+	},
+	Diary: {
+		name: "说说",
+		url: "/moments/diary/",
 		icon: "mdi:wechat",
 	},
 	Admin: {

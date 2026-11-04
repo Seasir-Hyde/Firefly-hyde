@@ -40,5 +40,12 @@
   "src:assets/images/DesktopWallpaper/28b4291225cba0bd.webp": "e1e0e9c0bbcfafa6b9",
   "src:assets/images/DesktopWallpaper/044bdf8a23f7808d.webp": "7e9e9f88acc61c6049",
   "public:assets/images/profile-covers/profile-cover-02.webp": "58637a50576d52607c",
-  "public:assets/images/profile-covers/profile-cover-01.webp": "9e9c90bfc9ddb1b4ba"
+  "public:assets/images/profile-covers/profile-cover-01.webp": "9e9c90bfc9ddb1b4ba",
+  "public:assets/images/analytics/visitor-activity-character.png": "d5d3e4e0dce7e3ddea",
+  "public:assets/images/analytics/push-rhythm-character.png": "f2a29af2aca2f0c6c1",
+  "public:assets/images/analytics/analytics-hero.png": "f1f5fde2daece6daea",
+  "public:assets/images/analytics/summary/summary-visitors.webp": "f1f6fee8e3efe4d9e6",
+  "public:assets/images/analytics/summary/summary-today-visitors.webp": "f4f6f7f7e7dcf3d9ce",
+  "public:assets/images/analytics/summary/summary-today-pageviews.webp": "f2f3fee0d9ebd2c3da",
+  "public:assets/images/analytics/summary/summary-pageviews.webp": "eff7feeee8efe6d7e2"
 }

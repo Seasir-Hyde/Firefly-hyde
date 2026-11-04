@@ -14,6 +14,10 @@ export type FriendLink = {
 	violationStartedAt?: number; // 违规整改期开始时间（Unix 秒）
 	unavailableStartedAt?: number; // 短暂失联 30 天整改期的开始时间（Unix 秒）
 	screenshot?: string; // 站点截图预览图（悬停展示）
+	// 以下为朋友圈页面移植新增的可选字段
+	recommended?: boolean; // 是否使用推荐友链样式
+	recommendationReason?: string; // 推荐理由，用于友链评选说明
+	recommendedTier?: "full" | "degraded"; // 推荐友链层级，降级推荐仅保留静态卡片装饰
 };
 
 /**

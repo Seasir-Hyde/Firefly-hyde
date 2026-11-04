@@ -1,448 +1,2279 @@
 ---
-import { Image } from "astro:assets";
-import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
-import Comment from "@/components/comment/index.astro";
-import MomentCard from "@/components/moments/MomentCard.astro";
-import MomentsCover from "@/components/moments/MomentsCover.astro";
-import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+import { getEnabledFriends, siteConfig } from "@/config";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
+import { loadFriendsFeed } from "@/utils/friends-feed";
 
-const moments = await getCollection("moments");
-const sortedMoments = moments
-	.filter((m) => !m.data.pinned)
-	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+const friends = getEnabledFriends();
+const feed = await loadFriendsFeed(friends);
+const title = "朋友圈";
+const description = "把友链博客最近写下的文章，收进一条轻盈的时间线。";
 
-// 置顶说说
-const pinnedMoments = moments
-	.filter((m) => m.data.pinned)
-	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
-
-// 获取 moments 资产目录下的所有图片
-const momentAssets = import.meta.glob<{ default: ImageMetadata }>(
-	"../content/moments/assets/*.{jpeg,jpg,png,gif,webp,avif}",
-	{ eager: true },
+const normalizeFriendUrl = (url: string | undefined | null) =>
+	(url ?? "")
+		.trim()
+		.replace(/^https?:\/\//i, "")
+		.replace(/^www\./i, "")
+		.replace(/\/+$/, "")
+		.toLowerCase();
+const ownSiteUrl = normalizeFriendUrl(siteConfig.site_url);
+const friendsByUrl = new Map(
+	friends
+		.map((friend) => [normalizeFriendUrl(friend.siteurl), friend] as const)
+		.filter(([url]) => url.length > 0),
 );
+const subscribedFriendUrls = new Set(
+	feed.sources.map((source) => normalizeFriendUrl(source.friendUrl)),
+);
+const unsubscribedFriends = friends.filter(
+	(friend) => !subscribedFriendUrls.has(normalizeFriendUrl(friend.siteurl)),
+);
+const randomArticleItems = JSON.stringify(
+	feed.items.map((item) => {
+		const isOwnSite = normalizeFriendUrl(item.friendUrl) === ownSiteUrl;
+		const isRecommended =
+			!isOwnSite &&
+			friendsByUrl.get(normalizeFriendUrl(item.friendUrl))?.recommended ===
+				true;
 
-// 解析图片路径
-const parseImages = (imagesData: any): (string | ImageMetadata)[] => {
-	let rawPaths: string[] = [];
-	if (Array.isArray(imagesData)) {
-		rawPaths = imagesData.map((img) =>
-			typeof img === "string" ? img : img.src || img,
-		);
-	} else if (typeof imagesData === "string" && imagesData.trim()) {
-		rawPaths = imagesData
-			.split(/[,;]/)
-			.map((img) => img.trim())
-			.filter((img) => img);
-	}
-
-	return Array.from(new Set(rawPaths))
-		.map((img) => {
-			if (
-				img.startsWith("http://") ||
-				img.startsWith("https://") ||
-				img.startsWith("/")
-			) {
-				return img;
-			}
-			const cleanPath = img.replace(/^\.\//, "");
-			if (cleanPath.startsWith("assets/")) {
-				const fileName = cleanPath.replace("assets/", "");
-				for (const path in momentAssets) {
-					if (path.endsWith(fileName)) {
-						return momentAssets[path].default;
-					}
-				}
-			}
-			return img;
-		})
-		.filter((img) => img);
-};
-
-// 预处理置顶说说
-const pinnedData = pinnedMoments.map((m) => ({
-	images: parseImages(m.data.images),
-	body: m.body || "",
-	date: m.data.published,
-}));
-
-// const albums = await getCollection("album");
+		return {
+			friendTitle: item.friendTitle,
+			avatar: item.avatar,
+			title: item.title,
+			link: item.link,
+			description: item.description,
+			publishedAt: item.publishedAt?.toISOString() ?? null,
+			role: isOwnSite ? "own" : isRecommended ? "recommended" : null,
+		};
+	}),
+).replace(/</g, "\\u003c");
 ---
 
-<MainGridLayout title="动态" description="记录生活中的点点滴滴">
-  <!-- 微信朋友圈风格封面 -->
-  <MomentsCover />
+<MainGridLayout title={title} description={description}>
+	<section class="moments-shell card-base z-10 px-9 py-6 relative w-full onload-animation" aria-labelledby="moments-title">
+		<header class="moments-header">
+			<div class="moments-heading">
+				<div class="moments-heading-icon" aria-hidden="true">
+					<Icon is:inline name="material-symbols:rss-feed-rounded" />
+				</div>
+				<div>
+					<h1 id="moments-title">朋友圈</h1>
+					<p>来自友链站点的最近更新，偶尔路过，也别忘了留下你的脚印。</p>
+				</div>
+			</div>
+			<div class="moments-stats" aria-label="朋友圈更新统计">
+				<strong>{feed.items.length}</strong>
+				<span>篇更新</span>
+			</div>
+			<div class="moments-note">
+				<Icon is:inline name="material-symbols:auto-awesome-rounded" aria-hidden="true" />
+				<span>
+					显示 {feed.sources.length}/{feed.checkedCount} 个友链来源（最新 {feed.freshSources} 个，沿用快照 {feed.staleSources} 个）。
+				</span>
+			</div>
+			{unsubscribedFriends.length > 0 && (
+				<p class="moments-unsubscribed" role="status">
+					<Icon is:inline name="material-symbols:info-outline-rounded" aria-hidden="true" />
+					<span>
+						未订阅的站点：{unsubscribedFriends.map((friend) => friend.title).join("、")}，如有需要，请与本站站长联系添加 RSS/Atom
+					</span>
+				</p>
+			)}
+			<article
+				class="moments-random-article"
+				data-random-article
+				data-items={randomArticleItems}
+				data-state="loading"
+				aria-label="随机一篇文章"
+			>
+				<svg class="moments-random-article__filters" aria-hidden="true" focusable="false" width="0" height="0">
+					<defs>
+						<filter id="moments-random-article-displacement" x="-12%" y="-20%" width="124%" height="140%">
+							<feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="23" result="noise" />
+							<feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="B" />
+						</filter>
+					</defs>
+				</svg>
+				<span class="moments-random-article__noise" aria-hidden="true"></span>
+				<span class="moments-random-article__sheen" aria-hidden="true"></span>
+				<div class="moments-random-article__icon">
+					<img
+						data-random-article-avatar
+						alt=""
+						width="40"
+						height="40"
+						loading="lazy"
+						decoding="async"
+						hidden
+					/>
+					<span data-random-article-avatar-fallback aria-hidden="true">
+						<Icon is:inline name="material-symbols:shuffle-rounded" />
+					</span>
+				</div>
+				<div class="moments-random-article__body">
+					<div class="moments-random-article__eyebrow">
+						<span>随机一篇文章</span>
+						<span>随手翻翻</span>
+						<span
+							class="moment-identity-badge moments-random-article__badge"
+							data-random-article-badge
+							hidden
+						></span>
+					</div>
+					<a
+						class="moments-random-article__link"
+						data-random-article-link
+						href="/posts/"
+						aria-label="打开随机文章"
+					>
+						<strong data-random-article-title>正在挑选一篇文章…</strong>
+						<span data-random-article-description>从朋友圈文章里随机选一篇，换个角度继续阅读。</span>
+						<span data-random-article-meta aria-hidden="true"></span>
+					</a>
+				</div>
+				<span class="moments-random-article__countdown" data-random-article-countdown aria-hidden="true">5</span>
+				<button
+					type="button"
+					class="moments-random-article__auto is-active"
+					data-random-article-auto
+					aria-pressed="true"
+					aria-label="关闭自动随机"
+				>
+					<Icon is:inline name="material-symbols:autorenew-rounded" aria-hidden="true" />
+					<span>自动随机</span>
+				</button>
+				<button
+					type="button"
+					class="moments-random-article__refresh"
+					data-random-article-refresh
+					aria-label="换一篇随机文章"
+				>
+					<Icon is:inline name="material-symbols:refresh-rounded" aria-hidden="true" />
+					<span>换一篇</span>
+				</button>
+			</article>
+		</header>
 
-  <!-- 置顶说说（始终渲染容器，JS 可动态追加外部置顶） -->
-  <a href="/moments/pinned/" class="wx-pinned" id="pinned-block" style={pinnedData.length === 0 ? 'display:none' : ''}>
-    <div class="wx-pinned-tag">
-      <span>置顶</span>
-    </div>
-    <div class="wx-pinned-items" id="pinned-items">
-      {pinnedData.map((item) => (
-        <div class="wx-pinned-preview">
-          {item.images.length > 0 ? (
-            <div class={`wx-pimgs wx-pimgs-${Math.min(item.images.length, 9)}`}>
-              {item.images.slice(0, 9).map((img) => (
-                typeof img === "string" ? (
-                  <img src={img} alt="" class="wx-pinned-img" loading="lazy" />
-                ) : (
-                  <Image src={img} alt="" class="wx-pinned-img" loading="lazy" />
-                )
-              ))}
-            </div>
-          ) : (
-            <p class="wx-ptxt">{item.body.slice(0, 60)}{item.body.length > 60 ? '...' : ''}</p>
-          )}
-        </div>
-      ))}
-    </div>
-  </a>
+		{feed.items.length > 0 ? (
+			<div class="moments-grid my-4" aria-label="友链文章更新">
+				{feed.items.map((item) => {
+					const isOwnSite = normalizeFriendUrl(item.friendUrl) === ownSiteUrl;
+					const isRecommended = !isOwnSite && friendsByUrl.get(normalizeFriendUrl(item.friendUrl))?.recommended === true;
 
-  <!-- 说说列表（本地 + 外部合并，按时间排序） -->
-  <div class="wx-feed" id="moments-feed">
-    {sortedMoments.length > 0 ? (
-      sortedMoments.map((moment) => (
-        <div class="wx-feed-item" data-published={moment.data.published.toISOString()}>
-          <MomentCard moment={moment} />
-        </div>
-      ))
-    ) : (
-      <div class="wx-empty" id="moments-empty">
-        <div class="wx-empty-icon">
-          <Icon name="material-symbols:sentiment-neutral-outline" />
-        </div>
-        <h3>还没有发布任何说说</h3>
-        <p>快去记录你的生活点滴吧</p>
-      </div>
-    )}
-  </div>
+					return (
+					<a
+						href={item.link}
+						target="_blank"
+						rel="noopener noreferrer"
+						class:list={[
+							"moment-card group",
+							isOwnSite && "moment-card--own",
+							isRecommended && "moment-card--recommended",
+						]}
+						data-moment-card
+						aria-label={`${item.title}，来自 ${item.friendTitle}`}
+					>
+						{(isOwnSite || isRecommended) && (
+							<span
+								class="moment-flow"
+								data-moment-flow
+								data-flow-tone={isRecommended ? "gold" : "blue"}
+								aria-hidden="true"
+							>
+								<span class="moment-flow-silk"></span>
+								<canvas class="moment-flow-stars"></canvas>
+							</span>
+						)}
+						<div class="moment-avatar">
+							<img src={item.avatar} alt="" width="48" height="48" loading="lazy" decoding="async" />
+						</div>
+						<div class="moment-content">
+							<div class="moment-title-row">
+								<h2>{item.title}</h2>
+								<Icon is:inline name="material-symbols:arrow-outward-rounded" aria-hidden="true" />
+							</div>
+							<p class="moment-meta">
+								<span>{item.friendTitle}</span>
+								{isOwnSite && (
+									<span class="moment-identity-badge moment-identity-badge--own">
+										<Icon is:inline name="material-symbols:home-rounded" aria-hidden="true" />
+										本站主理人
+									</span>
+								)}
+								{isRecommended && (
+									<span class="moment-identity-badge moment-identity-badge--recommended">
+										<Icon is:inline name="material-symbols:star-rounded" aria-hidden="true" />
+										推荐友链
+									</span>
+								)}
+								<span aria-hidden="true">·</span>
+								<time datetime={item.publishedAt?.toISOString()}>
+									{item.publishedAt ? formatDateToYYYYMMDD(item.publishedAt) : "最近更新"}
+								</time>
+							</p>
+							{item.description && <p class="moment-description">{item.description}</p>}
+						</div>
+					</a>
+					);
+				})}
+			</div>
+			<nav class="moments-pagination" data-moments-pagination aria-label="朋友圈分页">
+				<button type="button" data-moments-page="prev" aria-label="上一页">
+					<Icon is:inline name="material-symbols:chevron-left-rounded" aria-hidden="true" />
+					<span>上一页</span>
+				</button>
+				<span data-moments-page-indicator aria-live="polite">第 1 / 1 页</span>
+				<form class="moments-page-jump" data-moments-page-jump-form aria-label="跳转到朋友圈页">
+					<label for="moments-page-jump-input">跳转至</label>
+					<input
+						id="moments-page-jump-input"
+						data-moments-page-jump-input
+						type="number"
+						min="1"
+						inputmode="numeric"
+						aria-label="页码"
+						placeholder="页码"
+					/>
+					<span aria-hidden="true">页</span>
+					<button type="submit">前往</button>
+				</form>
+				<button type="button" data-moments-page="next" aria-label="下一页">
+					<span>下一页</span>
+					<Icon is:inline name="material-symbols:chevron-right-rounded" aria-hidden="true" />
+				</button>
+			</nav>
+		) : (
+			<div class="moments-empty card-base">
+				<Icon is:inline name="material-symbols:rss-feed-rounded" aria-hidden="true" />
+				<h2>暂时还没有读到更新</h2>
+				<p>友链站点可能暂未提供 RSS / Atom，下一次构建时会再次尝试探测。</p>
+			</div>
+		)}
+	</section>
 
-  <!-- 评论区 -->
-  <div id="moments-comments">
-    <Comment customPath="/moments/" />
-  </div>
+<script is:inline>
+	(() => {
+		const runtimeKey = "__rainztMomentsRuntime";
+		const runtime = window[runtimeKey] || {
+			activeShell: null,
+			cleanup: null,
+			init: null,
+			eventsBound: false,
+			hooksBound: false,
+			scheduledFrame: 0,
+		};
 
-  <!-- 外部朋友圈数据获取配置 -->
-  {externalMomentsConfig.enable && externalMomentsConfig.gistId && (
-    <script id="moments-config" is:inline data-swup-ignore-script
-      data-gist={externalMomentsConfig.gistId}
-      data-file={externalMomentsConfig.fileName}
-      data-author={externalMomentsConfig.defaultAuthor}
-      data-avatar={externalMomentsConfig.defaultAvatar}>
-    </script>
-  )}
+		const clearActiveRuntime = () => {
+			if (typeof runtime.cleanup === "function") runtime.cleanup();
+			runtime.cleanup = null;
+			runtime.activeShell = null;
+		};
+
+		const initMomentsPage = () => {
+			const shell = document.querySelector(".moments-shell");
+			if (!shell) {
+				clearActiveRuntime();
+				return;
+			}
+			if (runtime.activeShell === shell) return;
+
+			clearActiveRuntime();
+			runtime.activeShell = shell;
+			const cleanups = [];
+			runtime.cleanup = () => {
+				for (const cleanup of cleanups.splice(0)) cleanup();
+				runtime.activeShell = null;
+			};
+
+			const randomArticleCard = shell.querySelector("[data-random-article]");
+			if (randomArticleCard instanceof HTMLElement) {
+				const rawItems = randomArticleCard.dataset.items || "[]";
+				const articleLink = randomArticleCard.querySelector("[data-random-article-link]");
+				const articleTitle = randomArticleCard.querySelector("[data-random-article-title]");
+				const articleDescription = randomArticleCard.querySelector("[data-random-article-description]");
+				const articleMeta = randomArticleCard.querySelector("[data-random-article-meta]");
+				const articleBadge = randomArticleCard.querySelector("[data-random-article-badge]");
+				const articleAvatar = randomArticleCard.querySelector("[data-random-article-avatar]");
+				const articleAvatarFallback = randomArticleCard.querySelector("[data-random-article-avatar-fallback]");
+				const articleCountdown = randomArticleCard.querySelector("[data-random-article-countdown]");
+				const autoRandomButton = randomArticleCard.querySelector("[data-random-article-auto]");
+				const refreshButton = randomArticleCard.querySelector("[data-random-article-refresh]");
+				let candidates = [];
+				let lastArticleLink = "";
+				let autoRandomEnabled = true;
+				let secondsUntilRandom = 5;
+				let randomSwapTimer = 0;
+
+				const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+				const finePointer = window.matchMedia?.("(hover: hover) and (pointer: fine)").matches ?? false;
+				if (!reducedMotion && finePointer) {
+					let tiltFrame = 0;
+					let targetTiltX = 0;
+					let targetTiltY = 0;
+					let currentTiltX = 0;
+					let currentTiltY = 0;
+					let tiltVelocityX = 0;
+					let tiltVelocityY = 0;
+
+					const animateTilt = () => {
+						const stiffness = 0.105;
+						const damping = 0.74;
+						tiltVelocityX = (tiltVelocityX + (targetTiltX - currentTiltX) * stiffness) * damping;
+						tiltVelocityY = (tiltVelocityY + (targetTiltY - currentTiltY) * stiffness) * damping;
+						currentTiltX += tiltVelocityX;
+						currentTiltY += tiltVelocityY;
+						randomArticleCard.style.setProperty("--tilt-x", `${currentTiltX.toFixed(3)}deg`);
+						randomArticleCard.style.setProperty("--tilt-y", `${currentTiltY.toFixed(3)}deg`);
+
+						const settled =
+							Math.abs(targetTiltX - currentTiltX) < 0.01 &&
+							Math.abs(targetTiltY - currentTiltY) < 0.01 &&
+							Math.abs(tiltVelocityX) < 0.01 &&
+							Math.abs(tiltVelocityY) < 0.01;
+						if (settled && targetTiltX === 0 && targetTiltY === 0) {
+							currentTiltX = 0;
+							currentTiltY = 0;
+							randomArticleCard.style.setProperty("--tilt-x", "0deg");
+							randomArticleCard.style.setProperty("--tilt-y", "0deg");
+							tiltFrame = 0;
+							return;
+						}
+						tiltFrame = window.requestAnimationFrame(animateTilt);
+					};
+
+					const requestTiltFrame = () => {
+						if (!tiltFrame) tiltFrame = window.requestAnimationFrame(animateTilt);
+					};
+
+					const handlePointerEnter = () => {
+						randomArticleCard.dataset.tiltActive = "true";
+						requestTiltFrame();
+					};
+
+					const handlePointerMove = (event) => {
+						if (event.pointerType === "touch") return;
+						const rect = randomArticleCard.getBoundingClientRect();
+						const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+						const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+						randomArticleCard.style.setProperty("--pointer-x", `${(x * 100).toFixed(2)}%`);
+						randomArticleCard.style.setProperty("--pointer-y", `${(y * 100).toFixed(2)}%`);
+						targetTiltX = (0.5 - y) * 5.5;
+						targetTiltY = (x - 0.5) * 5.5;
+						requestTiltFrame();
+					};
+
+					const handlePointerLeave = () => {
+						targetTiltX = 0;
+						targetTiltY = 0;
+						randomArticleCard.dataset.tiltActive = "false";
+						randomArticleCard.style.setProperty("--pointer-x", "50%");
+						randomArticleCard.style.setProperty("--pointer-y", "50%");
+						requestTiltFrame();
+					};
+
+					randomArticleCard.addEventListener("pointerenter", handlePointerEnter);
+					randomArticleCard.addEventListener("pointermove", handlePointerMove);
+					randomArticleCard.addEventListener("pointerleave", handlePointerLeave);
+					cleanups.push(() => {
+						randomArticleCard.removeEventListener("pointerenter", handlePointerEnter);
+						randomArticleCard.removeEventListener("pointermove", handlePointerMove);
+						randomArticleCard.removeEventListener("pointerleave", handlePointerLeave);
+						if (tiltFrame) window.cancelAnimationFrame(tiltFrame);
+						randomArticleCard.style.removeProperty("--tilt-x");
+						randomArticleCard.style.removeProperty("--tilt-y");
+						randomArticleCard.style.removeProperty("--pointer-x");
+						randomArticleCard.style.removeProperty("--pointer-y");
+					});
+				}
+
+				const setRandomArticleState = (state) => {
+					randomArticleCard.dataset.state = state;
+					if (refreshButton instanceof HTMLButtonElement) refreshButton.disabled = false;
+				};
+
+				const updateRandomCountdown = () => {
+					if (!(articleCountdown instanceof HTMLElement)) return;
+					articleCountdown.textContent = autoRandomEnabled ? String(secondsUntilRandom) : "";
+					articleCountdown.dataset.auto = autoRandomEnabled ? "true" : "false";
+				};
+
+				const setAutoRandomState = (enabled) => {
+					autoRandomEnabled = enabled;
+					secondsUntilRandom = 5;
+					if (autoRandomButton instanceof HTMLButtonElement) {
+						autoRandomButton.classList.toggle("is-active", enabled);
+						autoRandomButton.setAttribute("aria-pressed", String(enabled));
+						autoRandomButton.setAttribute("aria-label", enabled ? "关闭自动随机" : "开启自动随机");
+					}
+					updateRandomCountdown();
+				};
+
+				const playRandomArticleSwap = () => {
+					if (reducedMotion) return;
+					randomArticleCard.classList.remove("is-switching");
+					void randomArticleCard.offsetWidth;
+					randomArticleCard.classList.add("is-switching");
+					if (randomSwapTimer) window.clearTimeout(randomSwapTimer);
+					randomSwapTimer = window.setTimeout(() => {
+						randomArticleCard.classList.remove("is-switching");
+						randomSwapTimer = 0;
+					}, 640);
+				};
+				cleanups.push(() => {
+					if (randomSwapTimer) window.clearTimeout(randomSwapTimer);
+					randomSwapTimer = 0;
+					randomArticleCard.classList.remove("is-switching");
+				});
+
+				const showRandomArticleAvatarFallback = () => {
+					if (articleAvatar instanceof HTMLImageElement) {
+						articleAvatar.hidden = true;
+						articleAvatar.removeAttribute("src");
+					}
+					if (articleAvatarFallback instanceof HTMLElement) articleAvatarFallback.hidden = false;
+				};
+
+				const handleRandomArticleAvatarError = () => showRandomArticleAvatarFallback();
+				if (articleAvatar instanceof HTMLImageElement) {
+					articleAvatar.addEventListener("error", handleRandomArticleAvatarError);
+					cleanups.push(() => articleAvatar.removeEventListener("error", handleRandomArticleAvatarError));
+				}
+
+				const renderRandomArticle = () => {
+					if (!(articleLink instanceof HTMLAnchorElement) || !(articleTitle instanceof HTMLElement)) return;
+					if (candidates.length === 0) {
+						setRandomArticleState("empty");
+						secondsUntilRandom = 0;
+						updateRandomCountdown();
+						randomArticleCard.classList.remove("moments-random-article--own", "moments-random-article--recommended");
+						articleLink.removeAttribute("href");
+						articleLink.setAttribute("aria-disabled", "true");
+						articleTitle.textContent = "暂时没有可推荐的文章";
+						if (articleDescription) articleDescription.textContent = "朋友圈暂时没有可读取的更新，请稍后再试。";
+						if (articleMeta) articleMeta.textContent = "";
+						showRandomArticleAvatarFallback();
+						if (articleBadge instanceof HTMLElement) {
+							articleBadge.hidden = true;
+							articleBadge.textContent = "";
+							articleBadge.classList.remove("moment-identity-badge--own", "moment-identity-badge--recommended");
+						}
+						playRandomArticleSwap();
+						return;
+					}
+
+					const ownArticles = candidates.filter((item) => item.role === "own");
+					const otherArticles = candidates.filter((item) => item.role !== "own");
+					const preferredPool = Math.random() < 0.2 ? ownArticles : otherArticles;
+					const categoryPool = preferredPool.length > 0 ? preferredPool : candidates;
+					const available = categoryPool.filter((item) => item.link !== lastArticleLink);
+					const pool = available.length > 0 ? available : categoryPool;
+					const picked = pool[Math.floor(Math.random() * pool.length)];
+					lastArticleLink = picked.link;
+					articleLink.href = picked.link;
+					articleLink.removeAttribute("aria-disabled");
+					articleLink.setAttribute("aria-label", `阅读随机文章：${picked.title}`);
+					articleTitle.textContent = picked.title || "随机文章";
+					if (articleAvatar instanceof HTMLImageElement && typeof picked.avatar === "string" && picked.avatar.length > 0) {
+						articleAvatar.src = picked.avatar;
+						articleAvatar.alt = `${picked.friendTitle || "友链站点"}头像`;
+						articleAvatar.hidden = false;
+						if (articleAvatarFallback instanceof HTMLElement) articleAvatarFallback.hidden = true;
+					} else {
+						showRandomArticleAvatarFallback();
+					}
+					if (articleDescription) {
+						articleDescription.textContent = picked.description || "打开这篇友链文章，看看今天会遇见什么。";
+					}
+					if (articleMeta) {
+						const published = picked.publishedAt
+							? new Date(picked.publishedAt).toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })
+							: "最近更新";
+						articleMeta.textContent = `${picked.friendTitle || "友链文章"} · ${published}`;
+					}
+					if (articleBadge instanceof HTMLElement) {
+						const role = picked.role === "own" || picked.role === "recommended" ? picked.role : "";
+						randomArticleCard.classList.remove("moments-random-article--own", "moments-random-article--recommended");
+						if (role !== "") randomArticleCard.classList.add(`moments-random-article--${role}`);
+						articleBadge.hidden = role === "";
+						articleBadge.classList.remove("moment-identity-badge--own", "moment-identity-badge--recommended");
+						if (role !== "") {
+							articleBadge.classList.add(`moment-identity-badge--${role}`);
+							articleBadge.textContent = role === "own" ? "本站主理人" : "推荐友链";
+						}
+					} else {
+						randomArticleCard.classList.remove("moments-random-article--own", "moments-random-article--recommended");
+						if (picked.role === "own" || picked.role === "recommended") {
+							randomArticleCard.classList.add(`moments-random-article--${picked.role}`);
+						}
+					}
+					setRandomArticleState("ready");
+					if (autoRandomEnabled) {
+						secondsUntilRandom = 5;
+						updateRandomCountdown();
+					}
+					playRandomArticleSwap();
+				};
+
+				const loadRandomArticles = () => {
+					try {
+						const data = JSON.parse(rawItems);
+						candidates = Array.isArray(data)
+							? data.filter((item) => item && typeof item.title === "string" && item.link)
+							: [];
+					} catch {
+						candidates = [];
+					}
+					renderRandomArticle();
+				};
+
+				const handleRandomArticleRefresh = () => {
+					if (candidates.length > 0) renderRandomArticle();
+					else loadRandomArticles();
+				};
+
+				const handleAutoRandomToggle = () => setAutoRandomState(!autoRandomEnabled);
+
+				refreshButton?.addEventListener("click", handleRandomArticleRefresh);
+				cleanups.push(() => refreshButton?.removeEventListener("click", handleRandomArticleRefresh));
+				autoRandomButton?.addEventListener("click", handleAutoRandomToggle);
+				cleanups.push(() => autoRandomButton?.removeEventListener("click", handleAutoRandomToggle));
+				loadRandomArticles();
+				const randomArticleTimer = window.setInterval(() => {
+					if (!autoRandomEnabled || candidates.length < 2) return;
+					if (secondsUntilRandom <= 1) {
+						renderRandomArticle();
+						return;
+					}
+					secondsUntilRandom -= 1;
+					updateRandomCountdown();
+				}, 1000);
+				cleanups.push(() => window.clearInterval(randomArticleTimer));
+			}
+
+			const momentsPageSize = 20;
+			const momentsCards = Array.from(shell.querySelectorAll("[data-moment-card]"));
+			const momentsPagination = shell.querySelector("[data-moments-pagination]");
+
+			if (momentsCards.length > 0 && momentsPagination) {
+				const momentsIndicator = momentsPagination.querySelector("[data-moments-page-indicator]");
+				const momentsPrev = momentsPagination.querySelector("[data-moments-page='prev']");
+				const momentsNext = momentsPagination.querySelector("[data-moments-page='next']");
+				const momentsJumpForm = momentsPagination.querySelector("[data-moments-page-jump-form]");
+				const momentsJumpInput = momentsPagination.querySelector("[data-moments-page-jump-input]");
+				const momentsTotalPages = Math.max(1, Math.ceil(momentsCards.length / momentsPageSize));
+				const getMomentsPage = () => {
+					const value = Number.parseInt(new URL(window.location.href).searchParams.get("page") || "1", 10);
+					return Number.isFinite(value) && value > 0 ? Math.min(value, momentsTotalPages) : 1;
+				};
+				let momentsCurrentPage = getMomentsPage();
+
+				const updateMomentsUrl = () => {
+					const nextUrl = new URL(window.location.href);
+					if (momentsCurrentPage === 1) nextUrl.searchParams.delete("page");
+					else nextUrl.searchParams.set("page", String(momentsCurrentPage));
+					window.history.pushState(null, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+				};
+
+				const renderMomentsPage = () => {
+					const start = (momentsCurrentPage - 1) * momentsPageSize;
+					momentsCards.forEach((card, index) => {
+						card.hidden = index < start || index >= start + momentsPageSize;
+					});
+					momentsPagination.classList.toggle("is-visible", momentsTotalPages > 1);
+					if (momentsIndicator) {
+						momentsIndicator.textContent = `第 ${momentsCurrentPage} / ${momentsTotalPages} 页 · 共 ${momentsCards.length} 篇`;
+					}
+					if (momentsJumpInput instanceof HTMLInputElement) {
+						momentsJumpInput.max = String(momentsTotalPages);
+						momentsJumpInput.placeholder = String(momentsCurrentPage);
+						momentsJumpInput.setAttribute("aria-valuemax", String(momentsTotalPages));
+						momentsJumpInput.setAttribute("aria-valuenow", String(momentsCurrentPage));
+					}
+					if (momentsPrev) {
+						momentsPrev.disabled = momentsCurrentPage === 1;
+						momentsPrev.setAttribute("aria-disabled", String(momentsPrev.disabled));
+					}
+					if (momentsNext) {
+						momentsNext.disabled = momentsCurrentPage === momentsTotalPages;
+						momentsNext.setAttribute("aria-disabled", String(momentsNext.disabled));
+					}
+				};
+
+				const goToMomentsPage = (page) => {
+					momentsCurrentPage = Math.min(Math.max(page, 1), momentsTotalPages);
+					updateMomentsUrl();
+					renderMomentsPage();
+					shell.querySelector(".moments-header")?.scrollIntoView({ behavior: "smooth", block: "start" });
+				};
+
+				const handlePaginationClick = (event) => {
+					const button = event.target instanceof Element
+						? event.target.closest("button[data-moments-page]")
+						: null;
+					if (!button || button.disabled) return;
+					goToMomentsPage(momentsCurrentPage + (button.dataset.momentsPage === "next" ? 1 : -1));
+				};
+				const handleJumpSubmit = (event) => {
+					event.preventDefault();
+					if (!(momentsJumpInput instanceof HTMLInputElement)) return;
+					const value = Number.parseInt(momentsJumpInput.value, 10);
+					if (!Number.isFinite(value)) {
+						momentsJumpInput.focus();
+						return;
+					}
+					momentsJumpInput.value = "";
+					goToMomentsPage(value);
+				};
+				const handlePopState = () => {
+					momentsCurrentPage = getMomentsPage();
+					renderMomentsPage();
+				};
+
+				momentsPagination.addEventListener("click", handlePaginationClick);
+				momentsJumpForm?.addEventListener("submit", handleJumpSubmit);
+				window.addEventListener("popstate", handlePopState);
+				cleanups.push(() => {
+					momentsPagination.removeEventListener("click", handlePaginationClick);
+					momentsJumpForm?.removeEventListener("submit", handleJumpSubmit);
+					window.removeEventListener("popstate", handlePopState);
+				});
+
+				renderMomentsPage();
+			}
+
+			const momentFlowHosts = Array.from(shell.querySelectorAll("[data-moment-flow]"));
+			const momentFlowReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+			for (const host of momentFlowHosts) {
+				const canvas = host.querySelector(".moment-flow-stars");
+				const context = canvas instanceof HTMLCanvasElement ? canvas.getContext("2d") : null;
+				if (!(canvas instanceof HTMLCanvasElement) || !context) continue;
+
+				let dpr = Math.min(window.devicePixelRatio || 1, 2);
+				let width = 0;
+				let height = 0;
+				let particles = [];
+				let last = performance.now();
+				let animationFrame = 0;
+				let resizeObserver = null;
+				let stopped = false;
+				const particleCount = 32;
+				const tone = host.dataset.flowTone === "gold"
+					? { core: "255,176,0", glow: "255,225,92" }
+					: { core: "32,143,232", glow: "151,220,255" };
+
+				const drawRoundedStar = (x, y, outerRadius, innerRadius, rotation) => {
+					const points = Array.from({ length: 10 }, (_, index) => {
+						const angle = rotation + (Math.PI * index) / 5;
+						const radius = index % 2 === 0 ? outerRadius : innerRadius;
+						return { x: x + Math.cos(angle) * radius, y: y + Math.sin(angle) * radius };
+					});
+					context.beginPath();
+					for (let index = 0; index < points.length; index += 1) {
+						const previous = points[(index + points.length - 1) % points.length];
+						const current = points[index];
+						const next = points[(index + 1) % points.length];
+						const startX = (previous.x + current.x) / 2;
+						const startY = (previous.y + current.y) / 2;
+						const endX = (current.x + next.x) / 2;
+						const endY = (current.y + next.y) / 2;
+						if (index === 0) context.moveTo(startX, startY);
+						context.quadraticCurveTo(current.x, current.y, endX, endY);
+					}
+					context.closePath();
+					context.fill();
+				};
+
+				const createParticle = () => ({
+					x: Math.random() * Math.max(width - 20, 1),
+					y: 4 + Math.random() * Math.max(height - 8, 1),
+					r: Math.random() < 0.26 ? 2.2 + Math.random() * 1.2 : 1.15 + Math.random() * 1.15,
+					speed: 0.08 + Math.random() * 0.2,
+					alpha: 0.26 + Math.random() * 0.44,
+					pulse: Math.random() * Math.PI * 2,
+					pulseSpeed: 0.012 + Math.random() * 0.02,
+					rotation: -Math.PI / 2 + (Math.random() - 0.5) * 0.2,
+					streak: Math.random() < 0.1,
+				});
+
+				const resize = () => {
+					if (stopped || !host.isConnected) return;
+					const rect = host.getBoundingClientRect();
+					width = rect.width;
+					height = rect.height;
+					if (!width || !height) return;
+					dpr = Math.min(window.devicePixelRatio || 1, 2);
+					canvas.width = Math.round(width * dpr);
+					canvas.height = Math.round(height * dpr);
+					canvas.style.width = `${width}px`;
+					canvas.style.height = `${height}px`;
+					context.setTransform(dpr, 0, 0, dpr, 0, 0);
+					particles = Array.from({ length: particleCount }, createParticle);
+				};
+
+				const draw = (now) => {
+					if (stopped || !host.isConnected) return;
+					if (!width || !height) {
+						if (!momentFlowReducedMotion) animationFrame = requestAnimationFrame(draw);
+						return;
+					}
+					const dt = Math.min(32, now - last);
+					last = now;
+					context.clearRect(0, 0, width, height);
+					const endX = width - 5;
+
+					for (const particle of particles) {
+						if (!momentFlowReducedMotion) particle.x += particle.speed * dt;
+						if (particle.x > endX) {
+							particle.x = -4 - Math.random() * 24;
+							particle.y = 4 + Math.random() * Math.max(height - 8, 1);
+						}
+						if (!momentFlowReducedMotion) particle.pulse += particle.pulseSpeed * dt;
+
+						const twinkle = 0.68 + 0.32 * Math.sin(particle.pulse);
+						const alpha = particle.alpha * twinkle;
+
+						if (particle.streak) {
+							const streak = context.createLinearGradient(particle.x - 8, particle.y, particle.x + 2, particle.y);
+							streak.addColorStop(0, `rgba(${tone.core},0)`);
+							streak.addColorStop(1, `rgba(${tone.core},${alpha * 0.7})`);
+							context.strokeStyle = streak;
+							context.lineWidth = 0.8;
+							context.beginPath();
+							context.moveTo(particle.x - 8, particle.y);
+							context.lineTo(particle.x + 1, particle.y);
+							context.stroke();
+						}
+
+						const glow = context.createRadialGradient(
+							particle.x,
+							particle.y,
+							0,
+							particle.x,
+							particle.y,
+							particle.r * 5.2,
+						);
+						glow.addColorStop(0, `rgba(${tone.core},${Math.min(1, alpha)})`);
+						glow.addColorStop(0.26, `rgba(${tone.glow},${alpha * 0.72})`);
+						glow.addColorStop(1, `rgba(${tone.core},0)`);
+						context.fillStyle = glow;
+						context.beginPath();
+						context.arc(particle.x, particle.y, particle.r * 5.2, 0, Math.PI * 2);
+						context.fill();
+
+						context.fillStyle = `rgba(${tone.core},${Math.min(1, alpha + 0.18)})`;
+						drawRoundedStar(
+							particle.x,
+							particle.y,
+							particle.r * 1.35,
+							particle.r * 0.58,
+							particle.rotation,
+						);
+					}
+
+					if (!momentFlowReducedMotion) animationFrame = requestAnimationFrame(draw);
+				};
+
+				const stop = () => {
+					stopped = true;
+					if (animationFrame) cancelAnimationFrame(animationFrame);
+					resizeObserver?.disconnect();
+					window.removeEventListener("resize", resize);
+				};
+
+				resize();
+				if ("ResizeObserver" in window) {
+					resizeObserver = new ResizeObserver(resize);
+					resizeObserver.observe(host);
+				}
+				window.addEventListener("resize", resize, { passive: true });
+				animationFrame = requestAnimationFrame(draw);
+				cleanups.push(stop);
+			}
+		};
+
+		const scheduleMomentsInit = () => {
+			if (runtime.scheduledFrame) cancelAnimationFrame(runtime.scheduledFrame);
+			runtime.scheduledFrame = requestAnimationFrame(() => {
+				runtime.scheduledFrame = 0;
+				runtime.init?.();
+			});
+		};
+		const bindSwupHooks = () => {
+			if (runtime.hooksBound || !window.swup?.hooks) return;
+			window.swup.hooks.on("content:replace", scheduleMomentsInit);
+			window.swup.hooks.on("page:view", scheduleMomentsInit);
+			runtime.hooksBound = true;
+		};
+
+		runtime.init = initMomentsPage;
+		window[runtimeKey] = runtime;
+		if (!runtime.eventsBound) {
+			for (const eventName of [
+				"astro:page-load",
+				"swup:contentReplaced",
+				"swup:content:replace",
+				"swup:page:view",
+			]) {
+				document.addEventListener(eventName, scheduleMomentsInit);
+			}
+			document.addEventListener("swup:enable", bindSwupHooks);
+			runtime.eventsBound = true;
+		}
+		bindSwupHooks();
+		initMomentsPage();
+	})();
+</script>
 </MainGridLayout>
 
-<!-- 引入外部朋友圈数据获取脚本 -->
-<script>
-  import "@/data/moments.ts";
-</script>
-
-
 <style>
-  /* 置顶块样式在底部 <style is:global> 中，
-     因为 JS 动态创建的外部置顶元素没有 Astro scoped 属性 */
+	.moments-shell {
+		/* 目标项目未定义 Aemeath 的玻璃控件边框变量，用等价的分割线色派生 */
+		--glass-control-border: color-mix(in srgb, var(--line-divider) 150%, transparent);
+		display: block;
+		background: var(--card-bg);
+	}
 
-  /* ============================================
-   * 说说列表
-   * ============================================ */
-  .wx-feed {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    padding: 1rem 0 2rem;
-  }
+	.moments-header {
+		position: relative;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 1.25rem 2rem;
+		padding: 0;
+		overflow: hidden;
+		background: transparent;
+		box-shadow: none;
+	}
 
-  .wx-feed-item {
-    position: relative;
-  }
+	.moments-header::after {
+		content: "";
+		position: absolute;
+		right: 1.25rem;
+		bottom: -3.5rem;
+		width: 10rem;
+		height: 10rem;
+		border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+		border-radius: 50%;
+		pointer-events: none;
+	}
 
-  .wx-feed-item + .wx-feed-item::before {
-    content: '';
-    position: absolute;
-    top: -0.75rem;
-    left: 1rem;
-    right: 1rem;
-    height: 1px;
-    background: var(--border);
-    opacity: 0.7;
-  }
+	.moments-heading {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		min-width: 0;
+	}
 
-  /* 空状态 */
-  .wx-empty {
-    text-align: center;
-    padding: 3rem 1rem;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-  }
+	.moments-heading-icon {
+		display: grid;
+		place-items: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		flex: 0 0 auto;
+		border-radius: 0.85rem;
+		color: white;
+		background: var(--primary);
+		box-shadow: 0 0.7rem 1.6rem color-mix(in srgb, var(--primary) 22%, transparent);
+		font-size: 1.45rem;
+	}
 
-  .wx-empty-icon {
-    width: 4rem;
-    height: 4rem;
-    margin: 0 auto 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--btn-regular-bg);
-    border-radius: 50%;
-    color: var(--content-meta);
-    font-size: 2rem;
-  }
+	.moments-heading h1 {
+		margin: 0;
+		font-size: clamp(1.35rem, 3vw, 1.85rem);
+		font-weight: 800;
+		letter-spacing: -0.02em;
+		color: var(--content-meta);
+	}
 
-  .wx-empty h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: 0.375rem;
-  }
+	.moments-heading p {
+		margin: 0.3rem 0 0;
+		color: var(--content-meta);
+		font-size: 0.9rem;
+		line-height: 1.6;
+	}
 
-  .wx-empty p {
-    font-size: 0.875rem;
-    color: var(--content-meta);
-    margin: 0;
-  }
+	.moments-stats {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		align-self: center;
+		white-space: nowrap;
+		color: var(--content-meta);
+	}
 
-  /* 响应式 */
-  @media (max-width: 480px) {
-    .wx-feed {
-      gap: 1.25rem;
-      padding: 0.75rem 0 1.5rem;
-    }
+	.moments-stats strong {
+		color: var(--primary);
+		font-size: 1.55rem;
+		font-variant-numeric: tabular-nums;
+	}
 
-    .wx-feed-item + .wx-feed-item::before {
-      top: -0.625rem;
-      left: 0.75rem;
-      right: 0.75rem;
-    }
-  }
-</style>
+	.moments-stats span {
+		font-size: 0.8rem;
+	}
 
-<style is:global>
-  /* ============================================
-   * 置顶块样式（需要 is:global，
-   * 因为 JS 动态创建的外部置顶元素没有 Astro scoped 属性）
-   * ============================================ */
-  .wx-pinned {
-    display: flex;
-    align-items: stretch;
-    background: var(--card-bg);
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 1.25rem;
-    min-height: 4.5rem;
-    text-decoration: none;
-    color: var(--text-color);
-    border: 1.5px solid transparent;
-    transition: border-color 0.2s ease, transform 0.2s ease;
-    cursor: pointer;
-  }
-  .wx-pinned:hover {
-    border-color: var(--primary);
-    transform: translateY(-2px);
-  }
-  .wx-pinned-tag {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0 0.75rem;
-    background: #fff;
-    color: #1a1a1a;
-    font-size: 1.625rem;
-    font-weight: 400;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-  :root.dark .wx-pinned-tag {
-    background: #00000000;
-    color: #fff;
-  }
-  .wx-pinned-items {
-    display: flex;
-    flex: 1;
-    justify-content: flex-end;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    gap: 0;
-  }
-  .wx-pinned-items::-webkit-scrollbar {
-    display: none;
-  }
-  .wx-pinned-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem;
-    min-width: 4rem;
-    max-width: 7.5rem;
-    flex: 1;
-    border-left: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .wx-pinned-preview:first-child {
-    border-left: none;
-  }
-  .wx-pimgs {
-    display: grid;
-    gap: 2px;
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  .wx-pimgs-1 { grid-template-columns: 1fr; }
-  .wx-pimgs-2 { grid-template-columns: 1fr 1fr; }
-  .wx-pimgs-3 {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-  .wx-pimgs-3 .wx-pinned-img:first-child { grid-row: 1 / 3; }
-  .wx-pimgs-4 {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-  .wx-pimgs-5,
-  .wx-pimgs-6 {
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-  .wx-pimgs-7,
-  .wx-pimgs-8,
-  .wx-pimgs-9 {
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-  }
-  .wx-pinned-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .wx-ptxt {
-    margin: 0;
-    font-size: 0.625rem;
-    color: var(--content-meta);
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    word-break: break-all;
-  }
-  @media (max-width: 480px) {
-    .wx-pinned-preview {
-      min-width: 3.5rem;
-      max-width: 6rem;
-      padding: 0.375rem;
-    }
-    .wx-ptxt {
-      font-size: 0.5625rem;
-      -webkit-line-clamp: 3;
-    }
-  }
+	.moments-note {
+		display: flex;
+		grid-column: 1 / -1;
+		align-items: center;
+		gap: 0.45rem;
+		padding-top: 0.8rem;
+		border-top: 1px solid var(--line-divider);
+		color: var(--text-color);
+		font-size: 0.76rem;
+		line-height: 1.55;
+	}
 
-  /* ============================================
-   * JS 动态插入的说说卡片样式
-   * 需要 is:global 因为卡片 DOM 由 JS 动态创建
-   * ============================================ */
-  #moments-feed .moment-card {
-    position: relative;
-    background: var(--card-bg);
-    border-radius: var(--radius-large);
-    padding: 1rem 1rem 1rem 1rem;
-    overflow: hidden;
-    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
-  }
-  :root.dark #moments-feed .moment-card { border-color: #3f3f46; }
-  #moments-feed .moment-card:hover {
-    border-color: var(--primary);
-    /* box-shadow: 0 4px 24px rgb(245, 0, 0); */
-    transform: translateY(-2px);
-  }
-  :root.dark #moments-feed .moment-card:hover {
-    border-color: #fff;
-    box-shadow: 0 4px 24px rgba(255,255,255,0.08);
-  }
+	.moments-note svg {
+		flex: 0 0 auto;
+		color: var(--primary);
+	}
 
-  #moments-feed .card-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.75rem; }
-  #moments-feed .card-avatar { flex-shrink: 0; }
-  #moments-feed .avatar-img {
-    width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;
-    border: 2px solid var(--primary); box-sizing: border-box;
-  }
-  #moments-feed .card-user-info { flex: 1; min-width: 0; }
-  #moments-feed .user-row { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.125rem; }
-  #moments-feed .pinned-badge {
-    display: inline-flex; align-items: center; gap: 0.25rem;
-    padding: 0.125rem 0.5rem; background: var(--btn-regular-bg);
-    color: var(--btn-content); border-radius: var(--radius);
-    font-size: 0.75rem; font-weight: 600;
-  }
-  #moments-feed .pinned-icon { width: 14px; height: 14px; }
-  #moments-feed .user-name { font-size: 0.9375rem; font-weight: 600; color: var(--primary); }
-  #moments-feed .meta-row { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: var(--content-meta); }
-  #moments-feed .meta-dot { opacity: 0.5; }
-  #moments-feed .location {
-    display: inline-flex; 
-    align-items: center; 
-    gap: 0.125rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  #moments-feed .location-icon { font-size: 0.875rem; flex-shrink: 0; width: 14px; height: 14px; }
+	.moments-unsubscribed {
+		display: flex;
+		grid-column: 1 / -1;
+		align-items: flex-start;
+		gap: 0.45rem;
+		margin: -0.55rem 0 0;
+		padding: 0.55rem 0.7rem;
+		border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line-divider));
+		border-radius: 0.65rem;
+		background: color-mix(in srgb, var(--primary) 5%, var(--card-bg));
+		color: var(--content-meta);
+		font-size: 0.74rem;
+		line-height: 1.55;
+	}
 
-  #moments-feed .card-content { margin-bottom: 0.75rem; }
-  #moments-feed .moment-markdown { word-break: break-word; }
-  #moments-feed .moment-markdown p { margin-bottom: 0.375rem; }
-  #moments-feed .moment-markdown p:last-child { margin-bottom: 0; }
-  #moments-feed .moment-markdown img { border-radius: var(--radius); margin-top: 0.5rem; max-width: 100%; }
-  #moments-feed .moment-markdown a { color: var(--primary); text-decoration: underline; }
+	.moments-unsubscribed svg {
+		flex: 0 0 auto;
+		margin-top: 0.12rem;
+		color: var(--primary);
+	}
 
-  #moments-feed .card-images { display: grid; gap: 0.375rem; margin-bottom: 0.75rem; }
-  #moments-feed .image-cols-1 { grid-template-columns: 100px; }
-  #moments-feed .image-cols-2 { grid-template-columns: repeat(2, 100px); }
-  #moments-feed .image-cols-3 { grid-template-columns: repeat(3, 90px); }
-  #moments-feed .image-item {
-    position: relative; border-radius: var(--radius); overflow: hidden;
-    cursor: pointer;  aspect-ratio: 1;
-  }
-  #moments-feed .image-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
-  #moments-feed .image-item:hover .image-img { transform: scale(1.03); }
-  #moments-feed .hidden-image { display: none !important; }
-  #moments-feed .has-more .image-img { filter: brightness(0.6); }
-  #moments-feed .more-overlay {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  }
-  #moments-feed .more-text { font-size: 1.5rem; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+	.moments-random-article {
+		--pointer-x: 50%;
+		--pointer-y: 50%;
+		--tilt-x: 0deg;
+		--tilt-y: 0deg;
+		--card-lift: 0px;
+		--beam-accent: var(--primary);
+		--moments-beam-angle: 0deg;
+		display: grid;
+		position: relative;
+		overflow: visible;
+		isolation: isolate;
+		grid-column: 1 / -1;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.75rem;
+		margin: -0.15rem 0 0.1rem;
+		padding: 1.04rem 0.78rem 0.68rem;
+		border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line-divider));
+		border-radius: 0.8rem;
+		background:
+			linear-gradient(
+				118deg,
+				color-mix(in srgb, var(--card-bg) 82%, transparent),
+				color-mix(in srgb, var(--primary) 8%, var(--card-bg)) 52%,
+				color-mix(in srgb, var(--card-bg) 72%, transparent)
+			),
+			color-mix(in srgb, var(--card-bg) 82%, transparent);
+		backdrop-filter: blur(16px) saturate(142%);
+		-webkit-backdrop-filter: blur(16px) saturate(142%);
+		box-shadow:
+			0 0.75rem 1.8rem color-mix(in srgb, var(--primary) 11%, transparent),
+			inset 0 1px 0 color-mix(in srgb, #ffffff 62%, transparent),
+			inset 0 -1px 0 color-mix(in srgb, var(--primary) 10%, transparent);
+		transform: perspective(1100px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translate3d(0, var(--card-lift), 0);
+		transform-style: preserve-3d;
+		will-change: transform;
+		touch-action: pan-y;
+		transition: border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+	}
 
-  #moments-feed .card-tags {
-    display: flex; flex-wrap: wrap; gap: 0.375rem;
-    padding-top: 0.625rem; border-top: 1px solid var(--border);
-  }
-  #moments-feed .tag-item {
-    padding: 0.25rem 0.625rem; background: transparent;
-    border: 1px solid var(--primary); border-radius: 9999px;
-    font-size: 0.75rem; color: var(--primary);
-    transition: all 0.2s ease;
-  }
-  #moments-feed .tag-item:hover {
-    background: color-mix(in srgb, var(--primary) 10%, transparent);
-  }
+	.moments-random-article:hover {
+		--card-lift: -1px;
+		border-color: color-mix(in srgb, var(--primary) 34%, var(--line-divider));
+		box-shadow:
+			0 1rem 2.1rem color-mix(in srgb, var(--primary) 16%, transparent),
+			inset 0 1px 0 color-mix(in srgb, #ffffff 78%, transparent),
+			inset 0 -1px 0 color-mix(in srgb, var(--primary) 14%, transparent);
+	}
 
-  /* 移动端 */
-  @media (max-width: 480px) {
-    #moments-feed .moment-card {
-      padding: 0.875rem 0.875rem 0.875rem 1.75rem;
-    }
-    #moments-feed .avatar-img { width: 2.25rem; height: 2.25rem; }
-    #moments-feed .user-name { font-size: 0.875rem; }
-    #moments-feed .meta-row { font-size: 0.6875rem; }
-    #moments-feed .location { max-width: 80px; }
-    #moments-feed .card-images { gap: 0.25rem; }
-    #moments-feed .more-text { font-size: 1.25rem; }
-  }
+	.moments-random-article::before,
+	.moments-random-article::after,
+	.moments-random-article__noise,
+	.moments-random-article__sheen,
+	.moments-random-article__filters {
+		position: absolute;
+		pointer-events: none;
+	}
+
+	.moments-random-article::before {
+		inset: 0;
+		z-index: 0;
+		border-radius: inherit;
+		background:
+			radial-gradient(
+				23rem 12rem at var(--pointer-x) var(--pointer-y),
+				color-mix(in srgb, #ffffff 62%, transparent) 0%,
+				color-mix(in srgb, var(--primary) 10%, transparent) 34%,
+				transparent 72%
+			),
+			linear-gradient(138deg, color-mix(in srgb, #ffffff 24%, transparent), transparent 42% 66%, color-mix(in srgb, var(--primary) 9%, transparent));
+		mix-blend-mode: screen;
+		opacity: 0.7;
+		transition: opacity 260ms ease;
+	}
+
+	.moments-random-article:hover::before,
+	.moments-random-article[data-tilt-active="true"]::before {
+		opacity: 0.94;
+	}
+
+	.moments-random-article::after {
+		inset: -1px;
+		z-index: 4;
+		padding: 1px;
+		border-radius: inherit;
+		background: conic-gradient(
+				from var(--moments-beam-angle),
+				transparent 0deg 304deg,
+				color-mix(in srgb, var(--beam-accent) 18%, transparent) 320deg,
+				color-mix(in srgb, var(--beam-accent) 72%, #ffffff) 328deg,
+				#ffffff 333deg,
+				color-mix(in srgb, var(--beam-accent) 46%, transparent) 339deg,
+				transparent 350deg 360deg
+			);
+		-webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		opacity: 0.62;
+		animation: moments-random-border-beam 7.5s linear infinite;
+		transition: opacity 260ms ease;
+	}
+
+	.moments-random-article:hover::after,
+	.moments-random-article[data-tilt-active="true"]::after {
+		opacity: 0.9;
+	}
+
+	.moments-random-article__noise {
+		inset: 0;
+		z-index: 0;
+		border-radius: inherit;
+		clip-path: inset(0 round 0.8rem);
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.38'/%3E%3C/svg%3E");
+		background-size: 160px 160px;
+		mix-blend-mode: soft-light;
+		opacity: 0.075;
+		transform: translate3d(0, 0, 0);
+		animation: moments-random-noise-shift 2.8s steps(3, end) infinite;
+	}
+
+	.moments-random-article__sheen {
+		inset: -42% -16%;
+		z-index: 0;
+		border-radius: inherit;
+		clip-path: inset(42% 16% round 0.8rem);
+		background: linear-gradient(
+			112deg,
+			transparent 39%,
+			color-mix(in srgb, #ffffff 10%, transparent) 46%,
+			color-mix(in srgb, #ffffff 58%, transparent) 49%,
+			color-mix(in srgb, var(--primary) 12%, transparent) 52%,
+			transparent 59%
+		);
+		filter: url(#moments-random-article-displacement);
+		mix-blend-mode: screen;
+		opacity: 0.36;
+		transform: translate3d(0, 0, 0) rotate(-3deg);
+		animation: moments-random-sheen-sweep 8.5s cubic-bezier(0.42, 0, 0.22, 1) infinite;
+	}
+
+	.moments-random-article__filters {
+		inset: 0;
+		width: 0;
+		height: 0;
+		overflow: hidden;
+	}
+
+	@property --moments-beam-angle {
+		syntax: "<angle>";
+		inherits: false;
+		initial-value: 0deg;
+	}
+
+	.moments-random-article[data-state="loading"] {
+		opacity: 0.78;
+	}
+
+	.moments-random-article[data-state="empty"] {
+		background: color-mix(in srgb, var(--card-bg) 96%, var(--primary) 4%);
+	}
+
+	.moments-random-article__icon {
+		position: relative;
+		z-index: 1;
+		display: grid;
+		place-items: center;
+		width: 2.2rem;
+		height: 2.2rem;
+		flex: 0 0 auto;
+		border-radius: 0.68rem;
+		background: color-mix(in srgb, var(--primary) 14%, var(--card-bg));
+		color: var(--primary);
+		font-size: 1.22rem;
+		transform: translateZ(14px);
+	}
+
+	.moments-random-article__icon img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border-radius: 0.58rem;
+		object-fit: cover;
+	}
+
+	.moments-random-article__icon img[hidden],
+	.moments-random-article__icon > span[hidden],
+	.moments-random-article__badge[hidden] {
+		display: none;
+	}
+
+	.moments-random-article__icon > span {
+		display: grid;
+		place-items: center;
+	}
+
+	.moments-random-article__body {
+		position: relative;
+		z-index: 1;
+		min-width: 0;
+		transform: translateZ(14px);
+	}
+
+	.moments-random-article__eyebrow {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		margin-bottom: 0.12rem;
+		color: var(--primary);
+		font-size: 0.68rem;
+		font-weight: 760;
+		letter-spacing: 0.01em;
+	}
+
+	.moments-random-article__eyebrow > span:nth-child(2) {
+		padding: 0.16rem 0.42rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--primary) 10%, var(--card-bg));
+		color: var(--content-meta);
+		font-size: 0.62rem;
+		font-weight: 600;
+	}
+
+	.moments-random-article__badge {
+		margin-left: 0.12rem;
+		font-size: 0.6rem;
+	}
+
+	.moments-random-article__link {
+		display: block;
+		min-width: 0;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.moments-random-article__link strong,
+	.moments-random-article__link span {
+		display: block;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.moments-random-article__link strong {
+		color: var(--text-color);
+		font-size: 0.88rem;
+		font-weight: 780;
+		transition: color 180ms ease;
+	}
+
+	.moments-random-article__link:hover strong {
+		color: var(--primary);
+	}
+
+	.moments-random-article--recommended {
+		--beam-accent: #e0a313;
+	}
+
+	.moments-random-article--recommended .moments-random-article__link strong {
+		color: #e0a313;
+		text-shadow: 0 0 0.3rem color-mix(in srgb, #e0a313 26%, transparent);
+	}
+
+	.moments-random-article--own {
+		--beam-accent: #149ed8;
+	}
+
+	.moments-random-article--own .moments-random-article__link strong {
+		color: #149ed8;
+		text-shadow: 0 0 0.3rem color-mix(in srgb, #149ed8 24%, transparent);
+	}
+
+	.moments-random-article__link [data-random-article-description] {
+		margin-top: 0.13rem;
+		color: var(--content-meta);
+		font-size: 0.72rem;
+		line-height: 1.45;
+	}
+
+	.moments-random-article__link [data-random-article-meta] {
+		margin-top: 0.12rem;
+		color: color-mix(in srgb, var(--content-meta) 76%, var(--primary));
+		font-size: 0.64rem;
+		line-height: 1.35;
+	}
+
+	.moments-random-article__countdown {
+		position: absolute;
+		z-index: 0;
+		top: 50%;
+		left: 50%;
+		color: color-mix(in srgb, var(--content-meta) 68%, transparent);
+		font-size: clamp(2.8rem, 7.4vw, 5rem);
+		font-variant-numeric: tabular-nums;
+		font-weight: 850;
+		line-height: 1;
+		pointer-events: none;
+		transform: translate(-50%, -50%) translateZ(4px);
+		transform-style: preserve-3d;
+		text-shadow: 0 0 1rem color-mix(in srgb, var(--content-meta) 14%, transparent);
+		animation: moments-random-countdown 1s ease-in-out infinite;
+		user-select: none;
+	}
+
+	.moments-random-article__countdown[data-auto="false"] {
+		opacity: 0.48;
+		animation-play-state: paused;
+	}
+
+	.moments-random-article__auto,
+	.moments-random-article__refresh {
+		position: relative;
+		z-index: 2;
+	}
+
+	.moments-random-article__auto {
+		position: absolute;
+		top: 0;
+		left: 50%;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		min-height: 1.65rem;
+		padding: 0.25rem 0.52rem;
+		border: 1px solid var(--glass-control-border);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--primary);
+		font-size: 0.62rem;
+		font-weight: 720;
+		transform: translate(-50%, -50%) translateZ(22px);
+		transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+	}
+
+	.moments-random-article__auto svg {
+		font-size: 0.82rem;
+	}
+
+	.moments-random-article__auto.is-active {
+		border-color: color-mix(in srgb, var(--primary) 44%, var(--line-divider));
+		background: transparent;
+		color: var(--primary);
+		box-shadow: none;
+	}
+
+	.moments-random-article__auto:hover,
+	.moments-random-article__auto:focus-visible {
+		border-color: var(--primary);
+		color: var(--primary);
+		outline: none;
+	}
+
+	.moments-random-article__refresh {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.28rem;
+		min-height: 2rem;
+		padding: 0.45rem 0.62rem;
+		border: 1px solid var(--glass-control-border);
+		border-radius: 0.62rem;
+		background: transparent;
+		color: var(--primary);
+		font-size: 0.68rem;
+		font-weight: 720;
+		white-space: nowrap;
+		transform: translateZ(14px);
+		transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+	}
+
+	.moments-random-article__refresh:hover:not(:disabled) {
+		border-color: color-mix(in srgb, var(--primary) 38%, var(--line-divider));
+		background: transparent;
+		transform: translateY(-1px);
+	}
+
+	.moments-random-article__refresh:disabled {
+		cursor: wait;
+		opacity: 0.55;
+	}
+
+	/* A soft, staggered hand-off keeps the postcard feeling continuous while
+	 * the RSS item and its avatar are replaced.  The card itself stays put;
+	 * only the incoming layers settle into place. */
+	.moments-random-article.is-switching::before {
+		animation: moments-random-swap-glint 640ms ease-out both;
+	}
+
+	.moments-random-article.is-switching .moments-random-article__icon {
+		animation: moments-random-swap-icon 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.moments-random-article.is-switching .moments-random-article__body {
+		animation: moments-random-swap-body 600ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both;
+	}
+
+	.moments-random-article.is-switching .moments-random-article__refresh {
+		animation: moments-random-swap-button 520ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+	}
+
+	@keyframes moments-random-swap-glint {
+		0% {
+			opacity: 0.2;
+		}
+		38% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0.7;
+		}
+	}
+
+	@keyframes moments-random-swap-icon {
+		from {
+			opacity: 0;
+			transform: translate3d(-0.4rem, 0, 14px) scale(0.86);
+			filter: blur(5px);
+		}
+		55% {
+			opacity: 0.82;
+		}
+		to {
+			opacity: 1;
+			transform: translateZ(14px) scale(1);
+			filter: blur(0);
+		}
+	}
+
+	@keyframes moments-random-swap-body {
+		from {
+			opacity: 0;
+			transform: translate3d(0, 0.45rem, 14px) scale(0.985);
+			filter: blur(5px);
+		}
+		55% {
+			opacity: 0.76;
+		}
+		to {
+			opacity: 1;
+			transform: translateZ(14px) scale(1);
+			filter: blur(0);
+		}
+	}
+
+	@keyframes moments-random-swap-button {
+		from {
+			opacity: 0;
+			transform: translate3d(0.35rem, 0, 14px) scale(0.92);
+			filter: blur(3px);
+		}
+		to {
+			opacity: 1;
+			transform: translateZ(14px) scale(1);
+			filter: blur(0);
+		}
+	}
+
+	@keyframes moments-random-countdown {
+		0%,
+		100% {
+			opacity: 0.34;
+			transform: translate(-50%, -50%) scale(0.9);
+		}
+		50% {
+			opacity: 0.52;
+			transform: translate(-50%, -50%) scale(1);
+		}
+	}
+
+	@keyframes moments-random-border-beam {
+		from {
+			--moments-beam-angle: 0deg;
+		}
+		to {
+			--moments-beam-angle: 360deg;
+		}
+	}
+
+	@keyframes moments-random-noise-shift {
+		0%,
+		100% {
+			transform: translate3d(0, 0, 0) scale(1);
+		}
+		33% {
+			transform: translate3d(-0.8%, 0.45%, 0) scale(1.012);
+		}
+		66% {
+			transform: translate3d(0.6%, -0.35%, 0) scale(0.996);
+		}
+	}
+
+	@keyframes moments-random-sheen-sweep {
+		0%,
+		18% {
+			transform: translate3d(-16%, 0, 0) rotate(-3deg);
+			opacity: 0;
+		}
+		42% {
+			opacity: 0.42;
+		}
+		68%,
+		100% {
+			transform: translate3d(16%, 0, 0) rotate(-3deg);
+			opacity: 0;
+		}
+	}
+
+	.moments-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.75rem;
+	}
+
+	.moments-pagination {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		margin-top: 0.25rem;
+	}
+
+	.moments-pagination.is-visible {
+		display: flex;
+	}
+
+	.moments-pagination button,
+	.moments-pagination > span {
+		display: inline-flex;
+		min-height: 2.25rem;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line-divider));
+		border-radius: 0.75rem;
+		background: color-mix(in srgb, var(--card-bg) 90%, transparent);
+		color: var(--content-meta);
+		font-size: 0.8rem;
+		line-height: 1;
+	}
+
+	.moments-pagination button {
+		padding: 0.55rem 0.75rem;
+		cursor: pointer;
+		transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, opacity 180ms ease;
+	}
+
+	.moments-pagination button:hover:not(:disabled),
+	.moments-pagination button:focus-visible {
+		border-color: var(--primary);
+		background: color-mix(in srgb, var(--primary) 10%, var(--card-bg));
+		color: var(--primary);
+		outline: none;
+	}
+
+	.moments-pagination button:disabled {
+		cursor: not-allowed;
+		opacity: 0.42;
+	}
+
+	.moments-pagination > span {
+		padding: 0 0.85rem;
+		color: var(--primary);
+		font-weight: 650;
+		white-space: nowrap;
+	}
+
+	.moments-page-jump {
+		display: inline-flex;
+		min-height: 2.25rem;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.22rem 0.35rem 0.22rem 0.65rem;
+		border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line-divider));
+		border-radius: 0.75rem;
+		background: color-mix(in srgb, var(--card-bg) 90%, transparent);
+		color: var(--content-meta);
+		font-size: 0.78rem;
+		line-height: 1;
+	}
+
+	.moments-page-jump label {
+		white-space: nowrap;
+	}
+
+	.moments-page-jump input {
+		width: 3.15rem;
+		min-height: 1.8rem;
+		padding: 0.25rem 0.3rem;
+		border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line-divider));
+		border-radius: 0.5rem;
+		background: var(--card-bg);
+		color: var(--primary);
+		font: inherit;
+		font-variant-numeric: tabular-nums;
+		text-align: center;
+		outline: none;
+	}
+
+	.moments-page-jump input::placeholder {
+		color: color-mix(in srgb, var(--content-meta) 78%, transparent);
+	}
+
+	.moments-page-jump input:focus-visible {
+		border-color: var(--primary);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+	}
+
+	.moments-page-jump input::-webkit-outer-spin-button,
+	.moments-page-jump input::-webkit-inner-spin-button {
+		margin: 0;
+		-webkit-appearance: none;
+	}
+
+	.moments-page-jump button {
+		min-height: 1.8rem;
+		padding: 0.35rem 0.55rem;
+		border: 0;
+		border-radius: 0.5rem;
+		background: color-mix(in srgb, var(--primary) 12%, var(--card-bg));
+		color: var(--primary);
+		font: inherit;
+		cursor: pointer;
+	}
+
+	.moments-page-jump button:hover,
+	.moments-page-jump button:focus-visible {
+		border-color: transparent;
+		background: var(--primary);
+		color: #fff;
+		outline: none;
+	}
+
+	.moment-card {
+		position: relative;
+		isolation: isolate;
+		contain: paint;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		min-width: 0;
+		padding: 0.85rem;
+		border: 1px solid var(--line-divider);
+		border-radius: 0.9rem;
+		background: var(--card-bg);
+		color: inherit;
+		text-decoration: none;
+		transition:
+			border-color 220ms ease,
+			box-shadow 220ms ease,
+			background-color 220ms ease;
+	}
+
+	.moment-card:hover,
+	.moment-card:focus-visible {
+		border-color: color-mix(in srgb, var(--primary) 58%, var(--line-divider));
+		background: color-mix(in srgb, var(--card-bg) 96%, var(--primary));
+		box-shadow: 0 0.8rem 1.8rem color-mix(in srgb, var(--primary) 12%, transparent);
+	}
+
+	.moment-card:focus-visible {
+		outline: 2px solid color-mix(in srgb, var(--primary) 72%, white);
+		outline-offset: 3px;
+	}
+
+	.moment-card--recommended {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		border-color: color-mix(in srgb, #e9bd51 42%, var(--line-divider));
+		background: color-mix(in srgb, #fff1b8 48%, var(--card-bg));
+		box-shadow: 0 0.28rem 0.9rem color-mix(in srgb, #e7b83e 14%, transparent);
+	}
+
+	.moment-card--recommended:hover,
+	.moment-card--recommended:focus-visible {
+		border-color: color-mix(in srgb, #dfa92e 62%, var(--line-divider));
+		background: color-mix(in srgb, #fff5c6 82%, var(--card-bg));
+		box-shadow: 0 0.45rem 1.15rem color-mix(in srgb, #e7b83e 20%, transparent);
+	}
+
+	.moment-card--own {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		border-color: color-mix(in srgb, #1dbde8 34%, var(--line-divider));
+		background: color-mix(in srgb, #dff5ff 54%, var(--card-bg));
+		box-shadow: 0 0.28rem 0.9rem color-mix(in srgb, #1dbde8 12%, transparent);
+	}
+
+	.moment-card--own:hover,
+	.moment-card--own:focus-visible {
+		border-color: color-mix(in srgb, #1dbde8 58%, var(--line-divider));
+		background: color-mix(in srgb, #d2f1ff 68%, var(--card-bg));
+		box-shadow: 0 0.45rem 1.15rem color-mix(in srgb, #1dbde8 18%, transparent);
+	}
+
+	.moment-card--recommended > *:not(.moment-flow),
+	.moment-card--own > *:not(.moment-flow) {
+		position: relative;
+		z-index: 2;
+	}
+
+	.moment-card--recommended {
+		--moment-flow-start: #fff0a8;
+		--moment-flow-blue: #ffe5a0;
+		--moment-flow-purple: #fff1ba;
+		--moment-flow-pink: #fff9e2;
+		--moment-flow-end: #ffe7a2;
+		background: color-mix(in srgb, #fff9df 78%, var(--card-bg));
+	}
+
+	.moment-card--own {
+		--moment-flow-start: #a9dcff;
+		--moment-flow-blue: #c8ebff;
+		--moment-flow-purple: #e1f4ff;
+		--moment-flow-pink: #f3fbff;
+		--moment-flow-end: #8ed0ff;
+		background: color-mix(in srgb, #effaff 78%, var(--card-bg));
+	}
+
+	.moment-card--recommended .moment-avatar {
+		border: 2px solid #f0bd32;
+		background: #fff3b8;
+		box-shadow:
+			0 0 0 3px color-mix(in srgb, #f7d66b 34%, transparent),
+			0 0.35rem 0.9rem color-mix(in srgb, #e5ae22 24%, transparent);
+	}
+
+	.moment-flow {
+		position: absolute !important;
+		inset: 0;
+		z-index: 1 !important;
+		overflow: hidden;
+		border-radius: inherit;
+		pointer-events: none;
+		isolation: isolate;
+		opacity: 0.46;
+		background:
+			linear-gradient(
+				100deg,
+				var(--moment-flow-start) 0%,
+				color-mix(in srgb, var(--moment-flow-start) 62%, var(--moment-flow-blue)) 19%,
+				var(--moment-flow-purple) 42%,
+				color-mix(in srgb, var(--moment-flow-purple) 78%, var(--moment-flow-pink)) 65%,
+				var(--moment-flow-pink) 84%,
+				var(--moment-flow-end) 100%
+			);
+		background-size: 240% 100%;
+		box-shadow:
+			inset 0 1px 1px rgba(255, 255, 255, 0.19),
+			inset 0 -1px 1px rgba(50, 20, 120, 0.16),
+			0 1px 3px color-mix(in srgb, var(--moment-flow-start) 14%, transparent);
+		animation: moment-flow-base 4.8s ease-in-out infinite alternate;
+	}
+
+	.moment-card--recommended .moment-flow {
+		opacity: 0.62;
+		background: linear-gradient(
+			100deg,
+			#ffe18a 0%,
+			#ffedac 19%,
+			#fff4c8 42%,
+			#fffbe6 65%,
+			#ffffff 84%,
+			#ffe39b 100%
+		);
+		background-size: 360% 100%;
+		background-position: 0% 50%;
+		animation: moment-flow-base 4.2s ease-in-out infinite alternate;
+	}
+
+	.moment-card--own .moment-flow {
+		opacity: 0.58;
+		background: linear-gradient(
+			100deg,
+			#94d5ff 0%,
+			#b5e5ff 19%,
+			#dbf3ff 42%,
+			#f4fbff 65%,
+			#ffffff 84%,
+			#a0ddff 100%
+		);
+		background-size: 360% 100%;
+		background-position: 0% 50%;
+		animation: moment-flow-base 4.2s ease-in-out infinite alternate;
+	}
+
+	.moment-card--recommended .moment-flow::before {
+		background:
+			radial-gradient(
+				ellipse at 18% 48%,
+				rgba(255, 209, 67, 0.55) 0 6%,
+				rgba(255, 221, 109, 0.22) 17%,
+				transparent 37%
+			),
+			radial-gradient(
+				ellipse at 49% 45%,
+				rgba(255, 231, 142, 0.76) 0 7%,
+				rgba(255, 222, 110, 0.28) 20%,
+				transparent 42%
+			),
+			radial-gradient(
+				ellipse at 77% 52%,
+				rgba(255, 244, 194, 0.68) 0 7%,
+				rgba(255, 235, 159, 0.24) 22%,
+				transparent 42%
+			);
+	}
+
+	.moment-card--own .moment-flow::before {
+		background:
+			radial-gradient(
+				ellipse at 18% 48%,
+				rgba(82, 184, 255, 0.55) 0 6%,
+				rgba(82, 184, 255, 0.22) 17%,
+				transparent 37%
+			),
+			radial-gradient(
+				ellipse at 49% 45%,
+				rgba(180, 210, 255, 0.76) 0 7%,
+				rgba(175, 205, 255, 0.28) 20%,
+				transparent 42%
+			),
+			radial-gradient(
+				ellipse at 77% 52%,
+				rgba(183, 235, 255, 0.58) 0 7%,
+				rgba(151, 220, 255, 0.22) 22%,
+				transparent 42%
+			);
+	}
+
+	.moment-flow::before {
+		position: absolute;
+		inset: -70% -45%;
+		content: "";
+		background:
+			radial-gradient(
+				ellipse at 18% 48%,
+				color-mix(in srgb, var(--moment-flow-blue) 72%, white) 0 6%,
+				color-mix(in srgb, var(--moment-flow-blue) 38%, transparent) 17%,
+				transparent 37%
+			),
+			radial-gradient(
+				ellipse at 49% 45%,
+				color-mix(in srgb, var(--moment-flow-purple) 76%, white) 0 7%,
+				color-mix(in srgb, var(--moment-flow-purple) 35%, transparent) 20%,
+				transparent 42%
+			),
+			radial-gradient(
+				ellipse at 77% 52%,
+				color-mix(in srgb, var(--moment-flow-pink) 70%, white) 0 7%,
+				color-mix(in srgb, var(--moment-flow-pink) 31%, transparent) 22%,
+				transparent 42%
+			);
+		filter: blur(9px) saturate(1.22);
+		transform: translate3d(-12%, 0, 0) scale(1.08);
+		mix-blend-mode: screen;
+		animation: moment-flow-aurora 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+	}
+
+	.moment-flow::after {
+		position: absolute;
+		top: -60%;
+		bottom: -60%;
+		left: -58%;
+		width: 58%;
+		content: "";
+		background: linear-gradient(
+			105deg,
+			transparent 0%,
+			rgba(255, 255, 255, 0.03) 23%,
+				rgba(255, 255, 255, 0.1) 43%,
+				rgba(255, 255, 255, 0.24) 50%,
+				rgba(255, 255, 255, 0.1) 59%,
+			transparent 78%
+		);
+		filter: blur(7px);
+		transform: skewX(-14deg);
+		mix-blend-mode: screen;
+		animation: moment-flow-shimmer 4.2s cubic-bezier(0.38, 0.05, 0.25, 1) infinite;
+	}
+
+	.moment-flow-silk {
+		position: absolute;
+		top: 3px;
+		left: -45%;
+		z-index: 2;
+		width: 46%;
+		height: 22px;
+		border-radius: 50%;
+		background: radial-gradient(
+			ellipse at center,
+			rgba(255, 255, 255, 0.3) 0%,
+			rgba(210, 219, 255, 0.15) 25%,
+			transparent 68%
+		);
+		filter: blur(4px);
+		mix-blend-mode: screen;
+		opacity: 0.75;
+		animation: moment-flow-silk-move 4.1s ease-in-out infinite;
+	}
+
+	.moment-flow-stars {
+		position: absolute;
+		inset: 0;
+		z-index: 3;
+		width: 100%;
+		height: 100%;
+		border-radius: inherit;
+		pointer-events: none;
+	}
+
+	@keyframes moment-flow-base {
+		0% { background-position: 0% 50%; }
+		100% { background-position: 100% 50%; }
+	}
+
+	@keyframes moment-flow-aurora {
+		0% { transform: translate3d(-14%, -2%, 0) scale(1.08) rotate(-2deg); }
+		55% { transform: translate3d(4%, 2%, 0) scale(1.16) rotate(1deg); }
+		100% { transform: translate3d(16%, -1%, 0) scale(1.1) rotate(-1deg); }
+	}
+
+	@keyframes moment-flow-shimmer {
+		0% { left: -66%; opacity: 0; }
+		13% { opacity: 0.8; }
+		58% { opacity: 0.95; }
+		82% { opacity: 0.55; }
+		100% { left: 122%; opacity: 0; }
+	}
+
+	@keyframes moment-flow-silk-move {
+		0% { left: -48%; transform: translateY(1px) scaleX(0.85); opacity: 0; }
+		15% { opacity: 0.5; }
+		48% { opacity: 0.83; }
+		100% { left: 118%; transform: translateY(-2px) scaleX(1.18); opacity: 0; }
+	}
+
+
+	:global(html.dark) .moment-card--recommended {
+		border-color: color-mix(in srgb, #e9bd51 32%, var(--line-divider));
+		background: color-mix(in srgb, #7a5714 18%, var(--card-bg));
+	}
+
+	:global(html.dark) .moment-card--own {
+		border-color: color-mix(in srgb, #1dbde8 34%, var(--line-divider));
+		background: color-mix(in srgb, #11627d 18%, var(--card-bg));
+	}
+
+	:global(html.dark) .moment-card--recommended .moment-flow {
+		opacity: 0.46;
+		background: linear-gradient(
+			100deg,
+			#5b4818 0%,
+			#75602a 19%,
+			#9a8240 42%,
+			#c3ae70 65%,
+			#e3d39a 84%,
+			#725a20 100%
+		);
+		background-size: 360% 100%;
+		animation: moment-flow-base 4.2s ease-in-out infinite alternate;
+	}
+
+	:global(html.dark) .moment-card--own .moment-flow {
+		opacity: 0.42;
+		background: linear-gradient(
+			100deg,
+			#1b4c6d 0%,
+			#266b91 19%,
+			#438db0 42%,
+			#70b8d3 65%,
+			#b5e7f4 84%,
+			#245f84 100%
+		);
+		background-size: 360% 100%;
+		animation: moment-flow-base 4.2s ease-in-out infinite alternate;
+	}
+
+	:global(html.dark) .moment-card--recommended .moment-flow::before {
+		background:
+			radial-gradient(ellipse at 18% 48%, rgba(255, 202, 68, 0.32) 0 6%, rgba(255, 211, 93, 0.14) 17%, transparent 37%),
+			radial-gradient(ellipse at 49% 45%, rgba(255, 225, 125, 0.42) 0 7%, rgba(255, 216, 107, 0.16) 20%, transparent 42%),
+			radial-gradient(ellipse at 77% 52%, rgba(255, 240, 179, 0.36) 0 7%, rgba(255, 228, 139, 0.14) 22%, transparent 42%);
+	}
+
+	:global(html.dark) .moment-card--own .moment-flow::before {
+		background:
+			radial-gradient(ellipse at 18% 48%, rgba(82, 184, 255, 0.32) 0 6%, rgba(82, 184, 255, 0.14) 17%, transparent 37%),
+			radial-gradient(ellipse at 49% 45%, rgba(180, 220, 255, 0.42) 0 7%, rgba(175, 210, 255, 0.16) 20%, transparent 42%),
+			radial-gradient(ellipse at 77% 52%, rgba(183, 235, 255, 0.34) 0 7%, rgba(151, 220, 255, 0.14) 22%, transparent 42%);
+	}
+
+	:global(html.dark) .moment-card--recommended .moment-avatar {
+		border-color: #e8bd4c;
+		background: #4d3b15;
+		box-shadow: 0 0 0 3px rgba(232, 189, 76, 0.18), 0 0.35rem 0.9rem rgba(232, 189, 76, 0.14);
+	}
+
+	.moment-avatar {
+		width: 2.9rem;
+		height: 2.9rem;
+		flex: 0 0 auto;
+		overflow: hidden;
+		border: 1px solid color-mix(in srgb, var(--primary) 15%, var(--line-divider));
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--primary) 8%, var(--card-bg));
+	}
+
+	.moment-avatar img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.moment-content {
+		min-width: 0;
+		flex: 1;
+	}
+
+	.moment-title-row {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		min-width: 0;
+	}
+
+	.moment-title-row h2 {
+		min-width: 0;
+		margin: 0;
+		overflow: hidden;
+		color: var(--content-meta);
+		font-size: 0.98rem;
+		font-weight: 750;
+		letter-spacing: -0.01em;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.moment-title-row svg {
+		flex: 0 0 auto;
+		color: var(--primary);
+		opacity: 0;
+		transform: translate(-0.2rem, 0.15rem);
+		transition: opacity 180ms ease, transform 180ms ease;
+	}
+
+	.moment-card:hover .moment-title-row svg,
+	.moment-card:focus-visible .moment-title-row svg {
+		opacity: 1;
+		transform: translate(0, 0.15rem);
+	}
+
+	.moment-meta {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 0.22rem 0 0;
+		overflow: hidden;
+		color: var(--content-meta);
+		font-size: 0.72rem;
+		line-height: 1.4;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.moment-identity-badge {
+		--moment-role-accent: var(--primary);
+		--moment-role-soft: color-mix(in srgb, var(--primary) 18%, var(--card-bg));
+		--moment-role-ink: var(--primary);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.18rem;
+		min-height: 1.05rem;
+		padding: 0.08rem 0.42rem;
+		border: 1px solid color-mix(in srgb, var(--moment-role-accent) 54%, transparent);
+		border-radius: 999px;
+		overflow: hidden;
+		background-color: color-mix(in srgb, var(--moment-role-soft) 82%, var(--card-bg));
+		background-image: linear-gradient(
+			112deg,
+			transparent 0%,
+			color-mix(in srgb, white 20%, transparent) 38%,
+			color-mix(in srgb, white 88%, transparent) 50%,
+			color-mix(in srgb, white 20%, transparent) 62%,
+			transparent 100%
+		);
+		background-repeat: no-repeat;
+		background-size: 220% 100%;
+		background-position: 130% 0;
+		color: var(--moment-role-ink);
+		font-size: 0.62rem;
+		font-weight: 800;
+		line-height: 1.25;
+		letter-spacing: 0.025em;
+		white-space: nowrap;
+		box-shadow:
+			inset 0 0 0 1px color-mix(in srgb, white 46%, transparent),
+			0 0 0.5rem color-mix(in srgb, var(--moment-role-accent) 22%, transparent);
+		animation: moment-identity-sweep 7.2s cubic-bezier(0.42, 0, 0.22, 1) infinite;
+	}
+
+	.moment-identity-badge svg {
+		width: 0.72rem;
+		height: 0.72rem;
+		flex: 0 0 auto;
+	}
+
+	.moment-identity-badge--recommended {
+		--moment-role-accent: #f4bb2e;
+		--moment-role-soft: #fff0a2;
+		--moment-role-ink: #d99808;
+	}
+
+	.moment-identity-badge--own {
+		--moment-role-accent: #1dbde8;
+		--moment-role-soft: #c6f3ff;
+		--moment-role-ink: #109bd2;
+	}
+
+	.moment-card--recommended .moment-title-row h2 {
+		color: #e0a313;
+		text-shadow: 0 0 0.3rem color-mix(in srgb, #e0a313 26%, transparent);
+	}
+
+	.moment-card--own .moment-title-row h2 {
+		color: #149ed8;
+		text-shadow: 0 0 0.3rem color-mix(in srgb, #149ed8 24%, transparent);
+	}
+
+	:global(html.dark) .moment-identity-badge--recommended {
+		--moment-role-ink: #f7d36f;
+		--moment-role-soft: #5a4518;
+		--moment-role-accent: #e5b83c;
+	}
+
+	:global(html.dark) .moment-identity-badge--own {
+		--moment-role-ink: #79dcfa;
+		--moment-role-soft: #174765;
+		--moment-role-accent: #55c9f2;
+	}
+
+	:global(html.dark) .moments-random-article--recommended .moments-random-article__link strong {
+		color: #f7d36f;
+	}
+
+	:global(html.dark) .moments-random-article--own .moments-random-article__link strong {
+		color: #79dcfa;
+	}
+
+	:global(html.dark) .moment-card--recommended .moment-title-row h2 {
+		color: #f7d36f;
+	}
+
+	:global(html.dark) .moment-card--own .moment-title-row h2 {
+		color: #79dcfa;
+	}
+
+	@keyframes moment-identity-sweep {
+		0%,
+		58% {
+			background-position: 130% 0;
+		}
+		78%,
+		100% {
+			background-position: -130% 0;
+		}
+	}
+
+	.moment-meta span:first-child {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.moment-description {
+		display: -webkit-box;
+		margin: 0.45rem 0 0;
+		overflow: hidden;
+		color: var(--content-meta);
+		font-size: 0.78rem;
+		line-height: 1.55;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+
+	.moments-empty {
+		display: grid;
+		place-items: center;
+		gap: 0.5rem;
+		padding: 3.5rem 1.5rem;
+		text-align: center;
+	}
+
+	.moments-empty svg {
+		color: var(--primary);
+		font-size: 2rem;
+	}
+
+	.moments-empty h2,
+	.moments-empty p {
+		margin: 0;
+	}
+
+	.moments-empty h2 {
+		color: var(--content-meta);
+		font-size: 1rem;
+	}
+
+	.moments-empty p {
+		color: var(--content-meta);
+		font-size: 0.85rem;
+	}
+
+	@media (max-width: 760px) {
+		.moments-header {
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 1rem;
+			padding: 0;
+		}
+
+		.moments-heading {
+			align-items: flex-start;
+		}
+
+		.moments-heading p {
+			font-size: 0.82rem;
+		}
+
+		.moments-stats {
+			padding-right: 0.25rem;
+		}
+
+		.moments-note {
+			align-items: flex-start;
+		}
+
+		.moments-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.moments-pagination {
+			gap: 0.5rem;
+		}
+
+		.moments-pagination button span {
+			display: none;
+		}
+
+		.moments-pagination button {
+			width: 2.25rem;
+			padding: 0.5rem;
+		}
+
+		.moments-pagination > span {
+			padding-inline: 0.65rem;
+			font-size: 0.75rem;
+		}
+
+		.moments-page-jump {
+			order: 3;
+			flex: 1 1 100%;
+			justify-content: center;
+			padding-inline: 0.45rem;
+		}
+
+		.moments-page-jump label {
+			display: none;
+		}
+
+		.moments-page-jump > span {
+			min-height: 0;
+			padding: 0;
+			border: 0;
+			background: none;
+			color: var(--content-meta);
+		}
+
+		.moments-page-jump button {
+			width: auto;
+			padding-inline: 0.65rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.moments-random-article {
+			transform: none;
+		}
+
+		.moments-random-article::after,
+		.moments-random-article__noise,
+		.moments-random-article__sheen,
+		.moments-random-article__countdown,
+		.moments-random-article.is-switching::before,
+		.moments-random-article.is-switching .moments-random-article__icon,
+		.moments-random-article.is-switching .moments-random-article__body,
+		.moments-random-article.is-switching .moments-random-article__refresh {
+			animation: none;
+		}
+
+		.moment-card,
+		.moment-title-row svg,
+		.moment-identity-badge {
+			transition: none;
+			animation: none;
+		}
+
+		.moment-flow,
+		.moment-flow::before,
+		.moment-flow::after,
+		.moment-flow-silk {
+			animation: none;
+		}
+
+		.moment-card:hover,
+		.moment-card:focus-visible {
+			transform: none;
+		}
+	}
 </style>
