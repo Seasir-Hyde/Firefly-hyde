@@ -139,7 +139,6 @@ export const siteConfig: SiteConfig = {
 		logo: {
 			type: "image",
 			value: "assets/images/logo.webp",
-			valueDark: "assets/images/logo/firefly-dark.png",
 			alt: "🍀",
 		},
 		// 导航栏标题

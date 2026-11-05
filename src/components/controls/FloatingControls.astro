@@ -7,6 +7,7 @@ import BackToTop from "./BackToTop.astro";
 import FloatingTOC from "./FloatingTOC.astro";
 import ImmersiveReading from "./ImmersiveReading.astro";
 import ImmersiveTOC from "./ImmersiveTOC.astro";
+import ScrollProgress from "./ScrollProgress.astro";
 
 interface Props {
 	headings?: MarkdownHeading[];
@@ -28,6 +29,7 @@ const immersiveReadingEnabled =
   )}
   <BackToComment />
   <BackToHome />
+  <ScrollProgress />
   <BackToTop />
 </div>
 
