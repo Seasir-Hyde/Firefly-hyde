@@ -1,28 +1,28 @@
 {
 	"version": 1,
-	"generatedAt": "2026-11-04T00:18:54.569Z",
+	"generatedAt": "2026-11-05T00:18:56.804Z",
 	"probeLocation": "CNB 定时探测节点",
 	"results": {
 		"docs-firefly.cuteleaf.cn": {
 			"state": "fast",
-			"milliseconds": 409,
-			"checkedAt": "2026-11-04T00:18:24.088Z",
+			"milliseconds": 377,
+			"checkedAt": "2026-11-05T00:18:29.316Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"onedayxyy.cn": {
 			"state": "slow",
-			"milliseconds": 1057,
-			"checkedAt": "2026-11-04T00:18:24.498Z",
+			"milliseconds": 1056,
+			"checkedAt": "2026-11-05T00:18:29.316Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"liuyuyang.net": {
 			"state": "fast",
-			"milliseconds": 439,
-			"checkedAt": "2026-11-04T00:18:24.088Z",
+			"milliseconds": 472,
+			"checkedAt": "2026-11-05T00:18:29.316Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
@@ -36,33 +36,33 @@
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"astro.cchaoka.cn": {
-			"state": "fast",
-			"milliseconds": 382,
-			"checkedAt": "2026-11-04T00:18:24.600Z",
+			"state": "normal",
+			"milliseconds": 605,
+			"checkedAt": "2026-11-05T00:18:29.788Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.nw177.cn": {
-			"state": "fast",
-			"milliseconds": 418,
-			"checkedAt": "2026-11-04T00:18:24.528Z",
+			"state": "normal",
+			"milliseconds": 518,
+			"checkedAt": "2026-11-05T00:18:29.695Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"seasir.top": {
 			"state": "normal",
-			"milliseconds": 512,
-			"checkedAt": "2026-11-04T00:18:24.088Z",
+			"milliseconds": 506,
+			"checkedAt": "2026-11-05T00:18:29.315Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"yubendan.com": {
 			"state": "fast",
-			"milliseconds": 243,
-			"checkedAt": "2026-11-04T00:18:24.982Z",
+			"milliseconds": 218,
+			"checkedAt": "2026-11-05T00:18:30.214Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
@@ -76,81 +76,81 @@
 			"probeLocation": "本地探测节点"
 		},
 		"docs.mizuki.mysqil.com": {
-			"state": "fast",
-			"milliseconds": 456,
-			"checkedAt": "2026-11-04T00:18:25.977Z",
+			"state": "normal",
+			"milliseconds": 648,
+			"checkedAt": "2026-11-05T00:18:30.433Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"mizuki.mysqil.com": {
-			"state": "fast",
-			"milliseconds": 424,
-			"checkedAt": "2026-11-04T00:18:25.556Z",
+			"state": "normal",
+			"milliseconds": 728,
+			"checkedAt": "2026-11-05T00:18:30.394Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.tsh520.cn": {
 			"state": "fast",
-			"milliseconds": 274,
-			"checkedAt": "2026-11-04T00:18:25.980Z",
+			"milliseconds": 479,
+			"checkedAt": "2026-11-05T00:18:31.081Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.tianhw.top": {
-			"state": "fast",
-			"milliseconds": 418,
-			"checkedAt": "2026-11-04T00:18:26.254Z",
+			"state": "normal",
+			"milliseconds": 979,
+			"checkedAt": "2026-11-05T00:18:31.122Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.casto.top": {
 			"state": "normal",
-			"milliseconds": 604,
-			"checkedAt": "2026-11-04T00:18:25.372Z",
+			"milliseconds": 824,
+			"checkedAt": "2026-11-05T00:18:30.372Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.542000.xyz": {
 			"state": "normal",
-			"milliseconds": 930,
-			"checkedAt": "2026-11-04T00:18:25.226Z",
+			"milliseconds": 864,
+			"checkedAt": "2026-11-05T00:18:30.220Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.huhaha.vip": {
 			"state": "normal",
-			"milliseconds": 785,
-			"checkedAt": "2026-11-04T00:18:27.168Z",
+			"milliseconds": 984,
+			"checkedAt": "2026-11-05T00:18:31.740Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.7003410.xyz": {
-			"state": "slow",
-			"milliseconds": 1005,
-			"checkedAt": "2026-11-04T00:18:26.673Z",
+			"state": "normal",
+			"milliseconds": 910,
+			"checkedAt": "2026-11-05T00:18:31.560Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"fqzlr.com": {
 			"state": "slow",
-			"milliseconds": 1568,
-			"checkedAt": "2026-11-04T00:18:26.433Z",
+			"milliseconds": 1865,
+			"checkedAt": "2026-11-05T00:18:31.196Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"qwq.sigrika.cc": {
 			"state": "normal",
-			"milliseconds": 834,
-			"checkedAt": "2026-11-04T00:18:27.678Z",
+			"milliseconds": 736,
+			"checkedAt": "2026-11-05T00:18:32.102Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
@@ -165,56 +165,56 @@
 		},
 		"blog.xrbk.cn": {
 			"state": "fast",
-			"milliseconds": 421,
-			"checkedAt": "2026-11-04T00:18:28.002Z",
+			"milliseconds": 413,
+			"checkedAt": "2026-11-05T00:18:32.725Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"zsso.cn": {
-			"state": "down",
-			"milliseconds": 91,
-			"checkedAt": "2026-11-04T00:18:32.516Z",
-			"httpStatus": 525,
-			"failureReason": "HTTP 525（已重试 2 次）",
+			"state": "fast",
+			"milliseconds": 94,
+			"checkedAt": "2026-11-05T00:18:32.838Z",
+			"httpStatus": 200,
+			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.imshimao.com": {
-			"state": "normal",
-			"milliseconds": 919,
-			"checkedAt": "2026-11-04T00:18:29.122Z",
+			"state": "slow",
+			"milliseconds": 1210,
+			"checkedAt": "2026-11-05T00:18:33.061Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.520781.xyz": {
-			"state": "slow",
-			"milliseconds": 1011,
-			"checkedAt": "2026-11-04T00:18:26.157Z",
+			"state": "normal",
+			"milliseconds": 655,
+			"checkedAt": "2026-11-05T00:18:31.085Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.seln.cn": {
 			"state": "normal",
-			"milliseconds": 609,
-			"checkedAt": "2026-11-04T00:18:28.513Z",
+			"milliseconds": 731,
+			"checkedAt": "2026-11-05T00:18:32.933Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"aifiee.cn": {
 			"state": "fast",
-			"milliseconds": 126,
-			"checkedAt": "2026-11-04T00:18:30.265Z",
+			"milliseconds": 135,
+			"checkedAt": "2026-11-05T00:18:34.073Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"ttquk.github.io": {
 			"state": "normal",
-			"milliseconds": 900,
-			"checkedAt": "2026-11-04T00:18:29.365Z",
+			"milliseconds": 934,
+			"checkedAt": "2026-11-05T00:18:33.138Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
@@ -229,264 +229,264 @@
 		},
 		"jerry-nis.top": {
 			"state": "normal",
-			"milliseconds": 713,
-			"checkedAt": "2026-11-04T00:18:30.042Z",
+			"milliseconds": 960,
+			"checkedAt": "2026-11-05T00:18:33.664Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"tbmiao.dpdns.org": {
 			"state": "slow",
-			"milliseconds": 1412,
-			"checkedAt": "2026-11-04T00:18:27.953Z",
+			"milliseconds": 1681,
+			"checkedAt": "2026-11-05T00:18:32.471Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.huchao.vip": {
 			"state": "fast",
-			"milliseconds": 212,
-			"checkedAt": "2026-11-04T00:18:30.391Z",
+			"milliseconds": 254,
+			"checkedAt": "2026-11-05T00:18:34.152Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"justpureh2o.cn": {
-			"state": "fast",
-			"milliseconds": 205,
-			"checkedAt": "2026-11-04T00:18:30.755Z",
+			"state": "normal",
+			"milliseconds": 666,
+			"checkedAt": "2026-11-05T00:18:34.208Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"qcqx.cn": {
 			"state": "fast",
-			"milliseconds": 91,
-			"checkedAt": "2026-11-04T00:18:32.607Z",
+			"milliseconds": 133,
+			"checkedAt": "2026-11-05T00:18:34.875Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"zzyang.top": {
 			"state": "fast",
-			"milliseconds": 268,
-			"checkedAt": "2026-11-04T00:18:32.698Z",
+			"milliseconds": 270,
+			"checkedAt": "2026-11-05T00:18:35.009Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"sunlight.kejk.cn": {
 			"state": "normal",
-			"milliseconds": 697,
-			"checkedAt": "2026-11-04T00:18:30.960Z",
+			"milliseconds": 928,
+			"checkedAt": "2026-11-05T00:18:34.272Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.elykia.cn": {
 			"state": "slow",
-			"milliseconds": 1533,
-			"checkedAt": "2026-11-04T00:18:31.658Z",
+			"milliseconds": 1832,
+			"checkedAt": "2026-11-05T00:18:34.406Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"naixv.netlify.app": {
 			"state": "slow",
-			"milliseconds": 1665,
-			"checkedAt": "2026-11-04T00:18:32.008Z",
+			"milliseconds": 1293,
+			"checkedAt": "2026-11-05T00:18:34.625Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"ryu-chan.vercel.app": {
 			"state": "down",
-			"milliseconds": 6001,
-			"checkedAt": "2026-11-04T00:18:48.566Z",
+			"milliseconds": 6000,
+			"checkedAt": "2026-11-05T00:18:50.802Z",
 			"httpStatus": null,
 			"failureReason": "Timeout after 6000ms（已重试 2 次）",
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"xixmu.top": {
 			"state": "fast",
-			"milliseconds": 217,
-			"checkedAt": "2026-11-04T00:18:33.191Z",
+			"milliseconds": 423,
+			"checkedAt": "2026-11-05T00:18:35.279Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"nanzhiy.cn": {
 			"state": "fast",
-			"milliseconds": 426,
-			"checkedAt": "2026-11-04T00:18:24.946Z",
+			"milliseconds": 398,
+			"checkedAt": "2026-11-05T00:18:29.822Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"secretblog.my.id": {
-			"state": "normal",
-			"milliseconds": 972,
-			"checkedAt": "2026-11-04T00:18:33.409Z",
+			"state": "slow",
+			"milliseconds": 1382,
+			"checkedAt": "2026-11-05T00:18:35.703Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"bk.zhaozhiqiang.pw": {
 			"state": "fast",
-			"milliseconds": 458,
-			"checkedAt": "2026-11-04T00:18:34.211Z",
+			"milliseconds": 383,
+			"checkedAt": "2026-11-05T00:18:36.238Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"linlog.top": {
 			"state": "slow",
-			"milliseconds": 1432,
-			"checkedAt": "2026-11-04T00:18:33.674Z",
+			"milliseconds": 1201,
+			"checkedAt": "2026-11-05T00:18:35.918Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"sanshijiu.cn": {
 			"state": "fast",
-			"milliseconds": 404,
-			"checkedAt": "2026-11-04T00:18:34.381Z",
+			"milliseconds": 401,
+			"checkedAt": "2026-11-05T00:18:36.622Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"wutongyu.site": {
-			"state": "fast",
-			"milliseconds": 283,
-			"checkedAt": "2026-11-04T00:18:34.866Z",
+			"state": "slow",
+			"milliseconds": 1017,
+			"checkedAt": "2026-11-05T00:18:37.120Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"clannad.top": {
 			"state": "normal",
-			"milliseconds": 735,
-			"checkedAt": "2026-11-04T00:18:34.786Z",
+			"milliseconds": 868,
+			"checkedAt": "2026-11-05T00:18:37.086Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"lonelybing.top": {
-			"state": "fast",
-			"milliseconds": 196,
-			"checkedAt": "2026-11-04T00:18:34.670Z",
+			"state": "slow",
+			"milliseconds": 1234,
+			"checkedAt": "2026-11-05T00:18:37.023Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"eliauk312.top": {
 			"state": "fast",
-			"milliseconds": 34,
-			"checkedAt": "2026-11-04T00:18:35.518Z",
+			"milliseconds": 110,
+			"checkedAt": "2026-11-05T00:18:38.258Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.ksah.cn": {
 			"state": "normal",
-			"milliseconds": 559,
-			"checkedAt": "2026-11-04T00:18:35.149Z",
+			"milliseconds": 581,
+			"checkedAt": "2026-11-05T00:18:38.138Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.srebro.cn": {
 			"state": "down",
-			"milliseconds": 55,
-			"checkedAt": "2026-11-04T00:18:39.391Z",
+			"milliseconds": 81,
+			"checkedAt": "2026-11-05T00:18:42.454Z",
 			"httpStatus": null,
 			"failureReason": "fetch failed（已重试 2 次）",
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"monkeyke.com": {
 			"state": "fast",
-			"milliseconds": 413,
-			"checkedAt": "2026-11-04T00:18:35.708Z",
+			"milliseconds": 167,
+			"checkedAt": "2026-11-05T00:18:39.119Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.oldwang.site": {
-			"state": "normal",
-			"milliseconds": 906,
-			"checkedAt": "2026-11-04T00:18:36.121Z",
+			"state": "slow",
+			"milliseconds": 1110,
+			"checkedAt": "2026-11-05T00:18:39.286Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"white-festa.net": {
 			"state": "normal",
-			"milliseconds": 853,
-			"checkedAt": "2026-11-04T00:18:35.520Z",
+			"milliseconds": 970,
+			"checkedAt": "2026-11-05T00:18:38.368Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"gl.baimu.live": {
-			"state": "fast",
-			"milliseconds": 411,
-			"checkedAt": "2026-11-04T00:18:35.106Z",
+			"state": "slow",
+			"milliseconds": 1164,
+			"checkedAt": "2026-11-05T00:18:37.954Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"devcoding.me": {
 			"state": "fast",
-			"milliseconds": 113,
-			"checkedAt": "2026-11-04T00:18:38.456Z",
+			"milliseconds": 284,
+			"checkedAt": "2026-11-05T00:18:41.772Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"blog.liushen.fun": {
 			"state": "fast",
-			"milliseconds": 254,
-			"checkedAt": "2026-11-04T00:18:38.569Z",
+			"milliseconds": 223,
+			"checkedAt": "2026-11-05T00:18:42.024Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"xiaodaidai.site": {
 			"state": "slow",
-			"milliseconds": 1619,
-			"checkedAt": "2026-11-04T00:18:37.027Z",
+			"milliseconds": 1627,
+			"checkedAt": "2026-11-05T00:18:40.397Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"hqxiaozou.top": {
 			"state": "fast",
-			"milliseconds": 174,
-			"checkedAt": "2026-11-04T00:18:38.823Z",
+			"milliseconds": 187,
+			"checkedAt": "2026-11-05T00:18:42.248Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"rainzt.cn": {
 			"state": "fast",
-			"milliseconds": 295,
-			"checkedAt": "2026-11-04T00:18:38.997Z",
+			"milliseconds": 134,
+			"checkedAt": "2026-11-05T00:18:42.435Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"yrajsh.cn": {
 			"state": "slow",
-			"milliseconds": 2305,
-			"checkedAt": "2026-11-04T00:18:38.646Z",
+			"milliseconds": 2273,
+			"checkedAt": "2026-11-05T00:18:42.056Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
 		},
 		"ffaff.fun": {
 			"state": "slow",
-			"milliseconds": 2081,
-			"checkedAt": "2026-11-04T00:18:36.374Z",
+			"milliseconds": 2433,
+			"checkedAt": "2026-11-05T00:18:39.339Z",
 			"httpStatus": 200,
 			"failureReason": null,
 			"probeLocation": "CNB 定时探测节点"
