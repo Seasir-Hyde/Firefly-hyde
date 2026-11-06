@@ -37,6 +37,57 @@ async function readLocalBuildInfo(): Promise<BuildInfo | null> {
 	return null;
 }
 
+/**
+ * 校验边缘缓存没有返回旧页面。
+ * 请求不带随机参数的首页，比较其 Last-Modified 与本次构建时间：
+ * 命中旧缓存时 Last-Modified 会明显早于 builtAt，据此发现
+ * 「部署成功、域名访问仍旧」的假阳性（build-info.json 走 no-store 无法暴露该问题）。
+ */
+async function verifyHtmlFreshness(
+	siteUrl: string,
+	builtAt?: string,
+): Promise<void> {
+	if (!builtAt) {
+		console.warn("[部署校验] 缺少 builtAt，跳过首页缓存校验");
+		return;
+	}
+	const builtTime = Date.parse(builtAt);
+	if (Number.isNaN(builtTime)) {
+		console.warn("[部署校验] builtAt 无法解析，跳过首页缓存校验");
+		return;
+	}
+
+	const response = await fetch(`${siteUrl}/`, {
+		signal: AbortSignal.timeout(timeoutMs),
+	});
+	if (!response.ok) {
+		throw new Error(`首页请求失败：HTTP ${response.status}`);
+	}
+
+	const lastModified = response.headers.get("last-modified");
+	const cacheStatus = response.headers.get("eo-cache-status") ?? "unknown";
+	if (!lastModified) {
+		console.warn("[部署校验] 首页未返回 Last-Modified，跳过缓存校验");
+		return;
+	}
+
+	const lastModifiedTime = Date.parse(lastModified);
+	// 留出构建开始到部署完成的时间差，避免误判
+	const toleranceMs = 10 * 60 * 1000;
+	if (
+		Number.isNaN(lastModifiedTime) ||
+		lastModifiedTime + toleranceMs < builtTime
+	) {
+		throw new Error(
+			`首页仍是旧版本：Last-Modified=${lastModified}（缓存状态 ${cacheStatus}），早于本次构建 ${builtAt}；` +
+				"请在 EdgeOne 控制台刷新 / 的缓存，并确认 edgeone.json 的 HTML 缓存策略已生效",
+		);
+	}
+	console.log(
+		`[部署校验] 首页缓存校验通过：Last-Modified=${lastModified}，缓存状态 ${cacheStatus}`,
+	);
+}
+
 async function main(): Promise<void> {
 	const local = await readLocalBuildInfo();
 	if (!local?.commit || local.commit === "unknown") {
@@ -65,6 +116,14 @@ async function main(): Promise<void> {
 					console.log(
 						`[部署校验] 通过：线上已更新到 ${expected}（第 ${attempt} 次校验，构建于 ${online.builtAt ?? "未知"}）`,
 					);
+					try {
+						await verifyHtmlFreshness(siteUrl, local.builtAt ?? online.builtAt);
+					} catch (error) {
+						console.error(
+							`[部署校验] 失败：${error instanceof Error ? error.message : String(error)}`,
+						);
+						process.exit(1);
+					}
 					return;
 				}
 				console.warn(

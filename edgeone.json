@@ -15,22 +15,22 @@
     {
       "source": "/",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" },
-        { "key": "Pages-Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+        { "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" },
+        { "key": "Pages-Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }
       ]
     },
     {
       "source": "/blog/*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" },
-        { "key": "Pages-Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+        { "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" },
+        { "key": "Pages-Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }
       ]
     },
     {
       "source": "/posts/*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" },
-        { "key": "Pages-Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+        { "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" },
+        { "key": "Pages-Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }
       ]
     },
     {
@@ -98,9 +98,9 @@
     }
   ],
   "caches": [
-    { "source": "/", "cacheTtl": 86400 },
-    { "source": "/blog/*", "cacheTtl": 86400 },
-    { "source": "/posts/*", "cacheTtl": 86400 },
+    { "source": "/", "cacheTtl": 0 },
+    { "source": "/blog/*", "cacheTtl": 0 },
+    { "source": "/posts/*", "cacheTtl": 0 },
     { "source": "/robots.txt", "cacheTtl": 604800 },
     { "source": "/sitemap-index.xml", "cacheTtl": 86400 },
     { "source": "/llms.txt", "cacheTtl": 86400 },
