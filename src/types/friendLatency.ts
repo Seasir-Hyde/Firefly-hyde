@@ -11,6 +11,10 @@ export type FriendProbeResult = {
 	clicks?: number;
 	// 该条记录的探测节点：快照可能同时包含多个节点的结果
 	probeLocation?: string;
+	// 互链检测：该友链页面上是否包含指回本站的链接（未检测 / 站点不可达时缺省）
+	mutual?: boolean;
+	// 互链检测时间，与延迟探测共用同一轮定时任务
+	mutualCheckedAt?: string;
 };
 
 export type FriendLatencySnapshot = {

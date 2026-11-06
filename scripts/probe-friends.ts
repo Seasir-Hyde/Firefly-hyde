@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { siteConfig } from "../src/config";
 import { getEnabledFriends } from "../src/config/friendsConfig";
 import { friendsProbeConfig } from "../src/config/friendsProbeConfig";
 import type {
@@ -40,7 +41,243 @@ const summaryFile =
 	process.env.PROBE_SUMMARY_FILE ??
 	join(tmpdir(), "firefly-friend-probe-summary.txt");
 
+/** 互链检测：单站页面最多读取的 HTML 字节数，避免把整个大文件下载下来。
+ * 部分友链页体积超过 1MB 且友链列表靠后，留 2MB 余量避免漏判。 */
+const MUTUAL_SCAN_MAX_BYTES = 2 * 1024 * 1024;
+/** 首页未发现回链时，额外检查的友链页数量上限 */
+const MUTUAL_FALLBACK_MAX_PAGES = 3;
+/** 友链页二次检查的超时（毫秒），比主探测更短，避免拖慢整轮任务 */
+const MUTUAL_FALLBACK_TIMEOUT_MS = 4000;
+/** 首页未显式链接时，直接尝试的常见友链路径（兼容 /friend 等固定入口） */
+const DEFAULT_FRIEND_PAGE_PATHS = ["/friend", "/friends", "/links"];
+/** 本站主机名（互链检测目标），归一化口径与页面查表保持一致 */
+const OWN_SITE_KEY = normalizeFriendLatencyUrl(siteConfig.site_url);
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** 解码 href 中常见的 HTML 实体，保证带参数的链接也能被正确比对 */
+function decodeHtmlEntities(value: string): string {
+	return value
+		.replace(/&#x([0-9a-f]+);/giu, (_, hex: string) =>
+			String.fromCodePoint(Number.parseInt(hex, 16)),
+		)
+		.replace(/&#(\d+);/gu, (_, dec: string) =>
+			String.fromCodePoint(Number.parseInt(dec, 10)),
+		)
+		.replace(/&amp;/giu, "&")
+		.replace(/&quot;/giu, '"')
+		.replace(/&#39;|&apos;/giu, "'")
+		.replace(/&lt;/giu, "<")
+		.replace(/&gt;/giu, ">");
+}
+
+/** 提取页面内所有带 href 的 <a> 标签（含锚文本，供友链页识别使用） */
+function collectAnchorHrefs(
+	html: string,
+): Array<{ href: string; text: string }> {
+	const anchors: Array<{ href: string; text: string }> = [];
+	const pattern =
+		/<a\b[^>]*\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/giu;
+	for (const match of html.matchAll(pattern)) {
+		const href = decodeHtmlEntities(
+			match[1] ?? match[2] ?? match[3] ?? "",
+		).trim();
+		if (href) anchors.push({ href, text: match[4] ?? "" });
+	}
+	return anchors;
+}
+
+/**
+ * 提取页面中所有可能指向本站的链接值。
+ * 除常规 <a href> 外，也覆盖卡片式友链页使用的
+ * data-href / data-siteurl / data-url / data-link 属性。
+ */
+function collectLinkHrefs(html: string): string[] {
+	const hrefs = collectAnchorHrefs(html).map((anchor) => anchor.href);
+	const attributePattern =
+		/\b(?:data-href|data-siteurl|data-url|data-link)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/giu;
+	for (const match of html.matchAll(attributePattern)) {
+		const href = decodeHtmlEntities(
+			match[1] ?? match[2] ?? match[3] ?? "",
+		).trim();
+		if (href) hrefs.push(href);
+	}
+	return hrefs;
+}
+
+function resolveAnchorUrl(href: string, baseUrl: string): URL | null {
+	try {
+		return new URL(href, baseUrl);
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * 判断页面 HTML 中是否包含指回本站的友链。
+ * 只比对链接类属性（<a href> / data-href 等），不扫描纯文本，
+ * 避免把正文里提到本站域名误判成互链。
+ */
+export function hasMutualLink(
+	html: string,
+	ownSiteUrl: string = siteConfig.site_url,
+	baseUrl: string = ownSiteUrl,
+): boolean {
+	const ownKey = normalizeFriendLatencyUrl(ownSiteUrl);
+	if (!ownKey) return false;
+	for (const href of collectLinkHrefs(html)) {
+		if (/^(?:mailto|tel|javascript|data):/iu.test(href)) continue;
+		const target = resolveAnchorUrl(href, baseUrl);
+		if (
+			target &&
+			/^https?:$/u.test(target.protocol) &&
+			normalizeFriendLatencyUrl(target.href) === ownKey
+		) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/** 明确指向友链列表的路径 / 锚文本特征（优先级最高） */
+const FRIEND_PAGE_STRONG_HINT =
+	/(?:friend|friends|links?|blogroll|友链|友情链接)/iu;
+/** 友链可能附带的通用页面路径（仅在强特征候选不足时补充） */
+const FRIEND_PAGE_WEAK_HINT = /(?:about|contact|关于|联系)/iu;
+
+/**
+ * 从首页里找出可能承载友链列表的同站页面。
+ * 优先选择 friend / links 等明确路径，避免被 /about/homepage 之类的
+ * 通用「关于」页面占满候选名额而漏掉真正的友链页。
+ */
+function findFriendPageCandidates(html: string, baseUrl: string): string[] {
+	const base = resolveAnchorUrl(baseUrl, baseUrl);
+	if (!base) return [];
+	const baseHost = base.hostname.toLowerCase().replace(/^www\./u, "");
+	// 路径本身命中 friend / links 的优先级最高；只有锚文本命中的次之；
+	// about / contact 仅在候选不足时兜底。
+	const strongPath: string[] = [];
+	const strongText: string[] = [];
+	const weak: string[] = [];
+	const seen = new Set<string>();
+	for (const anchor of collectAnchorHrefs(html)) {
+		const target = resolveAnchorUrl(anchor.href, baseUrl);
+		if (!target || !/^https?:$/u.test(target.protocol)) continue;
+		if (target.hostname.toLowerCase().replace(/^www\./u, "") !== baseHost) {
+			continue;
+		}
+		const key = target.href.replace(/[#?].*$/u, "");
+		if (seen.has(key)) continue;
+		if (FRIEND_PAGE_STRONG_HINT.test(target.pathname)) {
+			seen.add(key);
+			strongPath.push(target.href);
+		} else if (FRIEND_PAGE_STRONG_HINT.test(anchor.text)) {
+			seen.add(key);
+			strongText.push(target.href);
+		} else if (
+			FRIEND_PAGE_WEAK_HINT.test(`${target.pathname} ${anchor.text}`)
+		) {
+			seen.add(key);
+			weak.push(target.href);
+		}
+	}
+	const candidates = [...strongPath, ...strongText];
+	for (const path of DEFAULT_FRIEND_PAGE_PATHS) {
+		const target = resolveAnchorUrl(path, base.origin);
+		if (!target) continue;
+		const key = target.href.replace(/[#?].*$/u, "");
+		if (seen.has(key)) continue;
+		seen.add(key);
+		candidates.push(target.href);
+	}
+	candidates.push(...weak);
+	return candidates.slice(0, MUTUAL_FALLBACK_MAX_PAGES);
+}
+
+/** 读取响应体（最多 MUTUAL_SCAN_MAX_BYTES），读取中断时保留已读内容 */
+async function readHtmlBody(response: Response): Promise<string> {
+	const reader = response.body?.getReader();
+	if (!reader) return "";
+	const decoder = new TextDecoder();
+	let text = "";
+	let received = 0;
+	try {
+		while (received < MUTUAL_SCAN_MAX_BYTES) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			received += value.byteLength;
+			text += decoder.decode(value, { stream: true });
+		}
+	} catch {
+		// 读取被超时或连接中断打断时，用已读取的部分继续判断
+	} finally {
+		try {
+			await reader.cancel();
+		} catch {
+			/* 响应体已结束 */
+		}
+	}
+	return `${text}${decoder.decode()}`;
+}
+
+/** 拉取友链页并检测回链（失败返回 null，不阻塞探测主流程） */
+async function fetchFriendPageForMutual(
+	url: string,
+): Promise<{ html: string; url: string } | null> {
+	const controller = new AbortController();
+	const timer = setTimeout(
+		() => controller.abort(),
+		MUTUAL_FALLBACK_TIMEOUT_MS,
+	);
+	try {
+		await reserveRequestSlot();
+		const response = await fetch(url, {
+			method: "GET",
+			cache: "no-store",
+			redirect: "follow",
+			headers: { "user-agent": "Aemeath-friend-latency-probe/1.0" },
+			signal: controller.signal,
+		});
+		if (!response.ok) {
+			try {
+				await response.body?.cancel();
+			} catch {
+				/* 无需读取错误页 */
+			}
+			return null;
+		}
+		return { html: await readHtmlBody(response), url: response.url || url };
+	} catch {
+		return null;
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+/**
+ * 互链检测：复用延迟探测的同一次 GET 响应读取首页，避免重复请求友链站点。
+ * 首页找不到时，再检查最多两个友链 / 链接页，降低「友链在独立页面」的漏判。
+ */
+async function detectMutualLink(response: Response): Promise<boolean> {
+	const contentType = response.headers.get("content-type") ?? "";
+	if (
+		contentType &&
+		!/^(?:text\/html|text\/plain|application\/xhtml\+xml)/iu.test(
+			contentType.split(";")[0].trim(),
+		)
+	) {
+		return false;
+	}
+	const pageUrl = response.url;
+	const html = await readHtmlBody(response);
+	if (hasMutualLink(html, siteConfig.site_url, pageUrl)) return true;
+	for (const candidate of findFriendPageCandidates(html, pageUrl)) {
+		const page = await fetchFriendPageForMutual(candidate);
+		if (page && hasMutualLink(page.html, siteConfig.site_url, page.url))
+			return true;
+	}
+	return false;
+}
 
 /**
  * 本次探测使用的节点标识。
@@ -97,12 +334,20 @@ export async function measureFriend(
 			headers: { "user-agent": "Aemeath-friend-latency-probe/1.0" },
 			signal: controller.signal,
 		});
-		// Stop timing at the headers; do not download whole homepages.
+		// Stop timing at the headers; the body is only read for the mutual-link scan.
 		const milliseconds = Math.max(1, Math.round(performance.now() - startedAt));
-		try {
-			await response.body?.cancel();
-		} catch {
-			/* Headers already received. */
+		const isOwnSite = normalizeFriendLatencyUrl(siteUrl) === OWN_SITE_KEY;
+		let mutual: boolean | undefined;
+		if (response.ok && !isOwnSite) {
+			// 互链检测与延迟探测共用同一次 GET 请求；检测异常时保持缺省，
+			// 快照合并时沿用上一轮结论，不影响本次延迟结果。
+			mutual = await detectMutualLink(response).catch(() => undefined);
+		} else {
+			try {
+				await response.body?.cancel();
+			} catch {
+				/* Headers already received. */
+			}
 		}
 		return {
 			state: !response.ok
@@ -116,6 +361,7 @@ export async function measureFriend(
 			checkedAt,
 			httpStatus: response.status,
 			failureReason: response.ok ? null : `HTTP ${response.status}`,
+			...(mutual === undefined ? {} : { mutual, mutualCheckedAt: checkedAt }),
 		};
 	} catch (error) {
 		return {
@@ -175,6 +421,7 @@ type ProbeSummary = {
 	probeLocation: string;
 	reason: string | null;
 	distribution?: { fast: number; normal: number; slow: number; down: number };
+	mutualCount?: number;
 };
 
 /** 取出失联站点（最多 5 个），用于通知里点出具体对象 */
@@ -199,8 +446,8 @@ async function writeSummaryFile(summary: ProbeSummary): Promise<void> {
 			: "";
 	const headline =
 		summary.status === "success"
-			? `成功｜${summary.total} 站 · 快 ${summary.distribution?.fast ?? 0} / 正常 ${summary.distribution?.normal ?? 0} / 慢 ${summary.distribution?.slow ?? 0} / 失联 ${summary.failedCount} · 失败率 ${ratio} · 耗时 ${summary.elapsedSeconds}s · 快照已生成`
-			: `失败｜${summary.total} 站 · 失联 ${summary.failedCount} · 失败率 ${ratio} · 耗时 ${summary.elapsedSeconds}s · ${summary.reason ?? "探测未完成"}`;
+			? `成功｜${summary.total} 站 · 快 ${summary.distribution?.fast ?? 0} / 正常 ${summary.distribution?.normal ?? 0} / 慢 ${summary.distribution?.slow ?? 0} / 失联 ${summary.failedCount} · 互链 ${summary.mutualCount ?? 0} · 失败率 ${ratio} · 耗时 ${summary.elapsedSeconds}s · 快照已生成`
+			: `失败｜${summary.total} 站 · 失联 ${summary.failedCount} · 互链 ${summary.mutualCount ?? 0} · 失败率 ${ratio} · 耗时 ${summary.elapsedSeconds}s · ${summary.reason ?? "探测未完成"}`;
 	const detail = [
 		`status=${summary.status}`,
 		`total=${summary.total}`,
@@ -210,6 +457,7 @@ async function writeSummaryFile(summary: ProbeSummary): Promise<void> {
 		`elapsed=${summary.elapsedSeconds}s`,
 		`probeLocation=${summary.probeLocation}`,
 		`reason=${summary.reason ?? "-"}`,
+		`mutual=${summary.mutualCount ?? 0}`,
 		`down=${summary.downList.join(",")}`,
 	].join("\n");
 	try {
@@ -289,6 +537,10 @@ async function probeFriends(): Promise<void> {
 	const diagnosticOnly = args.includes("--diagnostic-only");
 	const probeLocation = probeLocationOfRun();
 	const elapsedSeconds = ((performance.now() - startedAt) / 1000).toFixed(1);
+	// 互链统计：本轮确认已回链本站的站点数（未检测到 / 探测失败的站点不计入）
+	const mutualCount = Object.values(results).filter(
+		(result) => result.mutual === true,
+	).length;
 
 	// 整轮健康度判定：失败率过高或成功数过低，说明是探测端（网络/机器）出问题，
 	// 而不是友链集体失联。这种情况下本轮结果整体作废、不写入快照，
@@ -319,6 +571,7 @@ async function probeFriends(): Promise<void> {
 			downList: collectDownList(results),
 			elapsedSeconds: elapsedSeconds,
 			probeLocation,
+			mutualCount,
 			reason: `失败率 ${(failureRatio * 100).toFixed(1)}% 超过阈值 ${(failureRatioThreshold * 100).toFixed(0)}%，整轮结果作废，未写入快照`,
 		});
 		if (!diagnosticOnly) process.exit(1);
@@ -337,7 +590,19 @@ async function probeFriends(): Promise<void> {
 				continue;
 			merged[key] = value;
 		}
-		Object.assign(merged, results);
+		for (const [key, value] of Object.entries(results)) {
+			// 本轮未完成互链检测（站点不可达 / 读取失败）时沿用上一轮结论，
+			// 避免一次网络抖动把「互链」标识错误地抹掉。
+			const previousResult = merged[key];
+			merged[key] =
+				value.mutual === undefined && previousResult?.mutual !== undefined
+					? {
+							...value,
+							mutual: previousResult.mutual,
+							mutualCheckedAt: previousResult.mutualCheckedAt,
+						}
+					: value;
+		}
 		const snapshot: FriendLatencySnapshot = {
 			version: 1,
 			generatedAt: new Date().toISOString(),
@@ -355,8 +620,9 @@ async function probeFriends(): Promise<void> {
 	console.info(
 		`[友链探测] 完成 ${total} 个站点（${elapsedSeconds}s）：快 ${summary.fast} / 正常 ${summary.normal} / 慢 ${summary.slow} / 不可达 ${summary.down}（失败率 ${(failureRatio * 100).toFixed(1)}%）`,
 	);
+	console.info(`[友链探测] 互链检测：${mutualCount}/${total} 个站点已回链本站`);
 	console.info(
-		`[友链探测] summary total=${total} fast=${summary.fast} normal=${summary.normal} slow=${summary.slow} down=${summary.down} degraded=${degraded}`,
+		`[友链探测] summary total=${total} fast=${summary.fast} normal=${summary.normal} slow=${summary.slow} down=${summary.down} mutual=${mutualCount} degraded=${degraded}`,
 	);
 	console.info(
 		diagnosticOnly
@@ -384,6 +650,7 @@ async function probeFriends(): Promise<void> {
 		probeLocation,
 		reason: null,
 		distribution: summary,
+		mutualCount,
 	});
 }
 

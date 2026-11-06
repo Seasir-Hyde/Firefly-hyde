@@ -317,6 +317,9 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
             const latencyLabel = isTemporarilyUnavailable
               ? `${item.title}，最近一次定时 GET 探测未连通`
               : latency.label;
+            // 互链标识：仅当定时探测在该友链页面中发现回链本站时展示
+            const isMutual = !isOwnSite && scheduledLatency?.mutual === true;
+            const mutualLabel = `${item.title}，该站点已在页面添加本站友链，已形成双向互链`;
             const rssUpdate = rssUpdates.get(normalizeFriendUrl(item.siteurl));
             const rssDate = rssUpdate ? rssDateLabel(rssUpdate.date) : null;
             const rssLabel = rssUpdate
@@ -408,6 +411,16 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                   >
                     {item.title}
                   </div>
+                  <div class="friend-card-heading__meta">
+                    {isMutual && (
+                      <span
+                        class="friend-mutual-badge"
+                        title={mutualLabel}
+                        aria-label={mutualLabel}
+                      >
+                        互链
+                      </span>
+                    )}
                     <span
                       class:list={[
                         "friend-latency",
@@ -425,6 +438,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
                         {latencyValue}
                       </span>
                     </span>
+                  </div>
                 </div>
 
                 <div
@@ -1212,6 +1226,14 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
           '<span data-friend-latency-value aria-live="polite">' + value + '</span>' +
         '</span>';
       };
+      // 互链标识：与本地卡片一致，读取同一份定时探测快照
+      var renderFriendMutual = function() {
+        var key = normalizeFriendUrl(item.siteUrl);
+        var entry = key ? latencyResults[key] : undefined;
+        if (!entry || entry.mutual !== true) return '';
+        var label = item.title + '，该站点已在页面添加本站友链，已形成双向互链';
+        return '<span class="friend-mutual-badge" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">互链</span>';
+      };
       var tagsHtml = '';
       if (item.tags && item.tags.length > 0) {
         tagsHtml = '<div class="flex flex-wrap gap-1 mt-1">' +
@@ -1231,7 +1253,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         '<div class="friend-card-content relative z-10 grow min-w-0 flex flex-col justify-center gap-0.5">' +
           '<div class="friend-card-heading">' +
             '<div class="friend-card-title font-bold text-base text-(--btn-content) group-hover:text-(--primary) transition-colors truncate">' + item.title + '</div>' +
-            renderFriendLatency() +
+            '<div class="friend-card-heading__meta">' + renderFriendMutual() + renderFriendLatency() + '</div>' +
           '</div>' +
           '<div class="friend-card-description text-sm line-clamp-1" title="' + item.desc + '">' + item.desc + '</div>' +
           tagsHtml +
@@ -2037,13 +2059,46 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       min-width: 0;
     }
 
-    /* 标题行：站点名在左，探测延迟在右（卡片右上角） */
+    /* 标题行：站点名在左，互链标识与探测延迟在右（卡片右上角） */
     .friend-card-heading {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
       min-width: 0;
+    }
+
+    /* 标题行右侧指标组：互链标识 + 探测延迟，保持右边缘对齐 */
+    .friend-card-heading__meta {
+      display: flex;
+      align-items: center;
+      flex: none;
+      gap: 0.32rem;
+      min-width: 0;
+    }
+
+    /* 互链标识：仅在定时探测确认该友链回链本站时显示 */
+    .friend-mutual-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      padding: 0.08rem 0.34rem;
+      border: 1px solid color-mix(in srgb, var(--primary) 42%, var(--line-divider));
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--primary) 12%, transparent);
+      color: var(--primary);
+      font-size: 0.6rem;
+      font-weight: 600;
+      line-height: 1.5;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    :global(.dark) .friend-mutual-badge {
+      border-color: color-mix(in srgb, var(--primary) 52%, transparent);
+      background: color-mix(in srgb, var(--primary) 18%, transparent);
+      color: color-mix(in srgb, var(--primary) 85%, white);
     }
 
     .friend-card-footer__identity,
@@ -2077,7 +2132,8 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
     .friend-card--temporarily-unavailable .friend-card-avatar,
     .friend-card--temporarily-unavailable .friend-card-title,
     .friend-card--temporarily-unavailable .friend-card-description,
-    .friend-card--temporarily-unavailable .friend-card-tag {
+    .friend-card--temporarily-unavailable .friend-card-tag,
+    .friend-card--temporarily-unavailable .friend-mutual-badge {
       filter: blur(0.06rem) saturate(0.74);
       opacity: 0.84;
       transition: filter 320ms ease, opacity 320ms ease;
@@ -2279,7 +2335,8 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       .friend-card--temporarily-unavailable .friend-card-avatar,
       .friend-card--temporarily-unavailable .friend-card-title,
       .friend-card--temporarily-unavailable .friend-card-description,
-      .friend-card--temporarily-unavailable .friend-card-tag {
+      .friend-card--temporarily-unavailable .friend-card-tag,
+      .friend-card--temporarily-unavailable .friend-mutual-badge {
         transition: none;
       }
 
