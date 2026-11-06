@@ -11,8 +11,10 @@ interface Props {
 const processedLinks = Astro.props.links;
 const navTitle = siteConfig.navbar.title || siteConfig.title;
 ---
-<div id="nav-menu-panel" class:list={["float-panel-closed fixed inset-0 z-1100"]} data-floating-panel data-floating-panel-trigger="nav-menu-switch" data-floating-panel-scroll-lock inert aria-hidden="true">
-    <!-- 遮罩（scrim）：点击关闭 -->
+<div id="nav-menu-panel" class:list={["float-panel-closed absolute inset-x-0 z-1100"]} data-floating-panel data-floating-panel-trigger="nav-menu-switch" data-floating-panel-scroll-lock data-floating-panel-close-delay="300" inert aria-hidden="true">
+    <!-- 一个滑动容器保证内容、毛玻璃和遮罩边缘处于同一合成坐标系。 -->
+    <div class="mobile-menu-motion">
+    <div class="mobile-menu-glass" aria-hidden="true"></div>
     <div class="mobile-menu-scrim" aria-hidden="true"></div>
     <!-- 抽屉：MD3 侧边导航，右侧滑入，占满整高，内部滚动 -->
     <aside class="mobile-menu-drawer" role="dialog" aria-modal="true" aria-label="导航菜单">
@@ -85,6 +87,7 @@ const navTitle = siteConfig.navbar.title || siteConfig.title;
             ))}
         </nav>
     </aside>
+    </div>
 </div>
 
 <style>
@@ -106,87 +109,168 @@ const navTitle = siteConfig.navbar.title || siteConfig.title;
 
     /* MD3 抽屉：面板改成透明全屏定位层，动画放在「遮罩/抽屉」子层上 */
     #nav-menu-panel {
-        top: 0;
-        bottom: 0;
+        position: absolute;
+        top: var(--mobile-menu-document-top, 0px);
+        bottom: auto;
+        height: var(--mobile-menu-paint-height, 100lvh); /* 打开时快照，避免 Safari 工具栏动画改变绘制边界 */
+        overflow: clip; /* 裁掉滑出部分，避免增加页面横向滚动范围 */
+        overscroll-behavior: none;
+        --mobile-menu-width: min(70vw, 340px);
         border-radius: 0; /* 覆盖 .float-panel 的圆角，避免遮罩四角被裁剪 */
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
-        transition: none;
+        visibility: visible;
+        transition: visibility 0s;
     }
     /* 关闭态：整体不可点，但不再整体淡出/下移（动画由子层负责） */
     #nav-menu-panel.float-panel-closed {
         opacity: 1;
         transform: none;
+        translate: none; /* Tailwind v4 的 -translate-y-1 使用独立 translate 属性 */
         pointer-events: none;
+        visibility: hidden;
+        transition-delay: 0.3s; /* 等子层滑出后隐藏，清除屏幕边缘的残留阴影 */
     }
 
-    /* ---- 遮罩（scrim）：fixed 锚定视口，铺满整屏 ---- */
-    .mobile-menu-scrim {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
+    /* Safari 浮动底栏后方使用与抽屉相同的毛玻璃。
+       z-index: 0 先采样原页面；滑动容器只占可见高度，不把黑色遮罩铺到这里。 */
+    #nav-menu-panel::after {
+        content: "";
+        position: absolute;
+        top: var(--mobile-menu-visible-height, 100dvh);
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 0;
+        background: var(--card-bg);
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.28s var(--ease-standard);
     }
-    :root.dark .mobile-menu-scrim {
-        background: rgba(0, 0, 0, 0.62);
+    #nav-menu-panel:not(.float-panel-closed)::after {
+        opacity: 1;
+    }
+
+    /* 不给共同祖先 opacity/filter，毛玻璃继续采样真实页面。 */
+    .mobile-menu-motion {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: var(--mobile-menu-width);
+        height: var(--mobile-menu-visible-height, 100dvh);
+        z-index: 1;
+        transform: translateX(100%);
+        transition: transform 0.3s var(--ease-decelerate);
+        will-change: transform;
+    }
+    #nav-menu-panel:not(.float-panel-closed) .mobile-menu-motion {
+        transform: translateX(0);
+    }
+    .mobile-menu-glass,
+    .mobile-menu-drawer {
+        position: absolute;
+        inset: 0;
+        box-sizing: border-box;
+        border-radius: var(--radius-large) 0 0 var(--radius-large);
+    }
+
+    /* ---- 毛玻璃：位于遮罩之前，连圆角边缘的模糊采样也不会被遮罩污染 ---- */
+    .mobile-menu-glass {
+        z-index: 0;
+        pointer-events: none;
+        background: var(--card-bg);
+        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
+    }
+    :root.dark .mobile-menu-glass {
+        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.45);
+    }
+    html:not([data-wallpaper-mode="none"])[data-has-wallpaper] .mobile-menu-glass,
+    html:not([data-wallpaper-mode="none"]) body.wallpaper-transparent .mobile-menu-glass,
+    html:not([data-wallpaper-mode="none"])[data-has-wallpaper] #nav-menu-panel::after,
+    html:not([data-wallpaper-mode="none"]) body.wallpaper-transparent #nav-menu-panel::after {
+        background: rgba(255, 255, 255, 0.55);
+        -webkit-backdrop-filter: blur(var(--navbar-panel-blur, 20px)) saturate(1.5);
+        backdrop-filter: blur(var(--navbar-panel-blur, 20px)) saturate(1.5);
+    }
+    :root.dark:not([data-wallpaper-mode="none"])[data-has-wallpaper] .mobile-menu-glass,
+    :root.dark:not([data-wallpaper-mode="none"]) body.wallpaper-transparent .mobile-menu-glass,
+    :root.dark:not([data-wallpaper-mode="none"])[data-has-wallpaper] #nav-menu-panel::after,
+    :root.dark:not([data-wallpaper-mode="none"]) body.wallpaper-transparent #nav-menu-panel::after {
+        background: rgba(23, 23, 23, 0.6);
+    }
+
+    /* 左侧矩形和两个圆角补集组成遮罩，无 SVG 蒙版、无巨大阴影。
+       矩形向左延伸一屏：整个动画中每个抽屉外的像素均被覆盖，只改变透明度。 */
+    .mobile-menu-scrim {
+        --scrim-color: rgba(0, 0, 0, 0.5);
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 100%;
+        width: 100vw;
+        z-index: 1;
+        background: var(--scrim-color);
+        opacity: 0;
+        pointer-events: none;
+        touch-action: none;
+        transition: opacity 0.28s var(--ease-standard);
     }
     #nav-menu-panel:not(.float-panel-closed) .mobile-menu-scrim {
         opacity: 1;
         pointer-events: auto;
     }
+    :root.dark .mobile-menu-scrim {
+        --scrim-color: rgba(0, 0, 0, 0.62);
+    }
+    .mobile-menu-scrim::before,
+    .mobile-menu-scrim::after {
+        content: "";
+        position: absolute;
+        left: 100%;
+        width: var(--radius-large);
+        height: var(--radius-large);
+    }
+    .mobile-menu-scrim::before {
+        top: 0;
+        background: radial-gradient(circle at 100% 100%, transparent var(--radius-large), var(--scrim-color) var(--radius-large));
+    }
+    .mobile-menu-scrim::after {
+        bottom: 0;
+        background: radial-gradient(circle at 100% 0%, transparent var(--radius-large), var(--scrim-color) var(--radius-large));
+    }
 
-    /* ---- 抽屉面板：fixed 锚定视口占满整高 ---- */
+    /* ---- 内容：透明独立层，不重复绘制底色或 backdrop-filter ---- */
     .mobile-menu-drawer {
-        /* MD3 color roles */
         --drawer-on-surface: var(--deep-text);
         --drawer-on-surface-variant: color-mix(in oklch, var(--deep-text) 70%, transparent);
         --drawer-hover: color-mix(in oklch, var(--primary) 8%, transparent);
         --drawer-selected-bg: color-mix(in oklch, var(--primary) 14%, transparent);
 
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: min(70vw, 340px);
+        z-index: 2;
+        height: 100%;
+        height: var(--mobile-menu-visible-height, 100dvh); /* 菜单内容避开浏览器控件，背景继续向下绘制 */
         display: flex;
         flex-direction: column;
-        background: var(--card-bg);
-        border-radius: var(--radius-large) 0 0 var(--radius-large); /* 仅左侧，跟随主题统一圆角 */
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
         overflow: hidden;
-        transform: translateX(100%);
-        transition: transform 0.3s var(--ease-decelerate);
+        background: transparent;
     }
     :root.dark .mobile-menu-drawer {
         --drawer-on-surface: rgba(255, 255, 255, 0.87);
         --drawer-on-surface-variant: rgba(255, 255, 255, 0.62);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
     }
 
-    /* 跟随导航栏毛玻璃（与 navbar.css 的下拉/面板同款）。
-       仅有可模糊对象时启用（Banner 有壁纸 / 全屏透明模式），
-       data-wallpaper-mode="none" 时无壁纸可模糊，落回上面的不透明卡片。 */
-    html:not([data-wallpaper-mode="none"])[data-has-wallpaper] .mobile-menu-drawer,
-    html:not([data-wallpaper-mode="none"]) body.wallpaper-transparent .mobile-menu-drawer {
-        background: rgba(255, 255, 255, 0.55) !important;
-        backdrop-filter: blur(var(--navbar-panel-blur, 20px)) saturate(1.5) !important;
-        box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
-        border: 1px solid rgba(0, 0, 0, 0.06) !important;
-    }
-    :root.dark:not([data-wallpaper-mode="none"])[data-has-wallpaper] .mobile-menu-drawer,
-    :root.dark:not([data-wallpaper-mode="none"]) body.wallpaper-transparent .mobile-menu-drawer {
-        background: rgba(23, 23, 23, 0.6) !important;
-        backdrop-filter: blur(var(--navbar-panel-blur, 20px)) saturate(1.5) !important;
-        box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-    #nav-menu-panel:not(.float-panel-closed) .mobile-menu-drawer {
-        transform: translateX(0);
+    @media (prefers-reduced-motion: reduce) {
+        #nav-menu-panel.float-panel-closed {
+            transition-delay: 0s;
+        }
+        #nav-menu-panel::after,
+        .mobile-menu-motion,
+        .mobile-menu-scrim {
+            transition: none;
+        }
     }
 
     /* ---- 头部 ---- */
@@ -195,7 +279,7 @@ const navTitle = siteConfig.navbar.title || siteConfig.title;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding: 20px 16px 12px 24px;
+        padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px 24px;
         flex-shrink: 0;
     }
     .mobile-menu-title {
@@ -228,7 +312,7 @@ const navTitle = siteConfig.navbar.title || siteConfig.title;
         flex: 1;
         overflow-y: auto;
         overscroll-behavior: contain;
-        padding: 8px 12px 16px;
+        padding: 8px max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) 12px;
         display: flex;
         flex-direction: column;
         gap: 6px;

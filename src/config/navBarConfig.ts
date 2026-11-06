@@ -136,7 +136,7 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 				icon: "material-symbols:monitoring-rounded",
 			},
 			{
-				name: "umami统计",
+				name: "Umami统计",
 				url: "https://umami.seasir.top/share/cp5SqrNUOxbulLZt/seasir.top",
 				external: true,
 				icon: "fa7-solid:chart-simple",
