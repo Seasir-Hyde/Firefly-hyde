@@ -1,4 +1,7 @@
 ---
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import GoogleAnalytics from "@components/analytics/GoogleAnalytics.astro";
 import La51Analytics from "@components/analytics/La51Analytics.astro";
 import MicrosoftClarity from "@components/analytics/MicrosoftClarity.astro";
@@ -45,6 +48,17 @@ import "@/styles/main.css";
 import "@/styles/immersive-reading.css";
 import "@/styles/variables.styl";
 import "@rehype-callouts-theme";
+
+// 读取构建指纹并暴露到 <meta>，供部署校验确认新版本页面是否真正生效
+let buildVersion: string | null = null;
+try {
+	const info = JSON.parse(
+		readFileSync(resolve(process.cwd(), "public/build-info.json"), "utf8"),
+	) as { commit?: string };
+	buildVersion = info.commit ?? null;
+} catch {
+	// 本地尚未生成指纹时忽略，不影响页面渲染
+}
 
 interface Props {
 	title?: string;
@@ -302,6 +316,7 @@ const isLocalPreview =
 
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="generator" content={Astro.generator} />
+    {buildVersion && <meta name="build-version" content={buildVersion} />}
     <meta name="theme-color" content={`hsl(${siteConfig.themeColor.hue} 12% 96%)`} />
     {
       favicons.map((favicon) => (

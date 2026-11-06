@@ -110,6 +110,6 @@
     { "source": "/images/*", "cacheTtl": 31536000 },
     { "source": "/music/*", "cacheTtl": 31536000 },
     { "source": "/favicon/*", "cacheTtl": 604800 },
-    { "source": "/*", "cacheTtl": 3600 }
+    { "source": "/*", "cacheTtl": 0 }
   ]
 }

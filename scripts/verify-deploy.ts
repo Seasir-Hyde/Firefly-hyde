@@ -51,24 +51,13 @@ async function readLocalBuildInfo(): Promise<{
 
 /**
  * 校验边缘缓存没有返回旧页面。
- * 请求不带随机参数的首页，比较其 Last-Modified 与本次构建时间：
- * 命中旧缓存时 Last-Modified 会明显早于 builtAt，据此发现
- * 「部署成功、域名访问仍旧」的假阳性（build-info.json 走 no-store 无法暴露该问题）。
+ * 请求不带随机参数的首页，比对页面内 <meta name="build-version"> 与本次 commit：
+ * Last-Modified 只是弱信号，页面内的版本标记才是权威判据。
  */
 async function verifyHtmlFreshness(
 	siteUrl: string,
-	builtAt?: string,
+	expectedCommit: string,
 ): Promise<void> {
-	if (!builtAt) {
-		console.warn("[部署校验] 缺少 builtAt，跳过首页缓存校验");
-		return;
-	}
-	const builtTime = Date.parse(builtAt);
-	if (Number.isNaN(builtTime)) {
-		console.warn("[部署校验] builtAt 无法解析，跳过首页缓存校验");
-		return;
-	}
-
 	const response = await fetch(`${siteUrl}/`, {
 		signal: AbortSignal.timeout(timeoutMs),
 	});
@@ -76,27 +65,27 @@ async function verifyHtmlFreshness(
 		throw new Error(`首页请求失败：HTTP ${response.status}`);
 	}
 
-	const lastModified = response.headers.get("last-modified");
+	const html = await response.text();
 	const cacheStatus = response.headers.get("eo-cache-status") ?? "unknown";
-	if (!lastModified) {
-		console.warn("[部署校验] 首页未返回 Last-Modified，跳过缓存校验");
+	const lastModified = response.headers.get("last-modified") ?? "unknown";
+	const versionMatch = html.match(
+		/<meta[^>]+name="build-version"[^>]+content="([^"]+)"/,
+	);
+	const onlineVersion = versionMatch?.[1] ?? null;
+
+	if (onlineVersion === expectedCommit) {
+		console.log(
+			`[部署校验] 首页版本校验通过：build-version=${onlineVersion}，缓存状态 ${cacheStatus}`,
+		);
 		return;
 	}
 
-	const lastModifiedTime = Date.parse(lastModified);
-	// 留出构建开始到部署完成的时间差，避免误判
-	const toleranceMs = 10 * 60 * 1000;
-	if (
-		Number.isNaN(lastModifiedTime) ||
-		lastModifiedTime + toleranceMs < builtTime
-	) {
-		throw new Error(
-			`首页仍是旧版本：Last-Modified=${lastModified}（缓存状态 ${cacheStatus}），早于本次构建 ${builtAt}；` +
-				"请在 EdgeOne 控制台刷新 / 的缓存，并确认 edgeone.json 的 HTML 缓存策略已生效",
-		);
-	}
-	console.log(
-		`[部署校验] 首页缓存校验通过：Last-Modified=${lastModified}，缓存状态 ${cacheStatus}`,
+	throw new Error(
+		onlineVersion
+			? `首页仍是旧版本：页面标记 ${onlineVersion} ≠ 本次构建 ${expectedCommit}` +
+					`（缓存状态 ${cacheStatus}，Last-Modified=${lastModified}）；请在 EdgeOne 控制台刷新 / 的缓存`
+			: `首页未返回 build-version 标记（缓存状态 ${cacheStatus}，Last-Modified=${lastModified}）；` +
+					"响应大概率是旧缓存，或构建未注入版本标记，请在 EdgeOne 控制台刷新 / 的缓存",
 	);
 }
 
@@ -106,7 +95,7 @@ async function main(): Promise<void> {
 		if (!found) {
 			console.error(
 				"[部署校验] 未找到构建指纹，请先执行构建（pnpm build）。\n" +
-					`  build 首步会生成 public/build-info.json 并复制到 dist/。\n` +
+					"  build 首步会生成 public/build-info.json 并复制到 dist/。\n" +
 					`  当前工作目录：${process.cwd()}\n` +
 					`  查找路径：${CANDIDATE_PATHS.join("、")}`,
 			);
@@ -144,7 +133,7 @@ async function main(): Promise<void> {
 						`[部署校验] 通过：线上已更新到 ${expected}（第 ${attempt} 次校验，构建于 ${online.builtAt ?? "未知"}）`,
 					);
 					try {
-						await verifyHtmlFreshness(siteUrl, local.builtAt ?? online.builtAt);
+						await verifyHtmlFreshness(siteUrl, expected);
 					} catch (error) {
 						console.error(
 							`[部署校验] 失败：${error instanceof Error ? error.message : String(error)}`,
