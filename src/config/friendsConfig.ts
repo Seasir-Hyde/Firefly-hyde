@@ -289,8 +289,8 @@ export const friendsConfig: FriendLink[] = [
 	{
 		title: "毛",
 		desc: "如果有不可能，那就去创造！海",
-		siteurl: "https://blog.huchao.vip/",
-		imgurl: "https://img.huchao.vip/file/avatar/1781199555294_favicon.ico",
+		siteurl: "https://blog.huchao.vip/blog/",
+		imgurl: "https://img.huchao.vip/file/avatar/1782805912195_7cf1163ce5b4c2783fc89f56e11124c1.jpg",
 		tags: ["Astro"],
 		weight: 0,
 		enabled: true,

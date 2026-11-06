@@ -46,10 +46,44 @@ const summaryFile =
 const MUTUAL_SCAN_MAX_BYTES = 2 * 1024 * 1024;
 /** 首页未发现回链时，额外检查的友链页数量上限 */
 const MUTUAL_FALLBACK_MAX_PAGES = 3;
-/** 友链页二次检查的超时（毫秒），比主探测更短，避免拖慢整轮任务 */
-const MUTUAL_FALLBACK_TIMEOUT_MS = 4000;
-/** 首页未显式链接时，直接尝试的常见友链路径（兼容 /friend 等固定入口） */
-const DEFAULT_FRIEND_PAGE_PATHS = ["/friend", "/friends", "/links"];
+/** 友链页二次检查的超时（毫秒）；部分友链页体积大、加载慢，需要比主探测更宽松 */
+const MUTUAL_FALLBACK_TIMEOUT_MS = 8000;
+/** 友链 JSON 接口通常体积小，但慢站可能数十 KB 且响应波动，保留 8s 上限 */
+const MUTUAL_API_TIMEOUT_MS = 8000;
+/** 首页未显式链接时，直接尝试的常见友链路径（/friends 最常见，其次 /friend） */
+const DEFAULT_FRIEND_PAGE_PATHS = ["/friends", "/friend", "/links"];
+type LinkApiProbe = {
+	method: "GET" | "POST";
+	path: string;
+	/** 分页接口最多尝试的页数（page 参数从 1 开始） */
+	pages?: number;
+	body?: Record<string, unknown>;
+};
+
+/** 前端渲染站点的友链数据接口，按顺序尝试；POST 项为只读资源列表接口 */
+const LINK_API_FALLBACK_PROBES: LinkApiProbe[] = [
+	{ method: "GET", path: "/api/links" },
+	{ method: "GET", path: "/api/public/links?pageSize=100", pages: 3 },
+	{ method: "GET", path: "/api/v1/friends" },
+	{ method: "GET", path: "/api/v1/friend-links" },
+	{ method: "GET", path: "/api/friends" },
+	{ method: "GET", path: "/api/v1/public/links/list" },
+	{ method: "GET", path: "/links.json" },
+	{
+		method: "POST",
+		path: "/api/webInfo/listResourcePath",
+		body: { resourceType: "friendUrl", noPagination: true, isAdmin: false },
+	},
+];
+/** 页面使用 Supabase 时，从内联脚本提取友链表接口 */
+function getSupabaseFriendsUrl(html: string): string | null {
+	const baseUrl = html.match(/SUPABASE_URL\s*=\s*["']([^"']+)["']/u)?.[1];
+	const key = html.match(/SUPABASE_KEY\s*=\s*["']([^"']+)["']/u)?.[1];
+	const query = html.match(/supabaseFetch\(["'](friends[^"']*)["']/u)?.[1];
+	if (!baseUrl || !key || !query) return null;
+	const separator = query.includes("?") ? "&" : "?";
+	return `${baseUrl}/rest/v1/${query}${separator}apikey=${key}`;
+}
 /** 本站主机名（互链检测目标），归一化口径与页面查表保持一致 */
 const OWN_SITE_KEY = normalizeFriendLatencyUrl(siteConfig.site_url);
 
@@ -224,13 +258,12 @@ async function readHtmlBody(response: Response): Promise<string> {
 async function fetchFriendPageForMutual(
 	url: string,
 ): Promise<{ html: string; url: string } | null> {
-	const controller = new AbortController();
-	const timer = setTimeout(
-		() => controller.abort(),
-		MUTUAL_FALLBACK_TIMEOUT_MS,
-	);
+	let timer: ReturnType<typeof setTimeout> | undefined;
 	try {
 		await reserveRequestSlot();
+		// 限速等待不计入请求超时，避免大页面因排队被误判为失败
+		const controller = new AbortController();
+		timer = setTimeout(() => controller.abort(), MUTUAL_FALLBACK_TIMEOUT_MS);
 		const response = await fetch(url, {
 			method: "GET",
 			cache: "no-store",
@@ -250,13 +283,100 @@ async function fetchFriendPageForMutual(
 	} catch {
 		return null;
 	} finally {
-		clearTimeout(timer);
+		if (timer) clearTimeout(timer);
 	}
+}
+
+/** 深度遍历 JSON，判断是否存在指向本站的 URL 字段 */
+function hasOwnSiteUrlInJson(
+	value: unknown,
+	ownKey: string,
+	baseUrl: string,
+): boolean {
+	if (typeof value === "string") {
+		const candidate = value.trim();
+		if (!/^(?:https?:)?\/\//iu.test(candidate)) return false;
+		const target = resolveAnchorUrl(candidate, baseUrl);
+		return (
+			!!target &&
+			/^https?:$/u.test(target.protocol) &&
+			normalizeFriendLatencyUrl(target.href) === ownKey
+		);
+	}
+	if (Array.isArray(value)) {
+		return value.some((item) => hasOwnSiteUrlInJson(item, ownKey, baseUrl));
+	}
+	if (value && typeof value === "object") {
+		return Object.values(value).some((item) =>
+			hasOwnSiteUrlInJson(item, ownKey, baseUrl),
+		);
+	}
+	return false;
+}
+
+/**
+ * 读取前端友链数据接口；POST 仅用于只读的资源列表查询。
+ * 静态 HTML 里没有友链链接的 Nuxt / Next / Vue 站点依赖这些接口。
+ */
+async function fetchMutualSource(
+	url: string,
+	method: "GET" | "POST",
+	body?: Record<string, unknown>,
+): Promise<string | null> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	try {
+		await reserveRequestSlot();
+		const controller = new AbortController();
+		timer = setTimeout(() => controller.abort(), MUTUAL_API_TIMEOUT_MS);
+		const headers: Record<string, string> = {
+			"user-agent": "Aemeath-friend-latency-probe/1.0",
+			accept: "application/json",
+		};
+		if (body) headers["content-type"] = "application/json";
+		const response = await fetch(url, {
+			method,
+			cache: "no-store",
+			redirect: "follow",
+			headers,
+			body: body ? JSON.stringify(body) : undefined,
+			signal: controller.signal,
+		});
+		if (!response.ok) {
+			try {
+				await response.body?.cancel();
+			} catch {
+				/* 无需读取错误响应 */
+			}
+			return null;
+		}
+		return await readHtmlBody(response);
+	} catch {
+		return null;
+	} finally {
+		if (timer) clearTimeout(timer);
+	}
+}
+
+/** 接口返回 JSON 时，深度查找是否存在指向本站的 URL */
+function jsonContainsOwnSite(text: string, baseUrl: string): boolean {
+	try {
+		return hasOwnSiteUrlInJson(JSON.parse(text), OWN_SITE_KEY, baseUrl);
+	} catch {
+		return false;
+	}
+}
+
+/** 页面是否为前端渲染的友链列表（SPA 或动态友链容器） */
+function hasClientRenderedFriendMarkup(html: string): boolean {
+	return /__NUXT__|__NEXT_DATA__|\/_next\/|id=["']app["']|data-friend|正在加载友链/u.test(
+		html,
+	);
 }
 
 /**
  * 互链检测：复用延迟探测的同一次 GET 响应读取首页，避免重复请求友链站点。
- * 首页找不到时，再检查最多两个友链 / 链接页，降低「友链在独立页面」的漏判。
+ * 首页找不到时，再检查最多三个友链 / 链接页；仍找不到时读取常见友链接口，
+ * 覆盖前端渲染友链列表、静态 HTML 不含链接的站点。
  */
 async function detectMutualLink(response: Response): Promise<boolean> {
 	const contentType = response.headers.get("content-type") ?? "";
@@ -271,10 +391,36 @@ async function detectMutualLink(response: Response): Promise<boolean> {
 	const pageUrl = response.url;
 	const html = await readHtmlBody(response);
 	if (hasMutualLink(html, siteConfig.site_url, pageUrl)) return true;
+	let hasDynamicFriendPage = hasClientRenderedFriendMarkup(html);
 	for (const candidate of findFriendPageCandidates(html, pageUrl)) {
 		const page = await fetchFriendPageForMutual(candidate);
-		if (page && hasMutualLink(page.html, siteConfig.site_url, page.url))
-			return true;
+		if (!page) continue;
+		if (hasMutualLink(page.html, siteConfig.site_url, page.url)) return true;
+		hasDynamicFriendPage ||= hasClientRenderedFriendMarkup(page.html);
+	}
+	// 前端渲染的友链列表：链接只存在于接口返回的数据中，
+	// 仅在首页或友链页面存在 SPA / 动态友链容器标记时尝试。
+	if (hasDynamicFriendPage) {
+		for (const probe of LINK_API_FALLBACK_PROBES) {
+			const pageCount = probe.pages ?? 1;
+			for (let page = 1; page <= pageCount; page += 1) {
+				const path = pageCount > 1 ? `${probe.path}&page=${page}` : probe.path;
+				const target = resolveAnchorUrl(path, pageUrl);
+				if (!target) break;
+				const apiText = await fetchMutualSource(
+					target.href,
+					probe.method,
+					probe.body,
+				);
+				if (apiText && jsonContainsOwnSite(apiText, pageUrl)) return true;
+			}
+		}
+	}
+	// Supabase 模板：友链表接口与公开 anon key 内联在页面脚本中
+	const supabaseUrl = getSupabaseFriendsUrl(html);
+	if (supabaseUrl) {
+		const apiText = await fetchMutualSource(supabaseUrl, "GET");
+		if (apiText && jsonContainsOwnSite(apiText, pageUrl)) return true;
 	}
 	return false;
 }
