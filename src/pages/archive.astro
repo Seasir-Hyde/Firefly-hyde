@@ -5,7 +5,7 @@ import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { getArchiveList } from "@/utils/content-utils";
 
-// 获取归档列表（posts + moments + bangumi + life）
+// 获取归档列表（posts + moments + bangumi）
 const archiveList = await getArchiveList();
 
 // 计算各类型数量
@@ -16,8 +16,7 @@ const momentsCount = archiveList.filter(
 const bangumiCount = archiveList.filter(
 	(item) => item.type === "bangumi",
 ).length;
-const lifeCount = archiveList.filter((item) => item.type === "life").length;
-const totalCount = postsCount + momentsCount + bangumiCount + lifeCount;
+const totalCount = postsCount + momentsCount + bangumiCount;
 ---
 
 <MainGridLayout title={i18n(I18nKey.archive)}>
@@ -37,11 +36,6 @@ const totalCount = postsCount + momentsCount + bangumiCount + lifeCount;
             <div class="flex flex-col">
                 <span class="text-3xl font-bold text-red-500 dark:text-red-400">{bangumiCount}</span>
                 <span class="text-sm text-30 mt-1">{i18n(I18nKey.bangumi)}</span>
-            </div>
-            <div class="w-px bg-neutral-200 dark:bg-neutral-700"></div>
-            <div class="flex flex-col">
-                <span class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{lifeCount}</span>
-                <span class="text-sm text-30 mt-1">生活</span>
             </div>
             <div class="w-px bg-neutral-200 dark:bg-neutral-700"></div>
             <div class="flex flex-col">

@@ -212,7 +212,7 @@ export async function getTagList(): Promise<Tag[]> {
 
 export interface ArchiveItem {
 	id: string;
-	type: "post" | "moment" | "bangumi" | "life";
+	type: "post" | "moment" | "bangumi";
 	link?: string;
 	data: {
 		title: string;
@@ -332,7 +332,6 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 
 	// 获取 Bangumi 数据
 	const bangumiItems: ArchiveItem[] = await fetchBangumiArchiveData();
-	const lifeItems: ArchiveItem[] = [];
 
 	// 获取远程说说数据
 	let externalMomentsItems: ArchiveItem[] = [];
@@ -381,7 +380,6 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 		...momentsFromCollection,
 		...externalMomentsItems,
 		...bangumiItems,
-		...lifeItems,
 	].sort((a, b) => {
 		const timeA = a.data.published.getTime();
 		const timeB = b.data.published.getTime();
