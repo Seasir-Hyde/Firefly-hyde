@@ -26,15 +26,27 @@ const { retries, intervalMs, timeoutMs } = friendsProbeConfig.verify;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** 优先读 dist/ 里的（部署产物），回退到 public/ */
-async function readLocalBuildInfo(): Promise<BuildInfo | null> {
-	for (const path of ["dist/build-info.json", "public/build-info.json"]) {
+const CANDIDATE_PATHS = ["dist/build-info.json", "public/build-info.json"];
+
+async function readLocalBuildInfo(): Promise<{
+	info: BuildInfo | null;
+	found: boolean;
+}> {
+	for (const path of CANDIDATE_PATHS) {
 		try {
-			return JSON.parse(await readFile(path, "utf8")) as BuildInfo;
-		} catch {
-			// 试下一个路径
+			const info = JSON.parse(await readFile(path, "utf8")) as BuildInfo;
+			return { info, found: true };
+		} catch (error) {
+			// 文件存在但内容不是合法 JSON：单独提示，避免误报成「未构建」
+			if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+				console.error(
+					`[部署校验] 构建指纹 ${path} 解析失败：${error instanceof Error ? error.message : String(error)}`,
+				);
+				return { info: null, found: true };
+			}
 		}
 	}
-	return null;
+	return { info: null, found: false };
 }
 
 /**
@@ -89,10 +101,25 @@ async function verifyHtmlFreshness(
 }
 
 async function main(): Promise<void> {
-	const local = await readLocalBuildInfo();
-	if (!local?.commit || local.commit === "unknown") {
+	const { info: local, found } = await readLocalBuildInfo();
+	if (!local) {
+		if (!found) {
+			console.error(
+				"[部署校验] 未找到构建指纹，请先执行构建（pnpm build）。\n" +
+					`  build 首步会生成 public/build-info.json 并复制到 dist/。\n` +
+					`  当前工作目录：${process.cwd()}\n` +
+					`  查找路径：${CANDIDATE_PATHS.join("、")}`,
+			);
+		} else {
+			console.error(
+				"[部署校验] 构建指纹内容异常（缺少有效字段），请重新执行 pnpm build 生成",
+			);
+		}
+		process.exit(1);
+	}
+	if (local.commit === "unknown") {
 		console.error(
-			"[部署校验] 无法读取本地构建指纹（dist/build-info.json），请确认构建步骤已生成",
+			"[部署校验] 构建指纹中的 commit 为 unknown（构建环境取不到 git/CNB_COMMIT），无法比对线上版本",
 		);
 		process.exit(1);
 	}
