@@ -108,14 +108,21 @@ const rssDateLabel = (date: Date) =>
 // 这样动态插入的卡片才能像本地友链一样显示「最后更新」。
 // 接口不可用时降级为空列表：动态卡片回落到接口自带的记录更新时间。
 const remoteFriends = await fetchRemoteFriends(REMOTE_FRIENDS_API_URL);
+const remoteFriendLinks = remoteFriends.map(remoteFriendToFriendLink);
 const remoteFeed = remoteFriends.length
-	? await loadFriendsFeed(remoteFriends.map(remoteFriendToFriendLink), {
+	? await loadFriendsFeed(remoteFriendLinks, {
 			cachedOnly: import.meta.env.DEV,
 			// 远程友链数量多且多为小站，收紧超时与重试次数，避免拖慢构建
 			timeoutMs: 5000,
 			attempts: 2,
 		})
 	: null;
+// 页面顶部统计：本地配置 + 远程接口下发，按归一化域名去重后计入总数
+const totalFriendCount = new Set(
+	[...items, ...remoteFriendLinks].map((item) =>
+		normalizeFriendUrl(item.siteurl),
+	),
+).size;
 // 注入给浏览器端：动态卡片按站点 URL 查表取「最后更新」
 const remoteFriendUpdates = remoteFeed ? buildFriendUpdateMap(remoteFeed) : {};
 
@@ -140,7 +147,7 @@ const escapedSiteDesc = (siteInfo.desc || "").replace(/'/g, "\\'");
 const escapedSiteUrl = (siteInfo.url || "").replace(/'/g, "\\'");
 const escapedSiteAvatar = (siteInfo.avatar || "").replace(/'/g, "\\'");
 const escapedSiteRss = (siteInfo.rss || "").replace(/'/g, "\\'");
-const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedSiteName}\\n站点描述：${escapedSiteDesc}\\n站点链接：${escapedSiteUrl}\\n头像链接：${escapedSiteAvatar}\\nRSS：${escapedSiteRss}');this.querySelectorAll('svg')[0].classList.add('hidden');this.querySelectorAll('svg')[1].classList.remove('hidden');setTimeout(()=>{this.querySelectorAll('svg')[0].classList.remove('hidden');this.querySelectorAll('svg')[1].classList.add('hidden')},1500)`;
+const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedSiteName}\\n站点描述：${escapedSiteDesc}\\n站点链接：${escapedSiteUrl}\\n头像链接：${escapedSiteAvatar}\\n站点RSS：${escapedSiteRss}');this.querySelectorAll('svg')[0].classList.add('hidden');this.querySelectorAll('svg')[1].classList.remove('hidden');setTimeout(()=>{this.querySelectorAll('svg')[0].classList.remove('hidden');this.querySelectorAll('svg')[1].classList.add('hidden')},1500)`;
 ---
 
 <MainGridLayout title={title} description={description}>
@@ -160,8 +167,12 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
             <div class="shrink-0 whitespace-nowrap text-3xl font-bold text-neutral-900 dark:text-neutral-100">
               {title}
             </div>
-            <span class="friends-count" aria-label={`当前共收录 ${items.length} 个友链`}>
-              <strong>{items.length}</strong>
+            <span
+              class="friends-count"
+              data-friends-count
+              aria-label={`当前共收录 ${totalFriendCount} 个友链`}
+            >
+              <strong data-friends-count-value>{totalFriendCount}</strong>
               <span>个</span>
             </span>
           </div>
@@ -1239,6 +1250,24 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       '</a>';
     }
 
+    // 重新统计友链总数：本地配置卡片与远程接口卡片按归一化域名去重后计数
+    function updateFriendsCount() {
+      var grid = document.getElementById('friends-grid');
+      var countEl = document.querySelector('[data-friends-count]');
+      if (!grid || !countEl) return;
+      var seen = Object.create(null);
+      var count = 0;
+      grid.querySelectorAll('.friend-card[data-friend-site-url]').forEach(function(card) {
+        var key = normalizeFriendUrl(card.getAttribute('data-friend-site-url'));
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        count += 1;
+      });
+      var valueEl = countEl.querySelector('[data-friends-count-value]');
+      if (valueEl) valueEl.textContent = String(count);
+      countEl.setAttribute('aria-label', '当前共收录 ' + count + ' 个友链');
+    }
+
     function loadDynamicFriends() {
       var loading = document.getElementById('friends-loading');
       var grid = document.getElementById('friends-grid');
@@ -1268,6 +1297,7 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
               return renderFriendCard(item);
             }).join('');
             grid.insertAdjacentHTML('beforeend', html);
+            updateFriendsCount();
           }
         })
         .catch(function(err) {
@@ -1275,6 +1305,8 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
         })
         .finally(function() {
           if (loading) loading.classList.add('hidden');
+          // 接口失败时回落到本地卡片数量，保证统计与页面实际展示一致
+          updateFriendsCount();
           // 动态卡片插入后触发 Umami 指标组件重算“xxx 次”徽章（组件已挂载时才存在该全局钩子）
           if (window.__rainztUmamiMetrics) window.__rainztUmamiMetrics();
         });
