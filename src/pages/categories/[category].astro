@@ -8,6 +8,7 @@ import type { GetStaticPaths } from "astro";
 import { Icon } from "astro-icon/components";
 import PostCard from "@/components/layout/PostCard.astro";
 import { siteConfig } from "@/config";
+import { assignCardDecors } from "@/utils/card-decor-utils";
 import { getCategoryList } from "@/utils/content-utils";
 import {
 	getCategoryPageUrl,
@@ -30,7 +31,7 @@ export const getStaticPaths = (async () => {
 		return import.meta.env.PROD ? data.draft !== true : true;
 	})) as PostEntry[];
 
-	const paths: any[] = [];
+	const paths: ReturnType<GetStaticPaths> = [];
 
 	for (const category of categories) {
 		const categoryPosts = allPosts.filter((post) => {
@@ -84,6 +85,16 @@ const decodedCategory = decodeURIComponent(categoryName);
 let delay = 0;
 const interval = 50;
 
+// 整页统一分配卡片背景水印图案，保证同一分类页内每张卡片的图案互不相同
+const cardDecorMap = assignCardDecors(
+	posts.map((entry: PostEntry) => ({
+		id: entry.id,
+		title: entry.data.title,
+		category: entry.data.category,
+		tags: entry.data.tags,
+	})),
+);
+
 const masonryEnabled = siteConfig.postListLayout.grid.masonry;
 const columnWidth = siteConfig.postListLayout.grid.columnWidth || 280;
 
@@ -96,7 +107,7 @@ const initialLayoutClass =
 		: "flex flex-col gap-4 md:gap-4 list-mode";
 ---
 
-<MainGridLayout title={`${decodedCategory} - ${i18n(I18nKey.categories)}`}>
+<MainGridLayout title={`${decodedCategory} - ${i18n(I18nKey.categories)}`} isPostListPage>
     <!-- 面包屑导航 -->
     <div class="card-base px-6 py-4 mb-6">
         <nav class="flex items-center gap-2 text-sm text-30">
@@ -180,6 +191,7 @@ const initialLayoutClass =
                         draft={entry.data.draft}
                         pinned={entry.data.pinned}
                         password={!!entry.data.password}
+                        decorPattern={cardDecorMap.get(entry.id)}
                         loading={index < 2 ? "eager" : "lazy"}
                         class:list="onload-animation post-card-item"
                         style={`animation-delay: calc(var(--content-delay) + ${delay++ * interval}ms);`}

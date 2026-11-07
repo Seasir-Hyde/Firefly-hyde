@@ -1,0 +1,359 @@
+/*
+ * Shared sidebar and post-list card finish:
+ * a quiet floral watermark in the card surface, plus soft layered shadows.
+ * Sidebar decorations follow their component across every route. Post-list cards
+ * remain scoped to the homepage and paginated post-list surfaces.
+ */
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) {
+	--home-card-mask-blossom: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M191 143c-37-4-61-20-78-43-15-21-20-42-39-55-12-8-25-11-39-10' stroke-width='3'/%3E%3Cpath d='M135 122c5-20 19-34 39-42M107 92c-17-4-31-14-41-29M151 107c10 1 19 5 27 12' stroke-width='2.2'/%3E%3Cellipse cx='176' cy='77' rx='11' ry='5' transform='rotate(-28 176 77)' stroke-width='2'/%3E%3Cellipse cx='164' cy='88' rx='11' ry='5' transform='rotate(42 164 88)' stroke-width='2'/%3E%3Cpath d='M109 93c-9 0-15-6-15-13 7-1 13 3 15 13Zm1 0c0-9 6-15 13-15 1 7-3 13-13 15Zm-1 1c9 0 15 6 15 13-7 1-13-3-15-13Zm-1 0c0 9-6 15-13 15-1-7 3-13 13-15Z' stroke-width='2.2'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='109' cy='93' r='3.5'/%3E%3Ccircle cx='146' cy='44' r='3'/%3E%3Ccircle cx='157' cy='35' r='1.7'/%3E%3Cpath d='m171 47 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-parcel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m78 58 39-20 39 20-39 20-39-20Zm0 0v45l39 21 39-21V58m-39 20v46m-20-76 39 20' stroke-width='3'/%3E%3Cpath d='M40 95c11 0 18 1 25 7m-8-15 9 15-16 5M164 40c-10-8-21-11-34-10m12-8-13 8 11 10' stroke-width='2.5'/%3E%3Cpath d='M38 51h24M45 62h18' stroke-width='2' stroke-dasharray='5 7'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='39' cy='95' r='3'/%3E%3Ccircle cx='47' cy='40' r='2'/%3E%3Ccircle cx='171' cy='114' r='2.5'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m83 39 52 53-25 2 15 28-13 7-15-29-17 19 3-80Z' stroke-width='3'/%3E%3Cpath d='M50 96c-8-17-3-34 13-45m-17 30-3 17 17-4M145 48l4 10 10 4-10 4-4 10-4-10-10-4 10-4 4-10Z' stroke-width='2.3'/%3E%3Cpath d='M38 118c12 5 22 5 33 1' stroke-width='2' stroke-dasharray='4 7'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='49' cy='45' r='3'/%3E%3Ccircle cx='164' cy='95' r='2'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-clock: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round'%3E%3Ccircle cx='119' cy='78' r='47' stroke-width='3'/%3E%3Cpath d='M119 47v32l24 16M119 25v10M119 121v10M66 78h10M162 78h10M82 41l7 8M149 108l7 8M82 115l7-8M149 49l7-8' stroke-width='3'/%3E%3Cpath d='M36 104h33M46 116h26M42 91h20' stroke-width='2' stroke-dasharray='6 6'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='119' cy='78' r='4'/%3E%3Ccircle cx='47' cy='44' r='3'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-sun-cloud: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='132' cy='57' r='25' stroke-width='3'/%3E%3Cpath d='M132 18v12M132 84v12M93 57h12M159 57h12M105 30l9 9M150 75l9 9M105 84l9-9M150 39l9-9' stroke-width='3'/%3E%3Cpath d='M47 111h91c14 0 22-8 22-19s-9-19-20-19c-4 0-7 1-10 3-6-15-19-24-35-24-20 0-36 15-38 34-2-1-5-1-7-1-9 0-16 6-16 13s5 13 13 13Z' stroke-width='3'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='43' cy='47' r='3'/%3E%3Ccircle cx='58' cy='36' r='2'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-quote: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round'%3E%3Cpath d='M47 47c-13 8-20 20-20 36h22v25H24V85c0-21 8-37 23-48m52 10C86 55 79 67 79 83h22v25H76V85c0-21 8-37 23-48' stroke-width='4'/%3E%3Cpath d='M119 60h43M119 75h35M119 90h46M119 105h28' stroke-width='3'/%3E%3Cpath d='M51 124c28 9 67 10 108 1' stroke-width='2' stroke-dasharray='5 7'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='157' cy='42' r='3'/%3E%3Cpath d='m139 29 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-chat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M38 43h95c10 0 18 8 18 18v31c0 10-8 18-18 18H88l-24 20 5-20H38c-10 0-18-8-18-18V61c0-10 8-18 18-18Z' stroke-width='3'/%3E%3Cpath d='M119 65h35c9 0 16 7 16 16v17c0 9-7 16-16 16h-7l4 14-19-14h-13' stroke-width='2.5'/%3E%3Cpath d='M83 91S59 78 59 64c0-11 14-14 24-3 10-11 24-8 24 3 0 14-24 27-24 27Z' stroke-width='2.5'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='37' cy='28' r='3'/%3E%3Ccircle cx='158' cy='39' r='2'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-orbit: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white'%3E%3Cellipse cx='104' cy='79' rx='70' ry='29' transform='rotate(-18 104 79)' stroke-width='2.5'/%3E%3Cellipse cx='104' cy='79' rx='37' ry='67' transform='rotate(31 104 79)' stroke-width='2.5'/%3E%3Ccircle cx='104' cy='79' r='22' stroke-width='3'/%3E%3Cpath d='M28 118c33 16 78 12 117-12' stroke-width='2' stroke-dasharray='5 7'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='49' cy='54' r='6'/%3E%3Ccircle cx='154' cy='108' r='4'/%3E%3Ccircle cx='154' cy='35' r='2.5'/%3E%3Cpath d='m43 97 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Zm121-34 1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5 1.5-4Z'/%3E%3C/g%3E%3C/svg%3E");
+	/* Keep the AI/agent card visibly different from the parcel motif: a loose
+	   constellation of nodes and curved links instead of another box shape. */
+	--home-card-mask-constellation: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M24 111C43 79 64 87 82 57S116 38 138 68S160 101 178 45' stroke-width='3'/%3E%3Cpath d='M43 70 67 111M82 57 104 119M138 68 125 117M178 45 158 102' stroke-width='1.8' stroke-dasharray='4 6'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='24' cy='111' r='5'/%3E%3Ccircle cx='43' cy='70' r='3.5'/%3E%3Ccircle cx='67' cy='111' r='4'/%3E%3Ccircle cx='82' cy='57' r='5'/%3E%3Ccircle cx='104' cy='119' r='3.5'/%3E%3Ccircle cx='138' cy='68' r='5'/%3E%3Ccircle cx='158' cy='102' r='3.5'/%3E%3Ccircle cx='178' cy='45' r='4.5'/%3E%3Cpath d='m119 24 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-window: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='23' y='27' width='144' height='101' rx='13' stroke-width='3'/%3E%3Cpath d='M23 51h144M38 39h1m12 0h1m12 0h1M42 69h47v38H42V69Zm59 0h46M101 82h38M101 95h46M101 108h29' stroke-width='3'/%3E%3Cpath d='M33 136h124' stroke-width='2' stroke-dasharray='5 7'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='153' cy='20' r='3'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-paper-plane: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m71 72 91-40-35 91-21-33-35-18Zm35 18 56-58M71 72l38 6' stroke-width='3'/%3E%3Cpath d='M29 112c20 12 43 11 62-1M35 95c-9 4-14 10-15 18' stroke-width='2.3' stroke-dasharray='6 7'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='43' cy='45' r='3'/%3E%3Ccircle cx='55' cy='34' r='2'/%3E%3Cpath d='m145 117 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-mask-code: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 150'%3E%3Cg fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='23' y='26' width='145' height='103' rx='13' stroke-width='3'/%3E%3Cpath d='M23 51h145M38 39h1m12 0h1m12 0h1M63 73 46 89l17 16m63-32 17 16-17 16M108 66 83 112' stroke-width='3'/%3E%3Cpath d='M36 119h39M121 119h34' stroke-width='2' stroke-dasharray='5 6'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='151' cy='20' r='3'/%3E%3C/g%3E%3C/svg%3E");
+	--home-card-active-mask: var(--home-card-mask-blossom);
+	--home-card-pattern-a: color-mix(in srgb, var(--primary) 82%, #76d9c2);
+	--home-card-pattern-b: #f3a2bc;
+	--home-card-pattern-c: #f6c76d;
+	--home-card-shadow:
+		0 0.48rem 1.05rem rgba(77, 139, 174, 0.09),
+		0 0.12rem 0.32rem rgba(67, 108, 139, 0.06),
+		inset 0 1px 0 rgba(255, 255, 255, 0.78);
+	--home-card-shadow-hover:
+		0 0.7rem 1.45rem rgba(65, 143, 188, 0.15),
+		0 0.18rem 0.44rem rgba(73, 113, 151, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="parcel"] {
+	--home-card-active-mask: var(--home-card-mask-parcel);
+	--home-card-pattern-a: #55bde8;
+	--home-card-pattern-b: #65d0b1;
+	--home-card-pattern-c: #f2b66d;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="cursor"] {
+	--home-card-active-mask: var(--home-card-mask-cursor);
+	--home-card-pattern-a: #8aa8ff;
+	--home-card-pattern-b: #d592ef;
+	--home-card-pattern-c: #78d5de;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="clock"] {
+	--home-card-active-mask: var(--home-card-mask-clock);
+	--home-card-pattern-a: #68bff0;
+	--home-card-pattern-b: #f0a96f;
+	--home-card-pattern-c: #f2cc6f;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="sun-cloud"] {
+	--home-card-active-mask: var(--home-card-mask-sun-cloud);
+	--home-card-pattern-a: #71c8ed;
+	--home-card-pattern-b: #f5ba66;
+	--home-card-pattern-c: #f3df86;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="quote"] {
+	--home-card-active-mask: var(--home-card-mask-quote);
+	--home-card-pattern-a: #76bfc4;
+	--home-card-pattern-b: #e99eb7;
+	--home-card-pattern-c: #b8a0e8;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="chat"] {
+	--home-card-active-mask: var(--home-card-mask-chat);
+	--home-card-pattern-a: #6fc5e8;
+	--home-card-pattern-b: #ef94b3;
+	--home-card-pattern-c: #8fd7bc;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="orbit"] {
+	--home-card-active-mask: var(--home-card-mask-orbit);
+	--home-card-pattern-a: #8b9df4;
+	--home-card-pattern-b: #c08ee7;
+	--home-card-pattern-c: #67cde1;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="constellation"] {
+	--home-card-active-mask: var(--home-card-mask-constellation);
+	--home-card-pattern-a: #7c9cf0;
+	--home-card-pattern-b: #a78ce9;
+	--home-card-pattern-c: #58cbd8;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="window"] {
+	--home-card-active-mask: var(--home-card-mask-window);
+	--home-card-pattern-a: #63bfe7;
+	--home-card-pattern-b: #7fd2ba;
+	--home-card-pattern-c: #9da5ed;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="paper-plane"] {
+	--home-card-active-mask: var(--home-card-mask-paper-plane);
+	--home-card-pattern-a: #61c1cf;
+	--home-card-pattern-b: #ef9fb5;
+	--home-card-pattern-c: #8eb1ed;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) [data-card-decor="code"] {
+	--home-card-active-mask: var(--home-card-mask-code);
+	--home-card-pattern-a: #5dbde5;
+	--home-card-pattern-b: #6bcba9;
+	--home-card-pattern-c: #9c9de9;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) .profile-card {
+	--home-card-active-mask: var(--home-card-mask-blossom);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="announcement"] {
+	--home-card-active-mask: var(--home-card-mask-chat);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="quote-of-the-day"] {
+	--home-card-active-mask: var(--home-card-mask-quote);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="schedule-progress"],
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="schedule-widget"],
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="calendar-widget"] {
+	--home-card-active-mask: var(--home-card-mask-clock);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="site-stats"] {
+	--home-card-active-mask: var(--home-card-mask-constellation);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="site-info"] {
+	--home-card-active-mask: var(--home-card-mask-window);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="categories"] {
+	--home-card-active-mask: var(--home-card-mask-parcel);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id="tags"] {
+	--home-card-active-mask: var(--home-card-mask-paper-plane);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) widget-layout[data-id$="-layout"] {
+	--home-card-active-mask: var(--home-card-mask-orbit);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base,
+		time-greeting-widget.card-base
+	) {
+	position: relative;
+	isolation: isolate;
+	border: 1px solid color-mix(in srgb, var(--primary) 8%, white 42%);
+	box-shadow: var(--home-card-shadow);
+	transition:
+		box-shadow 360ms cubic-bezier(0.2, 0.8, 0.2, 1),
+		border-color 300ms ease,
+		background-color 150ms ease;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base,
+		time-greeting-widget.card-base
+	):hover {
+	border-color: color-mix(in srgb, var(--primary) 19%, white 38%);
+	box-shadow: var(--home-card-shadow-hover);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base
+	)::before {
+	position: absolute;
+	right: -0.65rem;
+	bottom: -0.55rem;
+	z-index: 0;
+	width: 12.2rem;
+	height: 9.65rem;
+	content: "";
+	pointer-events: none;
+	background: linear-gradient(
+		138deg,
+		var(--home-card-pattern-a),
+		var(--home-card-pattern-b) 72%,
+		var(--home-card-pattern-c)
+	);
+	-webkit-mask-image: var(--home-card-active-mask);
+	mask-image: var(--home-card-active-mask);
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+	mask-size: contain;
+	opacity: 0.2;
+	transform: rotate(-2deg);
+	transition:
+		opacity 300ms ease,
+		transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base
+	):hover::before {
+	opacity: 0.31;
+	transform: translate(-0.28rem, -0.22rem) rotate(-4deg) scale(1.04);
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) .post-card-wrapper.card-base::before {
+	right: -1.2rem;
+	bottom: -1.3rem;
+	width: 74%;
+	height: 72%;
+	opacity: 0.23;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) .profile-card.card-base::before {
+	right: -1.8rem;
+	bottom: -1.3rem;
+	width: 14rem;
+	height: 11rem;
+	opacity: 0.24;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base
+	)
+	> * {
+	position: relative;
+	z-index: 1;
+}
+
+:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) .post-card-wrapper.card-base > .post-card-image {
+	z-index: 2;
+}
+
+html.dark :is(body:is(.is-home, .post-list-page), .sidebar-card-decor) {
+	--home-card-shadow:
+		0 0.55rem 1.2rem rgba(0, 0, 0, 0.2),
+		0 0.12rem 0.35rem rgba(0, 0, 0, 0.15),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	--home-card-shadow-hover:
+		0 0.78rem 1.6rem rgba(0, 0, 0, 0.28),
+		0 0.16rem 0.45rem rgba(0, 0, 0, 0.18),
+		inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+html.dark
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base,
+		time-greeting-widget.card-base
+	) {
+	border-color: color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+html.dark
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base
+	)::before {
+	opacity: 0.1;
+}
+
+@media (max-width: 767px) {
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) {
+		--home-card-shadow:
+			0 0.42rem 0.92rem rgba(68, 128, 164, 0.07),
+			0 0.1rem 0.26rem rgba(67, 108, 139, 0.05),
+			inset 0 1px 0 rgba(255, 255, 255, 0.72);
+		--home-card-shadow-hover: var(--home-card-shadow);
+	}
+
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+			.post-card-wrapper.card-base,
+			.profile-card.card-base,
+			widget-layout.card-base
+		)::before {
+		right: -1.2rem;
+		bottom: -1rem;
+		width: 11rem;
+		height: 8.7rem;
+		opacity: 0.16;
+	}
+
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor) .post-card-wrapper.card-base::before {
+		right: -1rem;
+		bottom: -1.1rem;
+		width: 72%;
+		height: 58%;
+		opacity: 0.2;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+			.post-card-wrapper.card-base,
+			.profile-card.card-base,
+			widget-layout.card-base,
+			time-greeting-widget.card-base
+	),
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+			.post-card-wrapper.card-base,
+			.profile-card.card-base,
+			widget-layout.card-base
+	)::before {
+		transition: none;
+	}
+}
+
+/* The flat card mode keeps the sidebar and post cards quiet too. */
+html[data-card-decoration="flat"]
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base,
+		time-greeting-widget.card-base
+	) {
+	border-color: color-mix(in oklch, var(--line-divider) 76%, var(--text-color) 4%);
+	box-shadow: none !important;
+}
+
+html[data-card-decoration="flat"]
+	:is(body:is(.is-home, .post-list-page), .sidebar-card-decor)
+	:is(
+		.post-card-wrapper.card-base,
+		.profile-card.card-base,
+		widget-layout.card-base,
+		time-greeting-widget.card-base
+	):hover {
+	border-color: color-mix(in oklch, var(--line-divider) 76%, var(--text-color) 4%);
+	box-shadow: none !important;
+}

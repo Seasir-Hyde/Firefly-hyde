@@ -27,6 +27,7 @@ import {
 	getStoredBannerCarouselEnabled,
 	getStoredBannerTitleEnabled,
 	getStoredCardBorderEnabled,
+	getStoredCardDecorationMode,
 	getStoredCardFollowThemeEnabled,
 	getStoredFullscreenCarouselEnabled,
 	getStoredFullscreenLayout,
@@ -41,6 +42,7 @@ import {
 	setBannerCarouselEnabled,
 	setBannerTitleEnabled,
 	setCardBorderEnabled,
+	setCardDecorationMode,
 	setCardFollowThemeEnabled,
 	setFullscreenCarouselEnabled,
 	setFullscreenLayout,
@@ -131,6 +133,8 @@ let cardBorderEnabled = $state(false);
 const defaultCardBorderEnabled = getDefaultCardBorderEnabled();
 let cardFollowThemeEnabled = $state(false);
 const defaultCardFollowThemeEnabled = getDefaultCardFollowThemeEnabled();
+// 卡片装饰模式：柔和蓝调（蓝调边框 + 分层柔和阴影）/ 轻薄边框（细边框、无阴影）
+let cardDecorationMode = $state<"soft" | "flat">("flat");
 
 const isWallpaperSwitchable = displaySettingsConfig.wallpaperModeSwitchable;
 const isFullscreenLayoutSwitchable = $derived(
@@ -494,6 +498,11 @@ function toggleCardFollowThemeEnabled() {
 	setCardFollowThemeEnabled(cardFollowThemeEnabled);
 }
 
+function selectCardDecoration(mode: "soft" | "flat") {
+	cardDecorationMode = mode;
+	setCardDecorationMode(mode);
+}
+
 function resetCardSettings() {
 	if (
 		isCardBorderSwitchable &&
@@ -613,6 +622,10 @@ onMount(() => {
 	// 从localStorage读取卡片样式状态
 	cardBorderEnabled = getStoredCardBorderEnabled();
 	cardFollowThemeEnabled = getStoredCardFollowThemeEnabled();
+
+	// 从localStorage读取卡片装饰模式，并同步到文档属性
+	cardDecorationMode = getStoredCardDecorationMode();
+	setCardDecorationMode(cardDecorationMode);
 
 	// 从localStorage读取全屏透明设置状态
 	overlayOpacity = getStoredOverlayOpacity();
@@ -826,6 +839,41 @@ $effect(() => {
 			</div>
 		</div>
 		{/if}
+
+		<!-- Card Decoration Section -->
+		<div>
+			<div class="section-title">
+				卡片装饰
+			</div>
+			<div class="card-decoration-options" role="group" aria-label="卡片装饰模式">
+				<button
+					type="button"
+					class="card-decoration-option"
+					class:card-decoration-option-active={cardDecorationMode === "soft"}
+					aria-pressed={cardDecorationMode === "soft"}
+					onclick={() => selectCardDecoration("soft")}
+				>
+					<span class="card-decoration-preview" aria-hidden="true">
+						<span class="card-decoration-preview-card card-decoration-preview-soft"></span>
+					</span>
+					<span class="card-decoration-label">柔和蓝调</span>
+					<span class="card-decoration-description">浅蓝边框与淡淡阴影</span>
+				</button>
+				<button
+					type="button"
+					class="card-decoration-option"
+					class:card-decoration-option-active={cardDecorationMode === "flat"}
+					aria-pressed={cardDecorationMode === "flat"}
+					onclick={() => selectCardDecoration("flat")}
+				>
+					<span class="card-decoration-preview" aria-hidden="true">
+						<span class="card-decoration-preview-card card-decoration-preview-flat"></span>
+					</span>
+					<span class="card-decoration-label">轻薄边框</span>
+					<span class="card-decoration-description">浅色边框，不加阴影</span>
+				</button>
+			</div>
+		</div>
 
 		<!-- Card Settings Section -->
 		{#if isCardBorderSwitchable || isCardFollowThemeSwitchable}

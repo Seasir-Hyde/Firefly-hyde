@@ -3,11 +3,22 @@ import type { CollectionEntry } from "astro:content";
 import { getPostUrlBySlug } from "@utils/url-utils";
 import PostCard from "@/components/layout/PostCard.astro";
 import { siteConfig } from "@/config";
+import { assignCardDecors } from "@/utils/card-decor-utils";
 
 const { page } = Astro.props;
 
 let delay = 0;
 const interval = 50;
+
+// 整页统一分配卡片背景水印图案，保证同一列表页内每张卡片的图案互不相同
+const cardDecorMap = assignCardDecors(
+	page.data.map((entry: PostEntry) => ({
+		id: entry.id,
+		title: entry.data.title,
+		category: entry.data.category,
+		tags: entry.data.tags,
+	})),
+);
 
 // 类型别名避免Fragment语法问题
 type PostEntry = CollectionEntry<"posts">;
@@ -53,6 +64,7 @@ const coverPositionClass =
         draft={entry.data.draft}
         pinned={entry.data.pinned}
         password={!!entry.data.password}
+        decorPattern={cardDecorMap.get(entry.id)}
         loading={index < 2 ? "eager" : "lazy"}
         class:list="onload-animation post-card-item"
         style={`animation-delay: calc(var(--content-delay) + ${delay++ * interval}ms);`}

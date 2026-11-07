@@ -14,9 +14,9 @@ import SidebarTOC from "@/components/widget/SidebarTOC.astro";
 import SiteInfo from "@/components/widget/SiteInfo.astro";
 import SiteStats from "@/components/widget/SiteStats.astro";
 import Tags from "@/components/widget/Tags.astro";
-import TimeGreeting from "@/components/widgets/TimeGreeting.astro"; // 引入时间问候语组件
 import UmamiStats from "@/components/widget/UmamiStats.astro"; // UmamiStats 组件
 import Weather from "@/components/widget/Weather.astro"; // 引入天气组件
+import TimeGreeting from "@/components/widgets/TimeGreeting.astro"; // 引入时间问候语组件
 
 import { sidebarLayoutConfig } from "@/config";
 import type {
@@ -181,7 +181,7 @@ const hasInitiallyVisibleTopComponents = topComponents.some(
 
 {
 	(topComponents.length > 0 || stickyComponents.length > 0 || bottomComponents.length > 0) && (
-		<aside id={`${side}-sidebar`} aria-label="Sidebar" class:list={[className, "flex flex-col w-full pt-0"]}>
+		<aside id={`${side}-sidebar`} aria-label="Sidebar" class:list={[className, "sidebar-card-decor flex flex-col w-full pt-0"]}>
 			{/* Mobile bottom components - 直接渲染所有组件，不分组 */}
 			{isMobileBottom ? (
 				<div class="flex flex-col w-full gap-4">

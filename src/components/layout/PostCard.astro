@@ -6,6 +6,8 @@ import CoverImage from "@/components/common/CoverImage.astro";
 import PostMetadata from "@/components/layout/PostMeta.astro";
 import PostStats from "@/components/layout/PostStats.astro";
 import { siteConfig } from "@/config";
+import type { CardDecorPattern } from "@/utils/card-decor-utils";
+import { getPreferredCardDecor } from "@/utils/card-decor-utils";
 import { getApiUrlList, processCoverImageSync } from "@/utils/image-utils";
 import { getFileDirFromPath, getTagUrl } from "@/utils/url-utils";
 
@@ -18,6 +20,8 @@ interface Props {
 	updated?: Date;
 	tags: string[];
 	category: string | null;
+	/** 卡片背景水印图案，由列表页统一分配以避免同页图案重复 */
+	decorPattern?: CardDecorPattern;
 	image: string;
 	description: string;
 	draft: boolean;
@@ -33,6 +37,7 @@ const {
 	published,
 	tags,
 	category,
+	decorPattern,
 	image,
 	description,
 	pinned,
@@ -60,6 +65,12 @@ const descriptionLines = Math.max(
 	0,
 	Math.trunc(siteConfig.postListLayout.descriptionLines ?? 2),
 );
+
+// 卡片背景水印图案：优先使用列表页统一分配的结果（保证同页内每张卡片图案不同），
+// 未传入时回退到按文章语义 / id 哈希自行计算。图案资源见 styles/home-card-decor.css
+const cardDecor: CardDecorPattern =
+	decorPattern ??
+	getPreferredCardDecor({ id: entry.id, title, category, tags });
 
 // PostMeta 配置
 const metaConfig = siteConfig.postListLayout.meta ?? {};
@@ -110,6 +121,7 @@ const minutes = remarkPluginFrontmatter.minutes;
     "card-base flex flex-col-reverse w-full rounded-(--radius-large) overflow-hidden relative",
     className,
   ]}
+  data-card-decor={cardDecor}
   style={style}
 >
   <!-- pinned icon -->

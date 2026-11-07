@@ -25,6 +25,7 @@ import { getEffectiveSidebarState } from "@/utils/sidebar-effective-utils";
 import Layout from "./Layout.astro";
 
 import "@/styles/expressive-code.css";
+import "@/styles/home-card-decor.css";
 
 interface Props {
 	title?: string;
@@ -39,6 +40,8 @@ interface Props {
 	ogImageHeight?: number;
 	ogImageAlt?: string;
 	postCategory?: string;
+	/** 是否为文章列表页（首页 / 分页 / 分类等），影响卡片背景装饰等列表页专属样式 */
+	isPostListPage?: boolean;
 	headings?: MarkdownHeading[];
 	encrypted?: boolean;
 	bannerPostMeta?: {
@@ -67,6 +70,7 @@ const {
 	ogImageHeight,
 	ogImageAlt,
 	postCategory,
+	isPostListPage,
 	headings = [],
 	encrypted = false,
 	bannerPostMeta,
@@ -98,7 +102,7 @@ const {
 } = sidebar;
 ---
 
-<Layout title={title} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle} postSlug={postSlug} postCoverImage={postCoverImage} postPublished={postPublished} postUpdated={postUpdated} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} ogImageAlt={ogImageAlt} hasWallpaper={hasWallpaper}>
+<Layout title={title} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle} postSlug={postSlug} postCoverImage={postCoverImage} postPublished={postPublished} postUpdated={postUpdated} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} ogImageAlt={ogImageAlt} hasWallpaper={hasWallpaper} isPostListPage={isPostListPage}>
 
 <slot slot="head" name="head" />
 <HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />

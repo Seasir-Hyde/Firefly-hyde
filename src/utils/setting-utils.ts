@@ -30,6 +30,43 @@ declare global {
 	}
 }
 
+// 卡片装饰模式：soft = 柔和蓝调（蓝调边框 + 分层柔和阴影），flat = 轻薄边框（细边框、无阴影）
+const CARD_DECORATION_MODE_KEY = "cardDecorationMode";
+export type CardDecorationMode = "soft" | "flat";
+
+/**
+ * 读取卡片装饰模式。
+ * 无存储或读取失败时回退到 "flat"（轻薄边框），与源项目保持一致。
+ */
+export function getStoredCardDecorationMode(): CardDecorationMode {
+	if (typeof window === "undefined") return "flat";
+	try {
+		return window.localStorage.getItem(CARD_DECORATION_MODE_KEY) === "soft"
+			? "soft"
+			: "flat";
+	} catch {
+		return "flat";
+	}
+}
+
+/**
+ * 应用卡片装饰模式：写入 <html data-card-decoration="..."> 并持久化到 localStorage。
+ * localStorage 不可用时，本次页面访问内依然生效。
+ */
+export function setCardDecorationMode(mode: CardDecorationMode): void {
+	const safeMode: CardDecorationMode = mode === "flat" ? "flat" : "soft";
+	if (typeof document !== "undefined") {
+		document.documentElement.setAttribute("data-card-decoration", safeMode);
+	}
+	try {
+		if (typeof window !== "undefined") {
+			window.localStorage.setItem(CARD_DECORATION_MODE_KEY, safeMode);
+		}
+	} catch {
+		// 存储不可用时，当前页面的外观变更仍然生效
+	}
+}
+
 export function getDefaultHue(): number {
 	const fallback = "250";
 	// 检查是否在浏览器环境中
