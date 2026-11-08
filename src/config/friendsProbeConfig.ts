@@ -23,6 +23,40 @@ export const friendsProbeConfig = {
 	/** 相邻两次请求之间的最小间隔（毫秒），避免给友链站点造成压力 */
 	intervalMs: 150,
 	/**
+	 * 延迟采样次数：连续采样后取中位数，过滤单次抖动与冷启动尖峰。
+	 * 同一站点的采样复用连接，贴近访客重复访问时的真实响应时间。
+	 */
+	samples: 3,
+	/**
+	 * 延迟分级阈值（毫秒）。绿色健康区间为 < goodMs（即「优秀 + 良好」）：
+	 *   < excellentMs        优秀（深绿）
+	 *   excellentMs–goodMs   良好（绿）
+	 *   goodMs–fairMs        一般（黄）
+	 *   ≥ fairMs             较差（红）
+	 * 探测状态仍只有 fast / normal / slow 三档，映射关系为 fast = 绿色区间。
+	 */
+	latencyGrades: {
+		excellentMs: 200,
+		goodMs: 500,
+		fairMs: 1000,
+	},
+	/**
+	 * 常态化监控告警阈值：
+	 *   siteMs —— 单个站点超过该值即列入告警名单（绿色区间上限）
+	 *   p95Ms  —— 整轮 p95 超过该值即判定整体偏离绿色区间
+	 * 只影响摘要/通知文案，不会中断流水线或阻止快照更新。
+	 */
+	alert: {
+		siteMs: 500,
+		p95Ms: 1000,
+	},
+	/** 延迟趋势日志（JSONL），每轮全量探测追加一行，供长期监控与回溯 */
+	historyFile: "src/data/friends-latency-history.jsonl",
+	/** 互链检测并发数：与延迟采样分两批执行，避免页面下载挤占延迟测量带宽 */
+	mutualConcurrency: 2,
+	/** 互链结果复用窗口（小时）：窗口内的重复运行不再重新扫描友链页 */
+	mutualCacheHours: 12,
+	/**
 	 * 整轮失败率超过该阈值 → 判定为「探测端异常」（网络/机器问题），
 	 * 本轮结果整体作废、不写入快照，并以非零退出码让 CI 触发告警。
 	 * 没有这道保护，探测机断网会把全部友链写成「失联」并推上线。

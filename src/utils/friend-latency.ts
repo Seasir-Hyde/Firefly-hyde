@@ -1,8 +1,32 @@
+import { friendsProbeConfig } from "@/config/friendsProbeConfig";
 import type {
 	FriendLatencySnapshot,
 	FriendLatencyState,
 } from "@/types/friendLatency";
 import { normalizeFriendUrl } from "@/utils/friend-url";
+
+/** 延迟四级评级：优秀 / 良好 / 一般 / 较差（前三档中的前两档属于绿色健康区间） */
+export type FriendLatencyGrade = "excellent" | "good" | "fair" | "poor";
+
+export const FRIEND_LATENCY_GRADE_LABELS: Record<FriendLatencyGrade, string> = {
+	excellent: "优秀",
+	good: "良好",
+	fair: "一般",
+	poor: "较差",
+};
+
+/** 绿色健康区间的上限（毫秒），即评级「良好」的上界 */
+export const FRIEND_LATENCY_GREEN_MAX_MS =
+	friendsProbeConfig.latencyGrades.goodMs;
+
+/** 按阈值把毫秒数映射为四级评级 */
+export function gradeFriendLatency(milliseconds: number): FriendLatencyGrade {
+	const { excellentMs, goodMs, fairMs } = friendsProbeConfig.latencyGrades;
+	if (milliseconds < excellentMs) return "excellent";
+	if (milliseconds < goodMs) return "good";
+	if (milliseconds < fairMs) return "fair";
+	return "poor";
+}
 
 /**
  * 友链延迟的展示状态。
@@ -70,10 +94,16 @@ export function getFriendLatencyDisplay(
 			stale,
 		};
 	}
+	const sampleText =
+		result.samples && result.samples > 1
+			? `连续 ${result.samples} 次采样中位数`
+			: "单次采样";
+	const grade = gradeFriendLatency(result.milliseconds ?? 0);
+	const gradeText = `${FRIEND_LATENCY_GRADE_LABELS[grade]}，绿色区间 <${FRIEND_LATENCY_GREEN_MAX_MS}ms`;
 	return {
 		state: result.state,
 		value: `${result.milliseconds}ms`,
-		label: `HTTP GET 首次响应时间 ${result.milliseconds} 毫秒；${source}${staleHint}。不是访客本机延迟。`,
+		label: `HTTP GET 响应时间 ${result.milliseconds} 毫秒（${sampleText}；评级：${gradeText}）；${source}${staleHint}。不是访客本机延迟。`,
 		stale,
 	};
 }

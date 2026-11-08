@@ -4,6 +4,8 @@ export type FriendProbeResult = {
 	state: FriendLatencyState;
 	// down 状态下可能没有耗时数据
 	milliseconds?: number;
+	// 本次响应时间的采样次数（中位数口径）；旧快照缺省时视为单次采样
+	samples?: number;
 	checkedAt: string;
 	httpStatus?: number | null;
 	failureReason?: string | null;

@@ -24,6 +24,7 @@
     "fill-descriptions": "npx tsx scripts/fill-descriptions/index.ts",
     "github-cards": "npx tsx scripts/generate-github-card-data.ts",
     "probe-friends": "npx tsx scripts/probe-friends.ts",
+    "benchmark-friends-latency": "npx tsx scripts/benchmark-friends-latency.ts",
     "refresh-friends-feed": "npx tsx scripts/refresh-friends-feed.ts",
     "generate-build-info": "npx tsx scripts/generate-build-info.ts",
     "verify-deploy": "npx tsx scripts/verify-deploy.ts"

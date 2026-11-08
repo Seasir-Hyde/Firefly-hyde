@@ -280,6 +280,10 @@ main:
             git config user.name "cnb-bot"
             git config user.email "bot@cnb.cool"
             git add src/data/friends-latency-snapshot.json
+            # 趋势日志由探测脚本追加，存在才提交（首轮运行前文件不存在）
+            if [ -f src/data/friends-latency-history.jsonl ]; then
+              git add src/data/friends-latency-history.jsonl
+            fi
             if git diff --cached --quiet; then
               echo "快照无变化，无需提交"
               exit 0

@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { appendFile, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -21,10 +21,19 @@ const {
 	retryBackoffMs,
 	concurrency: MAX_CONCURRENT_CHECKS,
 	intervalMs: REQUEST_INTERVAL_MS,
+	samples: PROBE_SAMPLES,
+	latencyGrades,
+	alert: LATENCY_ALERT,
+	historyFile,
+	mutualConcurrency: MUTUAL_CONCURRENCY,
+	mutualCacheHours,
 	failureRatioThreshold,
 	minSuccessCount,
 	snapshotRetentionDays,
 } = friendsProbeConfig;
+
+/** 互链结果复用窗口：同一站点在该时间内的重复运行不再重新扫描友链页 */
+const MUTUAL_CACHE_MS = mutualCacheHours * 3600_000;
 
 /** 快照中保留旧记录的上限：超过该天数的条目直接丢弃，避免陈旧数据长期占位 */
 const STALE_ENTRY_MAX_AGE_MS = snapshotRetentionDays * 24 * 3600_000;
@@ -32,6 +41,8 @@ const snapshotUrl = new URL(
 	"../src/data/friends-latency-snapshot.json",
 	import.meta.url,
 );
+/** 延迟趋势日志（JSONL）：每轮全量探测追加一行，随快照一起提交，便于长期回溯 */
+const historyUrl = new URL(`../${historyFile}`, import.meta.url);
 
 /**
  * 探测摘要文件路径。
@@ -105,6 +116,15 @@ function decodeHtmlEntities(value: string): string {
 		.replace(/&gt;/giu, ">");
 }
 
+/**
+ * 还原 JSON / JS 字符串里的斜杠转义。
+ * Nuxt 等前端框架的内联 payload 会把 URL 写成 `https:\u002F\u002Fseasir.top`，
+ * 不还原的话既不是合法链接，也无法与本站主机名比对。
+ */
+function decodeEscapedSlashes(value: string): string {
+	return value.replace(/\\u002f/giu, "/").replace(/\\\//gu, "/");
+}
+
 /** 提取页面内所有带 href 的 <a> 标签（含锚文本，供友链页识别使用） */
 function collectAnchorHrefs(
 	html: string,
@@ -148,26 +168,90 @@ function resolveAnchorUrl(href: string, baseUrl: string): URL | null {
 }
 
 /**
+ * 判断单个链接值是否指向本站。
+ * 兼容 JSON 斜杠转义，以及百分号编码的跳转参数（如 `?url=https%3A%2F%2F...`）。
+ */
+function linkValuePointsToOwnSite(
+	value: string,
+	ownKey: string,
+	baseUrl: string,
+): boolean {
+	const decoded = decodeHtmlEntities(decodeEscapedSlashes(value)).trim();
+	if (!/^(?:https?:)?\/\//iu.test(decoded)) return false;
+	const target = resolveAnchorUrl(decoded, baseUrl);
+	return (
+		!!target &&
+		/^https?:$/u.test(target.protocol) &&
+		normalizeFriendLatencyUrl(target.href) === ownKey
+	);
+}
+
+/**
+ * 判断一个 href 是否指向本站：
+ * 1. 直接指向本站；
+ * 2. 被友链站的跳转脚本包裹（如 `/vendor/redirect.php?url=https%3A%2F%2F本站`），
+ *    真实地址在查询参数里。
+ */
+function hrefPointsToOwnSite(
+	href: string,
+	ownKey: string,
+	baseUrl: string,
+): boolean {
+	if (linkValuePointsToOwnSite(href, ownKey, baseUrl)) return true;
+	const target = resolveAnchorUrl(
+		decodeHtmlEntities(decodeEscapedSlashes(href)),
+		baseUrl,
+	);
+	if (!target) return false;
+	for (const value of target.searchParams.values()) {
+		if (linkValuePointsToOwnSite(value, ownKey, baseUrl)) return true;
+	}
+	return false;
+}
+
+/**
+ * 从内联脚本 / 前端框架 payload 中提取独立的 URL 字符串。
+ * 部分友链页（如 Nuxt 渲染的卡片列表）静态 HTML 里没有指向本站的 <a>，
+ * 友链地址只存在于 payload 的字符串字段中。
+ */
+function collectInlineScriptUrls(html: string): string[] {
+	const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/giu)]
+		.map((match) => match[1] ?? "")
+		.join("\n");
+	if (!scripts) return [];
+	const decoded = decodeHtmlEntities(decodeEscapedSlashes(scripts));
+	const urls: string[] = [];
+	for (const match of decoded.matchAll(
+		/"(https?:\/\/[^"]*)"|'(https?:\/\/[^']*)'/giu,
+	)) {
+		const value = (match[1] ?? match[2] ?? "").trim();
+		if (value) urls.push(value);
+	}
+	return urls;
+}
+
+/**
  * 判断页面 HTML 中是否包含指回本站的友链。
- * 只比对链接类属性（<a href> / data-href 等），不扫描纯文本，
+ * 只比对链接类属性（<a href> / 跳转参数 / data-href 等），不扫描纯文本，
  * 避免把正文里提到本站域名误判成互链。
+ * `includeInlineScripts` 仅用于友链页面：覆盖前端渲染列表只把地址放在
+ * 内联 payload 里的站点。
  */
 export function hasMutualLink(
 	html: string,
 	ownSiteUrl: string = siteConfig.site_url,
 	baseUrl: string = ownSiteUrl,
+	options: { includeInlineScripts?: boolean } = {},
 ): boolean {
 	const ownKey = normalizeFriendLatencyUrl(ownSiteUrl);
 	if (!ownKey) return false;
 	for (const href of collectLinkHrefs(html)) {
 		if (/^(?:mailto|tel|javascript|data):/iu.test(href)) continue;
-		const target = resolveAnchorUrl(href, baseUrl);
-		if (
-			target &&
-			/^https?:$/u.test(target.protocol) &&
-			normalizeFriendLatencyUrl(target.href) === ownKey
-		) {
-			return true;
+		if (hrefPointsToOwnSite(href, ownKey, baseUrl)) return true;
+	}
+	if (options.includeInlineScripts) {
+		for (const url of collectInlineScriptUrls(html)) {
+			if (linkValuePointsToOwnSite(url, ownKey, baseUrl)) return true;
 		}
 	}
 	return false;
@@ -395,7 +479,13 @@ async function detectMutualLink(response: Response): Promise<boolean> {
 	for (const candidate of findFriendPageCandidates(html, pageUrl)) {
 		const page = await fetchFriendPageForMutual(candidate);
 		if (!page) continue;
-		if (hasMutualLink(page.html, siteConfig.site_url, page.url)) return true;
+		// 友链页可能只在内联 payload 里存友链地址（前端渲染的卡片列表）
+		if (
+			hasMutualLink(page.html, siteConfig.site_url, page.url, {
+				includeInlineScripts: true,
+			})
+		)
+			return true;
 		hasDynamicFriendPage ||= hasClientRenderedFriendMarkup(page.html);
 	}
 	// 前端渲染的友链列表：链接只存在于接口返回的数据中，
@@ -459,55 +549,114 @@ async function readSnapshot(): Promise<FriendLatencySnapshot | null> {
 	}
 }
 
-export async function measureFriend(
+export type FriendLatencySample = {
+	milliseconds: number;
+	httpStatus: number | null;
+	ok: boolean;
+};
+
+/** 取中位数；偶数个样本时取中间偏后的一个，保证结果一定来自真实样本 */
+function medianOf(values: number[]): number {
+	const sorted = [...values].sort((a, b) => a - b);
+	return sorted[Math.floor(sorted.length / 2)];
+}
+
+/**
+ * 单站延迟采样。
+ *
+ * 三条口径修正（原实现会在高并发下系统性偏高）：
+ * 1. 计时从「限速闸门放行、即将发出请求」开始，排队等待不再计入响应时间；
+ * 2. 收到响应头即停止计时并取消响应体，避免大页面下载挤占其他站点的探测带宽；
+ * 3. 同一站点连续采样，取中位数，过滤 DNS / TLS 冷启动与瞬时抖动。
+ */
+export async function sampleFriendLatency(
 	siteUrl: string,
-	timeoutMs: number = REQUEST_TIMEOUT_MS,
-): Promise<FriendProbeResult> {
-	const checkedAt = new Date().toISOString();
-	const startedAt = performance.now();
-	const controller = new AbortController();
-	const timer = setTimeout(() => controller.abort(), timeoutMs);
-	try {
-		const url = new URL(siteUrl);
-		if (!/^https?:$/u.test(url.protocol))
-			throw new Error("Unsupported protocol");
-		// 请求前先过限速闸门，避免并发把友链站点打挂
+	options: { timeoutMs?: number; samples?: number } = {},
+): Promise<{ samples: FriendLatencySample[]; errors: string[] }> {
+	const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
+	const count = Math.max(1, Math.floor(options.samples ?? PROBE_SAMPLES));
+	const url = new URL(siteUrl);
+	if (!/^https?:$/u.test(url.protocol)) throw new Error("Unsupported protocol");
+	const collected: FriendLatencySample[] = [];
+	const errors: string[] = [];
+	for (let index = 0; index < count; index += 1) {
 		await reserveRequestSlot();
-		const response = await fetch(url, {
-			method: "GET",
-			cache: "no-store",
-			redirect: "follow",
-			headers: { "user-agent": "Aemeath-friend-latency-probe/1.0" },
-			signal: controller.signal,
-		});
-		// Stop timing at the headers; the body is only read for the mutual-link scan.
-		const milliseconds = Math.max(1, Math.round(performance.now() - startedAt));
-		const isOwnSite = normalizeFriendLatencyUrl(siteUrl) === OWN_SITE_KEY;
-		let mutual: boolean | undefined;
-		if (response.ok && !isOwnSite) {
-			// 互链检测与延迟探测共用同一次 GET 请求；检测异常时保持缺省，
-			// 快照合并时沿用上一轮结论，不影响本次延迟结果。
-			mutual = await detectMutualLink(response).catch(() => undefined);
-		} else {
+		const startedAt = performance.now();
+		const controller = new AbortController();
+		const timer = setTimeout(() => controller.abort(), timeoutMs);
+		try {
+			const response = await fetch(url, {
+				method: "GET",
+				cache: "no-store",
+				redirect: "follow",
+				headers: { "user-agent": "Aemeath-friend-latency-probe/1.0" },
+				signal: controller.signal,
+			});
+			collected.push({
+				milliseconds: Math.max(1, Math.round(performance.now() - startedAt)),
+				httpStatus: response.status,
+				ok: response.ok,
+			});
 			try {
 				await response.body?.cancel();
 			} catch {
-				/* Headers already received. */
+				/* 只需要响应头，取消响应体失败不影响计时 */
 			}
+		} catch (error) {
+			errors.push(
+				controller.signal.aborted
+					? `Timeout after ${timeoutMs}ms`
+					: error instanceof Error
+						? error.message
+						: String(error),
+			);
+		} finally {
+			clearTimeout(timer);
 		}
+	}
+	return { samples: collected, errors };
+}
+
+/**
+ * 单站延迟探测：多次采样取中位数后映射为状态。
+ * 互链检测依赖完整 HTML，由调用方在独立的第二阶段执行，避免互相干扰。
+ */
+export async function measureFriend(
+	siteUrl: string,
+	options: { timeoutMs?: number; samples?: number } = {},
+): Promise<FriendProbeResult> {
+	const checkedAt = new Date().toISOString();
+	const startedAt = performance.now();
+	try {
+		const { samples, errors } = await sampleFriendLatency(siteUrl, options);
+		const okSamples = samples.filter((sample) => sample.ok);
+		if (!okSamples.length) {
+			const lastStatus = samples[samples.length - 1]?.httpStatus ?? null;
+			return {
+				state: "down",
+				milliseconds: Math.max(1, Math.round(performance.now() - startedAt)),
+				checkedAt,
+				httpStatus: lastStatus,
+				failureReason:
+					errors[errors.length - 1] ??
+					(lastStatus ? `HTTP ${lastStatus}` : "Probe failed"),
+			};
+		}
+		const milliseconds = medianOf(
+			okSamples.map((sample) => sample.milliseconds),
+		);
 		return {
-			state: !response.ok
-				? "down"
-				: milliseconds < 500
+			state:
+				milliseconds < latencyGrades.goodMs
 					? "fast"
-					: milliseconds < 1000
+					: milliseconds < latencyGrades.fairMs
 						? "normal"
 						: "slow",
 			milliseconds,
+			samples: okSamples.length,
 			checkedAt,
-			httpStatus: response.status,
-			failureReason: response.ok ? null : `HTTP ${response.status}`,
-			...(mutual === undefined ? {} : { mutual, mutualCheckedAt: checkedAt }),
+			httpStatus: okSamples[okSamples.length - 1]?.httpStatus ?? null,
+			failureReason: null,
 		};
 	} catch (error) {
 		return {
@@ -515,14 +664,8 @@ export async function measureFriend(
 			milliseconds: Math.max(1, Math.round(performance.now() - startedAt)),
 			checkedAt,
 			httpStatus: null,
-			failureReason: controller.signal.aborted
-				? `Timeout after ${timeoutMs}ms`
-				: error instanceof Error
-					? error.message
-					: String(error),
+			failureReason: error instanceof Error ? error.message : String(error),
 		};
-	} finally {
-		clearTimeout(timer);
 	}
 }
 
@@ -539,7 +682,9 @@ export async function probeSite(siteUrl: string): Promise<FriendProbeResult> {
 			// 指数退避：base * 2^(n-1)
 			await sleep(retryBackoffMs * 2 ** (attempt - 1));
 		}
-		const result = await measureFriend(siteUrl, REQUEST_TIMEOUT_MS);
+		const result = await measureFriend(siteUrl, {
+			timeoutMs: REQUEST_TIMEOUT_MS,
+		});
 		lastResult = result;
 		if (result.state !== "down") return result;
 	}
@@ -548,6 +693,45 @@ export async function probeSite(siteUrl: string): Promise<FriendProbeResult> {
 		...finalResult,
 		failureReason: `${finalResult.failureReason ?? "未知错误"}（已重试 ${PROBE_RETRIES} 次）`,
 	};
+}
+
+/**
+ * 互链检测阶段：单独发一次 GET 读取页面。
+ * 与延迟采样分批执行，避免大页面下载抢占带宽、把延迟读数推向高位。
+ */
+async function detectMutualForSite(
+	siteUrl: string,
+): Promise<{ mutual: boolean; checkedAt: string } | null> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	try {
+		await reserveRequestSlot();
+		const controller = new AbortController();
+		timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+		const response = await fetch(new URL(siteUrl), {
+			method: "GET",
+			cache: "no-store",
+			redirect: "follow",
+			headers: { "user-agent": "Aemeath-friend-latency-probe/1.0" },
+			signal: controller.signal,
+		});
+		if (!response.ok) {
+			try {
+				await response.body?.cancel();
+			} catch {
+				/* 错误页无需读取 */
+			}
+			return null;
+		}
+		return {
+			mutual: await detectMutualLink(response),
+			checkedAt: new Date().toISOString(),
+		};
+	} catch {
+		// 检测异常时保持缺省，快照合并会沿用上一轮结论
+		return null;
+	} finally {
+		if (timer) clearTimeout(timer);
+	}
 }
 
 type ProbeTarget = {
@@ -567,7 +751,22 @@ type ProbeSummary = {
 	probeLocation: string;
 	reason: string | null;
 	distribution?: { fast: number; normal: number; slow: number; down: number };
+	latency?: { p50: number; p95: number; max: number; sampled: number };
 	mutualCount?: number;
+	/** 绿色健康区间（<goodMs）内的站点数 */
+	greenCount?: number;
+	/** 达到告警阈值（alert.siteMs）的站点，按耗时降序，最多展示 5 个 */
+	overThreshold?: string[];
+	/** 达到告警阈值的站点总数 */
+	overThresholdCount?: number;
+	/** 本站延迟（形如 seasir.top(832ms)），未探测到时为 "-" */
+	ownSite?: string;
+	/** 本站是否越过绿色区间上限 */
+	ownAlerting?: boolean;
+	/** 整轮 p95 是否越过告警阈值 */
+	p95Alerting?: boolean;
+	/** 仅诊断模式：不写快照与趋势日志 */
+	diagnostic?: boolean;
 };
 
 /** 取出失联站点（最多 5 个），用于通知里点出具体对象 */
@@ -579,6 +778,28 @@ function collectDownList(results: Record<string, FriendProbeResult>): string[] {
 }
 
 /**
+ * 精简快照条目：省略空值字段（如 failureReason/httpStatus 的 null），
+ * 让页面内联注入的 JSON 更小，也保持快照结构易于阅读。
+ */
+function compactProbeResult(result: FriendProbeResult): FriendProbeResult {
+	const compact: FriendProbeResult = {
+		state: result.state,
+		checkedAt: result.checkedAt,
+	};
+	if (result.milliseconds !== undefined)
+		compact.milliseconds = result.milliseconds;
+	if (result.samples !== undefined) compact.samples = result.samples;
+	if (result.httpStatus !== undefined && result.httpStatus !== null)
+		compact.httpStatus = result.httpStatus;
+	if (result.failureReason) compact.failureReason = result.failureReason;
+	if (result.clicks !== undefined) compact.clicks = result.clicks;
+	if (result.probeLocation) compact.probeLocation = result.probeLocation;
+	if (result.mutual !== undefined) compact.mutual = result.mutual;
+	if (result.mutualCheckedAt) compact.mutualCheckedAt = result.mutualCheckedAt;
+	return compact;
+}
+
+/**
  * 写出探测摘要文件。
  *
  * 第一行是给流水线通知用的一行摘要（CI 通过 exports 注入到消息模板），
@@ -586,14 +807,27 @@ function collectDownList(results: Record<string, FriendProbeResult>): string[] {
  */
 async function writeSummaryFile(summary: ProbeSummary): Promise<void> {
 	const ratio = `${(summary.failureRatio * 100).toFixed(1)}%`;
+	const latencyText = summary.latency
+		? ` · p50 ${summary.latency.p50}ms / p95 ${summary.latency.p95}ms`
+		: "";
 	const down =
 		summary.downList.length > 0
 			? ` · 失联站点：${summary.downList.join("、")}${summary.failedCount > summary.downList.length ? " 等" : ""}`
 			: "";
+	// 告警文案：只有本站偏离绿色区间才叫「告警」；第三方站点只报数量，
+	// 避免每天把几十个第三方慢站都当成告警，导致真正的信号被淹没。
+	const slowText = summary.overThresholdCount
+		? ` · ≥${LATENCY_ALERT.siteMs}ms ${summary.overThresholdCount} 站`
+		: "";
+	const alertText = summary.ownAlerting
+		? ` · 告警：本站 ${summary.ownSite ?? "-"} 偏离绿色区间（≥${LATENCY_ALERT.siteMs}ms）`
+		: summary.ownSite
+			? " · 本站绿色区间"
+			: "";
 	const headline =
 		summary.status === "success"
-			? `成功｜${summary.total} 站 · 快 ${summary.distribution?.fast ?? 0} / 正常 ${summary.distribution?.normal ?? 0} / 慢 ${summary.distribution?.slow ?? 0} / 失联 ${summary.failedCount} · 互链 ${summary.mutualCount ?? 0} · 失败率 ${ratio} · 耗时 ${summary.elapsedSeconds}s · 快照已生成`
-			: `失败｜${summary.total} 站 · 失联 ${summary.failedCount} · 互链 ${summary.mutualCount ?? 0} · 失败率 ${ratio} · 耗时 ${summary.elapsedSeconds}s · ${summary.reason ?? "探测未完成"}`;
+			? `成功｜${summary.total} 站 · 快 ${summary.distribution?.fast ?? 0} / 正常 ${summary.distribution?.normal ?? 0} / 慢 ${summary.distribution?.slow ?? 0} / 失联 ${summary.failedCount} · 互链 ${summary.mutualCount ?? 0} · 失败率 ${ratio}${latencyText}${slowText}${alertText} · 耗时 ${summary.elapsedSeconds}s · ${summary.diagnostic ? "仅诊断，快照未改动" : "快照已生成"}`
+			: `失败｜${summary.total} 站 · 失联 ${summary.failedCount} · 互链 ${summary.mutualCount ?? 0} · 失败率 ${ratio}${latencyText}${slowText}${alertText} · 耗时 ${summary.elapsedSeconds}s · ${summary.reason ?? "探测未完成"}`;
 	const detail = [
 		`status=${summary.status}`,
 		`total=${summary.total}`,
@@ -604,6 +838,16 @@ async function writeSummaryFile(summary: ProbeSummary): Promise<void> {
 		`probeLocation=${summary.probeLocation}`,
 		`reason=${summary.reason ?? "-"}`,
 		`mutual=${summary.mutualCount ?? 0}`,
+		`latencyP50=${summary.latency?.p50 ?? "-"}ms`,
+		`latencyP95=${summary.latency?.p95 ?? "-"}ms`,
+		`latencyMax=${summary.latency?.max ?? "-"}ms`,
+		`latencySampled=${summary.latency?.sampled ?? 0}`,
+		`green=${summary.greenCount ?? "-"}`,
+		`ownSite=${summary.ownSite ?? "-"}`,
+		`ownAlerting=${summary.ownAlerting ?? false}`,
+		`p95Alerting=${summary.p95Alerting ?? false}`,
+		`overThresholdCount=${summary.overThresholdCount ?? 0}`,
+		`overThreshold=${summary.overThreshold?.join(",") ?? "-"}`,
 		`down=${summary.downList.join(",")}`,
 	].join("\n");
 	try {
@@ -663,30 +907,164 @@ async function probeFriends(): Promise<void> {
 	const total = queue.length;
 	const startedAt = performance.now();
 	const results: Record<string, FriendProbeResult> = {};
+	const diagnosticOnly = args.includes("--diagnostic-only");
+	const forceMutual = args.includes("--force-mutual") || Boolean(selectedSite);
+	const probeLocation = probeLocationOfRun();
+
+	// 第一阶段：纯延迟采样。只读响应头、立即取消响应体，页面传输不参与测量，
+	// 也不会出现「一边下载大页面、一边测别的站」的带宽争用。
+	const latencyQueue = [...queue];
 	let completed = 0;
-	async function worker(): Promise<void> {
-		while (queue.length) {
-			const friend = queue.shift();
+	async function latencyWorker(): Promise<void> {
+		while (latencyQueue.length) {
+			const friend = latencyQueue.shift();
 			if (!friend) return;
 			results[normalizeFriendLatencyUrl(friend.siteurl)] = {
 				...(await probeSite(friend.siteurl)),
-				probeLocation: probeLocationOfRun(),
+				probeLocation,
 			};
 			completed++;
 			if (completed % 10 === 0 || completed === total)
-				console.info(`[友链探测] 进度 ${completed}/${total}`);
+				console.info(`[友链探测] 延迟采样进度 ${completed}/${total}`);
 		}
 	}
 	await Promise.all(
-		Array.from({ length: Math.min(MAX_CONCURRENT_CHECKS, total) }, worker),
+		Array.from(
+			{ length: Math.min(MAX_CONCURRENT_CHECKS, total) },
+			latencyWorker,
+		),
 	);
-	const diagnosticOnly = args.includes("--diagnostic-only");
-	const probeLocation = probeLocationOfRun();
+
+	// 第二阶段：互链检测。低并发独立执行，并复用窗口内的历史结论，
+	// 避免每天重复扫描体积较大的友链页。
+	const mutualCandidates = queue.filter((friend) => {
+		const key = normalizeFriendLatencyUrl(friend.siteurl);
+		return results[key]?.state !== "down" && key !== OWN_SITE_KEY;
+	});
+	const previousSnapshot = await readSnapshot();
+	const mutualQueue = mutualCandidates.filter((friend) => {
+		if (forceMutual) return true;
+		const cached =
+			previousSnapshot?.results[normalizeFriendLatencyUrl(friend.siteurl)];
+		if (cached?.mutual === undefined || !cached.mutualCheckedAt) return true;
+		const checkedAt = new Date(cached.mutualCheckedAt).getTime();
+		return Number.isNaN(checkedAt) || Date.now() - checkedAt > MUTUAL_CACHE_MS;
+	});
+	const mutualQueueTotal = mutualQueue.length;
+	const mutualSkipped = mutualCandidates.length - mutualQueueTotal;
+	if (mutualSkipped > 0)
+		console.info(
+			`[友链探测] 互链检测：${mutualSkipped} 个站点命中 ${mutualCacheHours}h 复用窗口，跳过重复扫描`,
+		);
+	// 命中复用窗口的站点直接沿用历史互链结论，保证本轮统计与页面展示一致
+	const queuedMutualKeys = new Set(
+		mutualQueue.map((friend) => normalizeFriendLatencyUrl(friend.siteurl)),
+	);
+	for (const friend of mutualCandidates) {
+		const key = normalizeFriendLatencyUrl(friend.siteurl);
+		if (queuedMutualKeys.has(key)) continue;
+		const cached = previousSnapshot?.results[key];
+		if (cached?.mutual === undefined) continue;
+		results[key] = {
+			...results[key],
+			mutual: cached.mutual,
+			mutualCheckedAt: cached.mutualCheckedAt,
+		};
+	}
+	let mutualCompleted = 0;
+	async function mutualWorker(): Promise<void> {
+		while (mutualQueue.length) {
+			const friend = mutualQueue.shift();
+			if (!friend) return;
+			const key = normalizeFriendLatencyUrl(friend.siteurl);
+			const detected = await detectMutualForSite(friend.siteurl);
+			if (detected) {
+				results[key] = {
+					...results[key],
+					mutual: detected.mutual,
+					mutualCheckedAt: detected.checkedAt,
+				};
+			}
+			mutualCompleted++;
+			if (mutualCompleted % 10 === 0 || mutualCompleted === mutualQueueTotal)
+				console.info(
+					`[友链探测] 互链检测进度 ${mutualCompleted}/${mutualQueueTotal}`,
+				);
+		}
+	}
+	await Promise.all(
+		Array.from(
+			{ length: Math.min(MUTUAL_CONCURRENCY, mutualQueueTotal) },
+			mutualWorker,
+		),
+	);
+
 	const elapsedSeconds = ((performance.now() - startedAt) / 1000).toFixed(1);
 	// 互链统计：本轮确认已回链本站的站点数（未检测到 / 探测失败的站点不计入）
 	const mutualCount = Object.values(results).filter(
 		(result) => result.mutual === true,
 	).length;
+	// 延迟分位统计：用于对比优化前后的整体水平，写入摘要文件便于追溯
+	const latencies = Object.values(results)
+		.filter((result) => result.state !== "down")
+		.map((result) => result.milliseconds)
+		.filter((value): value is number => typeof value === "number" && value > 0)
+		.sort((a, b) => a - b);
+	const percentileOf = (list: number[], percentile: number): number =>
+		list.length
+			? list[
+					Math.min(
+						list.length - 1,
+						Math.floor((percentile / 100) * list.length),
+					)
+				]
+			: 0;
+	const latencyStats =
+		latencies.length > 0
+			? {
+					p50: percentileOf(latencies, 50),
+					p95: percentileOf(latencies, 95),
+					max: latencies[latencies.length - 1],
+					sampled: latencies.length,
+				}
+			: undefined;
+	const averageLatency = latencies.length
+		? Math.round(
+				latencies.reduce((sum, value) => sum + value, 0) / latencies.length,
+			)
+		: 0;
+	// 绿色健康区间 = fast（< latencyGrades.goodMs）；达到 alert.siteMs 的站点进入告警名单，
+	// 按耗时降序排列，摘要与通知里只点名最慢的 3 个，完整名单写入趋势日志。
+	const greenCount = Object.values(results).filter(
+		(result) => result.state === "fast",
+	).length;
+	const overThreshold = Object.entries(results)
+		.filter(
+			([siteUrl, result]) =>
+				siteUrl !== OWN_SITE_KEY &&
+				result.state !== "down" &&
+				typeof result.milliseconds === "number" &&
+				result.milliseconds >= LATENCY_ALERT.siteMs,
+		)
+		.sort((a, b) => (b[1].milliseconds ?? 0) - (a[1].milliseconds ?? 0))
+		.map(([siteUrl, result]) => `${siteUrl}(${result.milliseconds}ms)`);
+	const overThresholdHeadline = overThreshold.slice(0, 3);
+	// 告警判据只看本站：第三方友链的延迟由对方站点决定，天天越线并不代表我们能修复，
+	// 把它们计入告警会淹没真正的信号。第三方数据仍保留在 p95 与 ≥500ms 计数里供参考。
+	const ownResult = results[OWN_SITE_KEY];
+	const ownDown = ownResult?.state === "down";
+	const ownMilliseconds =
+		ownResult && !ownDown ? ownResult.milliseconds : undefined;
+	const ownAlerting =
+		ownDown ||
+		(typeof ownMilliseconds === "number" &&
+			ownMilliseconds >= LATENCY_ALERT.siteMs);
+	const p95Alerting = (latencyStats?.p95 ?? 0) >= LATENCY_ALERT.p95Ms;
+	const ownSiteText = ownDown
+		? `${OWN_SITE_KEY}(不可达)`
+		: typeof ownMilliseconds === "number"
+			? `${OWN_SITE_KEY}(${ownMilliseconds}ms)`
+			: "-";
 
 	// 整轮健康度判定：失败率过高或成功数过低，说明是探测端（网络/机器）出问题，
 	// 而不是友链集体失联。这种情况下本轮结果整体作废、不写入快照，
@@ -717,7 +1095,15 @@ async function probeFriends(): Promise<void> {
 			downList: collectDownList(results),
 			elapsedSeconds: elapsedSeconds,
 			probeLocation,
+			latency: latencyStats,
 			mutualCount,
+			greenCount,
+			overThresholdCount: overThreshold.length,
+			overThreshold: overThresholdHeadline,
+			ownSite: ownSiteText,
+			ownAlerting,
+			p95Alerting,
+			diagnostic: diagnosticOnly,
 			reason: `失败率 ${(failureRatio * 100).toFixed(1)}% 超过阈值 ${(failureRatioThreshold * 100).toFixed(0)}%，整轮结果作废，未写入快照`,
 		});
 		if (!diagnosticOnly) process.exit(1);
@@ -753,7 +1139,12 @@ async function probeFriends(): Promise<void> {
 			version: 1,
 			generatedAt: new Date().toISOString(),
 			probeLocation,
-			results: merged,
+			results: Object.fromEntries(
+				Object.entries(merged).map(([key, value]) => [
+					key,
+					compactProbeResult(value),
+				]),
+			),
 		};
 		await writeFile(
 			snapshotUrl,
@@ -767,6 +1158,50 @@ async function probeFriends(): Promise<void> {
 		`[友链探测] 完成 ${total} 个站点（${elapsedSeconds}s）：快 ${summary.fast} / 正常 ${summary.normal} / 慢 ${summary.slow} / 不可达 ${summary.down}（失败率 ${(failureRatio * 100).toFixed(1)}%）`,
 	);
 	console.info(`[友链探测] 互链检测：${mutualCount}/${total} 个站点已回链本站`);
+	console.info(
+		`[友链探测] 延迟分位：p50 ${latencyStats?.p50 ?? "-"}ms / p95 ${latencyStats?.p95 ?? "-"}ms / max ${latencyStats?.max ?? "-"}ms（${latencyStats?.sampled ?? 0} 个有效样本）`,
+	);
+	// 常态化告警只针对本站：它直接对应「Hyde Blog 832ms」这类徽章指标，
+	// 且是本仓库唯一能通过缓存/构建优化改善的站点。
+	if (ownAlerting) {
+		console.warn(
+			`[友链探测] 延迟告警：本站 ${OWN_SITE_KEY} ${ownDown ? "不可达" : `${ownMilliseconds}ms`}（绿色上限 ${LATENCY_ALERT.siteMs}ms）；另有 ${overThreshold.length} 个第三方站点 ≥${LATENCY_ALERT.siteMs}ms，整轮 p95 ${latencyStats?.p95 ?? "-"}ms`,
+		);
+	} else {
+		console.info(
+			`[友链探测] 本站延迟健康：${ownMilliseconds ?? "-"}ms < ${LATENCY_ALERT.siteMs}ms（绿色区间）；另有 ${overThreshold.length} 个第三方站点 ≥${LATENCY_ALERT.siteMs}ms，整轮 p95 ${latencyStats?.p95 ?? "-"}ms`,
+		);
+	}
+	if (!diagnosticOnly) {
+		// 趋势日志：一行一轮，随快照一起提交，用于观察是否长期稳定在绿色区间。
+		try {
+			const historyEntry = {
+				generatedAt: new Date().toISOString(),
+				probeLocation,
+				total,
+				successCount,
+				failedCount,
+				distribution: summary,
+				p50: latencyStats?.p50 ?? null,
+				p95: latencyStats?.p95 ?? null,
+				max: latencyStats?.max ?? null,
+				avg: averageLatency,
+				sampled: latencyStats?.sampled ?? 0,
+				greenCount,
+				overThresholdCount: overThreshold.length,
+				overThreshold,
+				ownSite: ownMilliseconds ?? null,
+				ownAlerting,
+				p95Alerting,
+				mutualCount,
+			};
+			await appendFile(historyUrl, `${JSON.stringify(historyEntry)}\n`, "utf8");
+		} catch (error) {
+			console.warn(
+				`[友链探测] 趋势日志写入失败：${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
 	console.info(
 		`[友链探测] summary total=${total} fast=${summary.fast} normal=${summary.normal} slow=${summary.slow} down=${summary.down} mutual=${mutualCount} degraded=${degraded}`,
 	);
@@ -796,7 +1231,15 @@ async function probeFriends(): Promise<void> {
 		probeLocation,
 		reason: null,
 		distribution: summary,
+		latency: latencyStats,
 		mutualCount,
+		greenCount,
+		overThresholdCount: overThreshold.length,
+		overThreshold: overThresholdHeadline,
+		ownSite: ownSiteText,
+		ownAlerting,
+		p95Alerting,
+		diagnostic: diagnosticOnly,
 	});
 }
 

@@ -15,22 +15,36 @@
     {
       "source": "/",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" },
-        { "key": "Pages-Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" }
+      ]
+    },
+    {
+      "source": "/friends",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" }
+      ]
+    },
+    {
+      "source": "/friends/*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" }
       ]
     },
     {
       "source": "/blog/*",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" },
-        { "key": "Pages-Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" }
       ]
     },
     {
       "source": "/posts/*",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" },
-        { "key": "Pages-Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" },
+        { "key": "Pages-Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" }
       ]
     },
     {
@@ -98,9 +112,11 @@
     }
   ],
   "caches": [
-    { "source": "/", "cacheTtl": 0 },
-    { "source": "/blog/*", "cacheTtl": 0 },
-    { "source": "/posts/*", "cacheTtl": 0 },
+    { "source": "/", "cacheTtl": 300 },
+    { "source": "/friends", "cacheTtl": 300 },
+    { "source": "/friends/*", "cacheTtl": 300 },
+    { "source": "/blog/*", "cacheTtl": 300 },
+    { "source": "/posts/*", "cacheTtl": 300 },
     { "source": "/robots.txt", "cacheTtl": 604800 },
     { "source": "/sitemap-index.xml", "cacheTtl": 86400 },
     { "source": "/llms.txt", "cacheTtl": 86400 },

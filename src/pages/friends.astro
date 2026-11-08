@@ -1960,16 +1960,17 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
       opacity: 0.72;
     }
 
+    /* 颜色对应四级阈值：绿色区间(<500ms) 用绿，一般(500-1000ms) 用琥珀，较差(≥1000ms) 用红 */
     .friend-latency--fast {
       color: #69b78e;
     }
 
     .friend-latency--normal {
-      color: #78a8dd;
+      color: #d4a15e;
     }
 
     .friend-latency--slow {
-      color: #d4a15e;
+      color: #dc879b;
     }
 
     .friend-latency--down {
@@ -1989,11 +1990,11 @@ const copyAllOnClick = `navigator.clipboard.writeText('站点名称：${escapedS
     }
 
     :global(.dark) .friend-latency--normal {
-      color: #b1d8ff;
+      color: #ffdaa0;
     }
 
     :global(.dark) .friend-latency--slow {
-      color: #ffdaa0;
+      color: #ffb9c7;
     }
 
     :global(.dark) .friend-latency--down {
