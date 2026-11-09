@@ -62,6 +62,29 @@ main:
           script: |
             pnpm install --registry https://registry.npmjs.org
             cd admin && pnpm install --registry https://registry.npmjs.org && cd ..
+        - name: 🧪 校验 JSON 数据
+          # 提前拦下语法错误（如合并冲突标记残留）的 JSON：
+          # 否则会在 astro build 内部由 vite-json 插件报「key must be a string at line N」，
+          # 且不打印文件名，只能靠翻仓库定位。
+          script: |
+            node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const roots = ["src", "public"];
+            let bad = 0;
+            const walk = (dir) => {
+              for (const name of fs.readdirSync(dir)) {
+                const file = path.join(dir, name);
+                if (fs.statSync(file).isDirectory()) { walk(file); continue; }
+                if (!name.endsWith(".json")) continue;
+                try { JSON.parse(fs.readFileSync(file, "utf8")); }
+                catch (error) { bad++; console.error("BAD JSON: " + file + " -> " + error.message); }
+              }
+            };
+            for (const root of roots) if (fs.existsSync(root)) walk(root);
+            if (bad > 0) { console.error("共 " + bad + " 个 JSON 文件解析失败，请修复后再构建"); process.exit(1); }
+            console.log("JSON 校验通过");
+            '
         - name: 📦️ 编译项目
           # if: |
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]

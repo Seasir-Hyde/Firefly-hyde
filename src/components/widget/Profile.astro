@@ -65,7 +65,7 @@ const socialLinks = [
 						title={item.name}
 						data-copy-value={item.url.slice(5)}
 					>
-						<Icon is:inline name={item.icon} aria-hidden="true" />
+						<Icon name={item.icon} aria-hidden="true" />
 					</button>
 				) : item.url.startsWith("mailto:") ? (
 					<a
@@ -77,7 +77,7 @@ const socialLinks = [
 						data-encoded-email={encodeMailto(item.url)}
 						onclick={MAILTO_ONCLICK_SCRIPT}
 					>
-						<Icon is:inline name={item.icon} aria-hidden="true" />
+						<Icon name={item.icon} aria-hidden="true" />
 					</a>
 				) : (
 					<a
@@ -88,7 +88,7 @@ const socialLinks = [
 						target={item.name === "RSS" ? undefined : "_blank"}
 						rel={item.name === "RSS" ? undefined : "me noopener noreferrer"}
 					>
-						<Icon is:inline name={item.icon} aria-hidden="true" />
+						<Icon name={item.icon} aria-hidden="true" />
 					</a>
 				),
 			)}
@@ -97,11 +97,11 @@ const socialLinks = [
 		{showUmamiStats && (
 			<div class="profile-stats" aria-label="站点访问统计">
 				<div class="profile-stat">
-					<span class="profile-stat-label"><Icon is:inline name="material-symbols:group-outline" aria-hidden="true" />累计访客</span>
+					<span class="profile-stat-label"><Icon name="material-symbols:group-outline" aria-hidden="true" />累计访客</span>
 					<strong data-umami-stat="visitors" aria-live="polite">加载中</strong>
 				</div>
 				<div class="profile-stat">
-					<span class="profile-stat-label"><Icon is:inline name="material-symbols:visibility-outline-rounded" aria-hidden="true" />总浏览量</span>
+					<span class="profile-stat-label"><Icon name="material-symbols:visibility-outline-rounded" aria-hidden="true" />总浏览量</span>
 					<strong data-umami-stat="pageviews" aria-live="polite">加载中</strong>
 				</div>
 			</div>
