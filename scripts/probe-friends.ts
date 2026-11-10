@@ -587,7 +587,6 @@ export async function sampleFriendLatency(
 		try {
 			const response = await fetch(url, {
 				method: "GET",
-				cache: "no-store",
 				redirect: "follow",
 				headers: { "user-agent": "Aemeath-friend-latency-probe/1.0" },
 				signal: controller.signal,
