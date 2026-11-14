@@ -317,18 +317,6 @@ main:
             else
               REMOTE_URL="origin"
             fi
-            # 探测耗时一两分钟，期间往往有人提交代码，远端 main 会领先本地，
-            # 直接 push 会报 non-fast-forward（"tip of your current branch is behind"）。
-            # 这里先把快照提交 rebase 到远端最新提交上再推；绝不能用 force，
-            # 否则会覆盖掉期间别人的提交。
-            #
-            # 关键点：rebase 冲突一律 -X theirs（保留 CNB 刚跑完的探测结果）。
-            # 场景解释 —— CNB 探测期间若有人提交本地快照到 main：
-            #   远端 main（FETCH_HEAD）含本地 dev 的快照（可能更旧）
-            #   CNB 本地含刚探测完的新快照
-            # git rebase FETCH_HEAD -X theirs：遇到冲突时用「被 rebase 的提交（CNB 新快照）」
-            #   → 永远保留本轮探测的权威结果，同时不丢失其他代码改动。
-            # 只对快照冲突取 theirs，其他文件冲突正常解决（概率极低）。
             pushed=0
             for attempt in 1 2 3; do
               if git fetch "$REMOTE_URL" main \

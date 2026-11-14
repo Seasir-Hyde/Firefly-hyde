@@ -73,7 +73,6 @@ const projects: {
 	tags?: string[];
 	screenshot?: string;
 }[] = [];
-const allTags = [...new Set(items.flatMap((item) => item.tags || []))].sort();
 const ownSiteUrl = normalizeFriendUrl(siteConfig.site_url);
 // 延迟快照数据来自 src/data/friends-latency-snapshot.json（文件已存在，直接使用真实数据）
 const latencySnapshot = friendsLatencySnapshot as FriendLatencySnapshot;
@@ -123,6 +122,12 @@ const totalFriendCount = new Set(
 		normalizeFriendUrl(item.siteurl),
 	),
 ).size;
+// 标签过滤：合并本地友链 + 远程友链的所有标签
+const allTags = [
+	...new Set(
+		[...items, ...remoteFriendLinks].flatMap((item) => item.tags || []),
+	),
+].sort();
 // 注入给浏览器端：动态卡片按站点 URL 查表取「最后更新」
 const remoteFriendUpdates = remoteFeed ? buildFriendUpdateMap(remoteFeed) : {};
 
