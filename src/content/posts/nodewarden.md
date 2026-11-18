@@ -1,14 +1,14 @@
 ---
-title: NodeWarden密码管理器
+title: 用 Cloudflare Workers 自建密码库
 published: 2026-09-17
 pinned: false
 image: "images/xueshan.webp"
 
 slug: /nodewarden
-tags: ["NodeWarden"]
+tags: ["NodeWarden", "Cloudflare"]
 category: 开源项目
 draft: false
-series: "Cloudflare Workers"
+series: "开源项目"
 description: "最近想自己折腾密码管理，就盯上了 NodeWarden 这个开源项目。今天就来聊聊我是怎么把它搭起来、日常用起来感觉如何，顺便分享点配置时的踩坑经验。如果你也想把数据安全握在自己手里，不妨跟我一起看看。"
 descriptionSource: ai
 ---

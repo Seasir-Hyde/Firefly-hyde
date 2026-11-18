@@ -205,6 +205,9 @@ export function setTheme(theme: LIGHT_DARK_MODE): void {
 	// 先应用主题
 	applyThemeToDocument(theme);
 
+	// 用户偏好与 data-theme（代码高亮主题）分离，显式记录便于调试
+	document.documentElement.setAttribute("data-mode", theme);
+
 	// 保存到localStorage
 	localStorage.setItem("theme", theme);
 
@@ -310,6 +313,7 @@ export function initThemeListener(): void {
 	}
 
 	const theme = getStoredTheme();
+	document.documentElement.setAttribute("data-mode", theme);
 
 	// 如果主题是 system 模式，需要监听系统主题变化
 	if (theme === SYSTEM_MODE) {

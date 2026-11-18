@@ -9,6 +9,14 @@ export function removeFileExtension(id: string): string {
 	return id.replace(/\.(md|mdx|markdown)$/i, "");
 }
 
+/**
+ * 统一文章 slug：去扩展名 + 去首尾斜杠。
+ * frontmatter 中 `slug: /xxx` 会带前导斜杠，裸拼 `/posts/${id}/` 会产生 //。
+ */
+export function normalizePostSlug(id: string): string {
+	return removeFileExtension(id).replace(/^\/+|\/+$/g, "");
+}
+
 export function pathsEqual(path1: string, path2: string): boolean {
 	const normalizedPath1 = path1.replace(/^\/|\/$/g, "").toLowerCase();
 	const normalizedPath2 = path2.replace(/^\/|\/$/g, "").toLowerCase();
@@ -34,9 +42,7 @@ function joinUrl(...parts: string[]): string {
 }
 
 export function getPostUrlBySlug(slug: string): string {
-	// 移除文件扩展名（如 .md, .mdx 等）
-	const slugWithoutExt = removeFileExtension(slug);
-	return url(`/posts/${slugWithoutExt}/`);
+	return url(`/posts/${normalizePostSlug(slug)}/`);
 }
 
 export function getTagUrl(tag: string): string {

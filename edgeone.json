@@ -3,6 +3,12 @@
 	"buildCommand": "pnpm build",
 	"outputDirectory": "dist",
 	"nodeVersion": "22.11.0",
+	"redirects": [
+		{ "source": "/blog/:slug/", "destination": "/posts/:slug/", "statusCode": 301 },
+		{ "source": "/blog/:slug", "destination": "/posts/:slug/", "statusCode": 301 },
+		{ "source": "/blog/", "destination": "/", "statusCode": 301 },
+		{ "source": "/blog", "destination": "/", "statusCode": 301 }
+	],
 	"headers": [
 		{
 			"source": "/*",

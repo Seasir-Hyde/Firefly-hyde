@@ -398,7 +398,9 @@ html {
         @apply top-21 rounded-(--radius-large) overflow-hidden bg-(--card-bg) transition-colors duration-150 shadow-xl border border-black/5 dark:border-white/10
     }
     .float-panel-closed {
-        @apply -translate-y-1 opacity-0 pointer-events-none
+        @apply -translate-y-1 opacity-0 pointer-events-none;
+        /* 关闭态彻底移出可访问性与文本提取范围；带 transition-all 的面板仍会先淡出再隐藏 */
+        visibility: hidden;
     }
     .float-panel-closed * {
         @apply pointer-events-none

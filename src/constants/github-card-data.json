@@ -1,4 +1,10 @@
 {
+	"hoshinosuzumi/chronoframe": {
+		"description": "Self-hosted personal gallery application with online photo management and albums, supporting Live/Motion Photos, EXIF parsing, geolocation recognition, and an explore map.",
+		"language": "TypeScript",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/26276464?v=4",
+		"license": "AGPL-3.0"
+	},
 	"shuaiplus/nodewarden": {
 		"description": "Bitwarden-compatible server running on Cloudflare Workers",
 		"language": "TypeScript",

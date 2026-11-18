@@ -352,21 +352,24 @@ const managerConfigStr = JSON.stringify({
     function tryPlayCurrentTrackUrl(autoPlay, ver) {
         if (ver !== loadVersion) return;
 
+        // 首屏/切歌单只广播元数据，不设置 audio.src，避免 4MB+ 音频被浏览器预加载。
+        // 真正的 src 在用户点击播放（autoPlay=true）时才写入。
+        if (!autoPlay) {
+            emitPlayState(false, true);
+            return;
+        }
+
         audio.src = currentTrackUrls[currentTrackUrlIndex];
 
-        if (autoPlay) {
-            audio.play().then(function () {
-                if (ver !== loadVersion) return; // stale, discard
-                emitPlayState(true, true);
-            }).catch(function (e) {
-                if (ver !== loadVersion) return; // stale, discard
-                if (e.name === 'AbortError') return; // interrupted by new load
-                console.warn('Autoplay blocked:', e);
-                emitPlayState(false, true);
-            });
-        } else {
+        audio.play().then(function () {
+            if (ver !== loadVersion) return; // stale, discard
+            emitPlayState(true, true);
+        }).catch(function (e) {
+            if (ver !== loadVersion) return; // stale, discard
+            if (e.name === 'AbortError') return; // interrupted by new load
+            console.warn('Autoplay blocked:', e);
             emitPlayState(false, true);
-        }
+        });
     }
 
     // ── Track loading ────────────────────────────────────────
@@ -412,7 +415,7 @@ const managerConfigStr = JSON.stringify({
         if (!state.playlist || state.playlist.length === 0) return;
         if (audio.paused) {
             if (!audio.src && state.playlist.length > 0) {
-                loadTrack(0, true);
+                loadTrack(state.currentIndex >= 0 ? state.currentIndex : 0, true);
                 return;
             }
             audio.play().then(function () {
