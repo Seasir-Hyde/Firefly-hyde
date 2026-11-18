@@ -1,19 +1,20 @@
 ---
-title: ChronoFrame 详细部署教程
+title: ChronoFrame 私人相册部署教程
 published: 2026-11-14
 pinned: false
-description: "ChronoFrame 详细部署教程"
+
 image: "images/xueshan.webp"
 slug: /ChronoFrame
 # 标签
-tags: ["ChronoFrame"]
+tags: ["ChronoFrame", "Docker"]
 # 分类
 category: 开源项目
 draft: false
-series: "ChronoFrame 扩展特性"
+series: "开源项目"
+description: "最近折腾了个叫 ChronoFrame 的开源照片画廊，能自动整理 EXIF 和拍摄地点，还能按地图浏览，体验特别棒。今天我把这套从 Docker 部署、域名解析到 SSL 证书配置的完整流程整理出来了，想自己搭个私人相册的朋友，跟着一步步来就行。"
 descriptionSource: ai
-
 ---
+
 
 ## ChronoFrame 是什么？
 
