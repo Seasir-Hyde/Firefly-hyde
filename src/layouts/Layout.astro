@@ -443,6 +443,9 @@ const isLocalPreview =
 
       // 获取存储的主题，如果没有则使用默认值
       const theme = localStorage.getItem("theme") || defaultMode;
+      // 用户偏好（light/dark/system）与代码高亮主题（data-theme）是两套状态，
+      // 单独暴露 data-mode 便于调试，避免把 one-dark-pro 误当成偏好值。
+      document.documentElement.setAttribute("data-mode", theme);
 
       // 获取系统主题
       function getSystemTheme() {

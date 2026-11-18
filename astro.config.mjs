@@ -248,6 +248,25 @@ export default defineConfig({
 				// 根据页面开关配置过滤sitemap
 				const url = new URL(page);
 				const pathname = url.pathname;
+				// 后台/管理入口不进索引（线上历史构建曾把 /adminmn/* 写入 sitemap）
+				if (pathname === "/adminmn" || pathname.startsWith("/adminmn/")) {
+					return false;
+				}
+				// 已下线或从未在本站发布的遗留路径，历史 sitemap 中仍残留，统一排除
+				if (
+					pathname === "/admin" ||
+					pathname.startsWith("/admin/") ||
+					pathname === "/anime" ||
+					pathname.startsWith("/anime/") ||
+					pathname === "/diary" ||
+					pathname.startsWith("/diary/")
+				) {
+					return false;
+				}
+				// 文章统一规范到 /posts/；/blog/ 由 EdgeOne 301 跳转，不再进 sitemap
+				if (pathname === "/blog" || pathname.startsWith("/blog/")) {
+					return false;
+				}
 				if (pathname === "/dynamic/" && !siteConfig.pages.dynamic) {
 					return false;
 				}

@@ -123,7 +123,7 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 				{
 					name: "RSS",
 					icon: "fa7-solid:rss",
-					url: "/rss/",
+					url: "/rss.xml",
 				},
 			],
 		},
