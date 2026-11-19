@@ -39,6 +39,7 @@ export type { ProfileConfig } from "./profileConfig";
 export type {
 	AdConfig,
 	CalendarConfig,
+	CommentsWidgetConfig,
 	MobileBottomComponentConfig,
 	SidebarLayoutConfig,
 	SiteInfoConfig,

@@ -79,6 +79,9 @@ export const ko: Translation = {
 	[Key.commentSection]: "댓글",
 	[Key.commentSubtitle]: "생각을 공유하고 모두와 이야기해 보세요",
 	[Key.commentNotConfigured]: "댓글 시스템이 설정되지 않았습니다",
+	[Key.latestComments]: "최신 댓글",
+	[Key.commentsEmpty]: "아직 댓글이 없습니다",
+	[Key.commentOn]: "댓글:",
 	[Key.guestbookCommentHint]:
 		"설정 파일에서 댓글 시스템을 아직 활성화하지 않았습니다. 활성화하면 방문자가 이곳에 메시지를 남길 수 있습니다",
 	[Key.friends]: "친구",

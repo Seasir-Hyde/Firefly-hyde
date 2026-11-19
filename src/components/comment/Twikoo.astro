@@ -22,14 +22,23 @@ const config = {
 <script is:inline src={jsUrl} defer></script>
 {cssUrl && <link rel="stylesheet" href={cssUrl.startsWith("http") ? cssUrl : url(cssUrl)} />}
 <script is:inline define:vars={{ config }}>
+  // 统一路径格式：去掉 query/hash、多余斜杠与结尾斜杠
+  // Twikoo 按路径严格匹配存储评论，路径写法不一致会直接读不到评论
+  function normalizePath(rawPath) {
+    if (!rawPath) return "";
+    let normalized = String(rawPath).split("?")[0].split("#")[0].trim();
+    if (!normalized) return "";
+    if (!normalized.startsWith("/")) normalized = "/" + normalized;
+    normalized = normalized.replace(/\/{2,}/g, "/");
+    if (normalized.length > 1) normalized = normalized.replace(/\/+$/, "");
+    return normalized;
+  }
+
   // 获取当前页面路径
   function getCurrentPath() {
     const requestedPath = new URLSearchParams(window.location.search).get("path");
-    if (requestedPath) return requestedPath;
-    const pathname = window.location.pathname;
-    return pathname.endsWith("/") && pathname.length > 1
-      ? pathname.slice(0, -1)
-      : pathname;
+    if (requestedPath) return normalizePath(requestedPath);
+    return normalizePath(window.location.pathname);
   }
 
   // 动态创建配置对象
@@ -41,12 +50,29 @@ const config = {
     };
   }
 
+  let initTimer = null;
+  let lastInitAt = 0;
+  let hiddenAt = 0;
+  let refreshing = false;
+
+  // 检查评论框是否有未提交的草稿，避免刷新时把用户内容清空
+  function hasDraft() {
+    const commentEl = document.getElementById("tcomment");
+    if (!commentEl) return false;
+    return Array.from(
+      commentEl.querySelectorAll("textarea, input[type='text']")
+    ).some(function (node) {
+      return node.value && node.value.trim().length > 0;
+    });
+  }
+
   // 初始化 Twikoo
   function initTwikoo() {
     if (typeof twikoo !== "undefined") {
       const commentEl = document.getElementById("tcomment");
       if (commentEl) {
         commentEl.innerHTML = "";
+        lastInitAt = Date.now();
 
         const dynamicConfig = createTwikooConfig();
         console.log("[Twikoo] Init config:", dynamicConfig);
@@ -66,19 +92,40 @@ const config = {
     }
   }
 
+  // 防抖初始化，避免 Swup 与自定义事件同时触发导致重复请求
+  function scheduleInit(delay) {
+    if (initTimer) clearTimeout(initTimer);
+    initTimer = setTimeout(function () {
+      initTimer = null;
+      initTwikoo();
+    }, typeof delay === "number" ? delay : 0);
+  }
+
+  // 回到前台时重新拉取评论，确保能看到最新内容（有草稿时跳过）
+  function refreshComments(force) {
+    if (refreshing) return;
+    if (!document.getElementById("tcomment")) return;
+    if (!force && hasDraft()) return;
+    refreshing = true;
+    initTwikoo();
+    setTimeout(function () {
+      refreshing = false;
+    }, 1000);
+  }
+
   // 页面加载时初始化
   document.addEventListener("DOMContentLoaded", initTwikoo);
 
   // Swup 页面切换后重新初始化
   if (window.swup && window.swup.hooks) {
     window.swup.hooks.on("content:replace", function () {
-      setTimeout(initTwikoo, 200);
+      scheduleInit(200);
     });
   } else {
     document.addEventListener("swup:enable", function () {
       if (window.swup && window.swup.hooks) {
         window.swup.hooks.on("content:replace", function () {
-          setTimeout(initTwikoo, 200);
+          scheduleInit(200);
         });
       }
     });
@@ -86,10 +133,26 @@ const config = {
 
   // 自定义事件监听
   document.addEventListener("firefly:page:loaded", function () {
-    const commentEl = document.getElementById("tcomment");
-    if (commentEl) {
-      console.log("[Twikoo] Re-initializing via custom event");
-      initTwikoo();
+    if (document.getElementById("tcomment")) {
+      scheduleInit(200);
     }
+  });
+
+  // 从后台切回（微信内切换聊天/锁屏）或从 bfcache 恢复时刷新评论
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+      hiddenAt = Date.now();
+      return;
+    }
+    if (!hiddenAt) return;
+    const awayMs = Date.now() - hiddenAt;
+    hiddenAt = 0;
+    if (awayMs < 10000) return;
+    if (Date.now() - lastInitAt < 30000) return;
+    refreshComments(false);
+  });
+
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) refreshComments(false);
   });
 </script>
