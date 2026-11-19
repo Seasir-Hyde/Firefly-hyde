@@ -89,6 +89,73 @@ async function verifyHtmlFreshness(
 	);
 }
 
+/**
+ * 校验同一路由的「带斜杠」与「不带斜杠」两种形式都能访问。
+ *
+ * 站点导航、canonical、sitemap 统一使用带斜杠形式（trailingSlash: always），
+ * 所以两种形式都必须命中同一份 index.html：
+ *   /archive 与 /archive/、/posts/todo 与 /posts/todo/
+ *
+ * 背景：EdgeOne Pages 只有把目录登记为真实目录时才会解析目录索引，
+ * 目录内若只有 index.html 一个对象，/posts/todo 与 /posts/todo/ 都会 404
+ * （对象本身在，/posts/todo/index.html 直接访问是 200）。
+ * scripts/ensure-route-index.ts 会给这类目录补一个伴随文件来规避。
+ */
+async function verifyRouteForms(siteUrl: string): Promise<void> {
+	const routes = ["/archive", "/posts/todo", "/tags"];
+	let lastDetail = "";
+
+	for (let attempt = 1; attempt <= retries; attempt++) {
+		const results = await Promise.all(
+			routes.flatMap((route) =>
+				[route, route.endsWith("/") ? route : `${route}/`].map(async (path) => {
+					try {
+						const response = await fetch(
+							`${siteUrl}${path}?t=${Date.now()}-${attempt}`,
+							{
+								headers: { "Cache-Control": "no-cache" },
+								signal: AbortSignal.timeout(timeoutMs),
+							},
+						);
+						return { path, status: response.status, ok: response.ok };
+					} catch (error) {
+						return {
+							path,
+							status: 0,
+							ok: false,
+							reason: error instanceof Error ? error.message : String(error),
+						};
+					}
+				}),
+			),
+		);
+
+		const failed = results.filter((result) => !result.ok);
+		if (failed.length === 0) {
+			console.log(
+				`[部署校验] 路由双形态校验通过：${results
+					.map((result) => `${result.path} → ${result.status}`)
+					.join("、")}`,
+			);
+			return;
+		}
+
+		const detail = failed
+			.map((result) => `${result.path} → HTTP ${result.status}`)
+			.join("、");
+		lastDetail = detail;
+		console.warn(
+			`[部署校验] 第 ${attempt} 次校验：路由双形态异常（${detail}）`,
+		);
+		if (attempt < retries) await sleep(intervalMs);
+	}
+
+	throw new Error(
+		`路由双形态异常：${lastDetail}；请确认 scripts/ensure-route-index.ts 已接入 build，` +
+			"且产物中每个路由目录除 index.html 外还含有伴随文件",
+	);
+}
+
 async function main(): Promise<void> {
 	const { info: local, found } = await readLocalBuildInfo();
 	if (!local) {
@@ -134,6 +201,14 @@ async function main(): Promise<void> {
 					);
 					try {
 						await verifyHtmlFreshness(siteUrl, expected);
+					} catch (error) {
+						console.error(
+							`[部署校验] 失败：${error instanceof Error ? error.message : String(error)}`,
+						);
+						process.exit(1);
+					}
+					try {
+						await verifyRouteForms(siteUrl);
 					} catch (error) {
 						console.error(
 							`[部署校验] 失败：${error instanceof Error ? error.message : String(error)}`,
