@@ -1,4 +1,4 @@
-// 仪表盘：内容统计（文章/说说/公告/一言）+ 最近构建状态 + 快捷入口
+// 仪表盘：内容统计（文章/公告/一言）+ 最近构建状态 + 快捷入口
 // 统计数据复用现有 list API 的 total 字段，不新增后端端点；卡片二合一（点击跳转对应管理页）
 import { IconRefresh } from "@douyinfe/semi-icons";
 import {
@@ -18,7 +18,6 @@ import { type ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { announcementsApi } from "@/api/announcements";
 import { buildsApi } from "@/api/builds";
-import { momentsApi } from "@/api/moments";
 import { postsApi } from "@/api/posts";
 import { quotesApi } from "@/api/quotes";
 import { usePageShell } from "@/hooks/usePageShell";
@@ -233,13 +232,6 @@ export function DashboardPage() {
 					label="文章"
 					icon={<span>📄</span>}
 					path="/posts"
-				/>
-				<StatCard
-					queryKey={["stats", "moments"]}
-					queryFn={() => momentsApi.list().then((r) => r.total)}
-					label="说说"
-					icon={<span>💬</span>}
-					path="/moments"
 				/>
 				<StatCard
 					queryKey={["stats", "announcements"]}

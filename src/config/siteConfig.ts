@@ -179,13 +179,6 @@ export const siteConfig: SiteConfig = {
 			label: "中国尊",
 		},
 	},
-	// 说说页面封面配置（微信朋友圈风格）
-	momentsCover: {
-		enable: true,
-		image:
-			"https://ph.0824.uk/file/博客横屏封面/1780635498430_mmexport1774845895097.jpg",
-	},
-
 	// 分类导航栏开关，在首页和归档页顶部显示分类快捷导航
 	categoryBar: true,
 

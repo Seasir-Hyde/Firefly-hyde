@@ -10,7 +10,7 @@
  * 不分片、不用 list。读「整体 get」、写「读出→改→整体 put」。
  *
  * 为什么放 Edge Functions + 单文件零本地 import：KV 只有 Edge 能访问，而 Edge 多模块
- * import 会 545 且无日志（见 docs/admin-console-plan.md 十三章坑 12/15）。同 moments/index.js，
+ * import 会 545 且无日志（见 docs/admin-console-plan.md 十三章坑 12/15）。同 quotes/index.js，
  * JWT 验签（Web Crypto HMAC-SHA256）、KV 访问、响应封装全部内联。
  *
  * 数据模型（对齐博客 src/config/announcementConfig.ts）：

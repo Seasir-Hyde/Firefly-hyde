@@ -2,7 +2,7 @@
  * GET /api/public/announcements  公告公开只读 API（Edge Functions，Edge Runtime）
  *
  * 无鉴权：middleware.js 白名单已放行 /api/public/*。供博客前台运行时 fetch（阶段 4）。
- * 响应头：CORS（PUBLIC_ALLOWED_ORIGIN）+ Cache-Control 60s（同 public/moments.js）。
+ * 响应头：CORS（PUBLIC_ALLOWED_ORIGIN）+ Cache-Control 60s（同 public/quotes.js）。
  *
  * 单文件、零本地 import。只读，不含 JWT/写逻辑。
  */

@@ -158,49 +158,19 @@ export type Tag = {
 };
 
 export async function getTagList(): Promise<Tag[]> {
-	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
+	// 计数只统计文章：标签点击后进入 /archive/?tag=，该页只列出文章，
+	// 若把说说（moments / 远程说说）的标签也计入，会出现「计数 > 0 但列表为 0」的不一致。
+	const allBlogPosts = await getCollection("posts", ({ data }) => {
 		return import.meta.env.PROD ? data.draft !== true : true;
 	});
 
 	const countMap: { [key: string]: number } = {};
-	allBlogPosts.forEach((post: { data: { tags: string[] } }) => {
+	allBlogPosts.forEach((post) => {
 		post.data.tags.forEach((tag: string) => {
 			if (!countMap[tag]) countMap[tag] = 0;
 			countMap[tag]++;
 		});
 	});
-
-	// 从 moments collection 获取标签
-	const momentsCollection = await getCollection("moments");
-	momentsCollection.forEach((moment) => {
-		moment.data.tags?.forEach((tag: string) => {
-			if (!countMap[tag]) countMap[tag] = 0;
-			countMap[tag]++;
-		});
-	});
-
-	// 从远程说说获取标签
-	try {
-		const { externalMomentsConfig } = await import(
-			"@/config/externalMomentsConfig"
-		);
-		if (externalMomentsConfig.enable && externalMomentsConfig.gistId) {
-			// 使用 raw URL 直接获取，不需要认证（更可靠的 URL 格式）
-			const rawUrl = `https://gist.githubusercontent.com/raw/${externalMomentsConfig.gistId}/${externalMomentsConfig.fileName}`;
-			const response = await fetch(rawUrl);
-			if (response.ok) {
-				const moments = await response.json();
-				moments.forEach((m: { tags?: string[] }) => {
-					m.tags?.forEach((tag: string) => {
-						if (!countMap[tag]) countMap[tag] = 0;
-						countMap[tag]++;
-					});
-				});
-			}
-		}
-	} catch (e) {
-		console.warn("[Tags] 获取远程说说标签失败:", e);
-	}
 
 	// sort tags
 	const keys: string[] = Object.keys(countMap).sort((a, b) => {
@@ -212,7 +182,7 @@ export async function getTagList(): Promise<Tag[]> {
 
 export interface ArchiveItem {
 	id: string;
-	type: "post" | "moment" | "bangumi";
+	type: "post" | "bangumi";
 	link?: string;
 	data: {
 		title: string;
@@ -307,80 +277,10 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 		},
 	}));
 
-	// 从 moments collection 读取数据
-	const momentsCollection = await getCollection("moments");
-	const momentsFromCollection: ArchiveItem[] = momentsCollection.map(
-		(moment) => {
-			let title = moment.id || "";
-			title = title.replace(/[#*`]/g, "").trim();
-			if (title.length > 50) title = `${title.substring(0, 50)}...`;
-			if (!title) title = i18n(I18nKey.moments) || "日常动态";
-
-			return {
-				id: `moment-${moment.id}`,
-				type: "moment",
-				link: "/moments/",
-				data: {
-					title: title,
-					published: new Date(moment.data.published),
-					tags: moment.data.tags || [],
-					category: null,
-				},
-			};
-		},
-	);
-
 	// 获取 Bangumi 数据
 	const bangumiItems: ArchiveItem[] = await fetchBangumiArchiveData();
 
-	// 获取远程说说数据
-	let externalMomentsItems: ArchiveItem[] = [];
-	try {
-		const { externalMomentsConfig } = await import(
-			"@/config/externalMomentsConfig"
-		);
-		if (externalMomentsConfig.enable && externalMomentsConfig.gistId) {
-			// 使用 raw URL 直接获取，不需要认证（更可靠的 URL 格式）
-			const rawUrl = `https://gist.githubusercontent.com/raw/${externalMomentsConfig.gistId}/${externalMomentsConfig.fileName}`;
-			const response = await fetch(rawUrl);
-			if (response.ok) {
-				const moments = (await response.json()) as Array<{
-					id: string;
-					content: string;
-					published: string;
-					tags?: string[];
-					pinned?: boolean;
-				}>;
-				externalMomentsItems = moments.map((m) => {
-					let title = m.content || "";
-					title = title.replace(/[#*`]/g, "").trim();
-					if (title.length > 50) title = `${title.substring(0, 50)}...`;
-					if (!title) title = i18n(I18nKey.moments) || "日常动态";
-
-					return {
-						id: `ext-${m.id}`,
-						type: "moment",
-						link: "/moments/",
-						data: {
-							title: title,
-							published: new Date(m.published),
-							tags: m.tags || [],
-							category: null,
-						},
-					};
-				});
-			}
-		}
-	} catch (e) {
-		console.warn("[Archive] 获取远程说说数据失败:", e);
-	}
-
-	return [
-		...postItems,
-		...momentsFromCollection,
-		...externalMomentsItems,
-		...bangumiItems,
-	].sort((a, b) => {
+	return [...postItems, ...bangumiItems].sort((a, b) => {
 		const timeA = a.data.published.getTime();
 		const timeB = b.data.published.getTime();
 		return timeB - timeA;

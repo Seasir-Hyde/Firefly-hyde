@@ -5,7 +5,7 @@
 // 例：
 //   node scripts/smoke-announcements-quotes.mjs https://firefly-admin-xxxx.edgeone.cool ey... 1783... zane '密码'
 //
-// 复用 smoke-moments.mjs 的 warm up / cookie / 重定向控制逻辑，覆盖：
+// 复用后台冒烟脚本的 warm up / cookie / 重定向控制逻辑，覆盖：
 //   公告: seed(1条) → GET → POST/PUT/DELETE → public 只读
 //   一言: seed(35条) → GET → POST/PUT/DELETE → public 只读
 //

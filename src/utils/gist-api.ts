@@ -1,17 +1,5 @@
 const GITHUB_API_BASE = "https://api.github.com";
 
-export interface ExternalMoment {
-	id: string;
-	content: string;
-	published: string;
-	images?: string[];
-	tags?: string[];
-	location?: string;
-	pinned?: boolean;
-	author?: string;
-	avatar?: string;
-}
-
 export interface NotebookData {
 	entries: Array<{
 		id: string;
@@ -154,32 +142,6 @@ export async function deleteGist(
 	} catch {
 		return false;
 	}
-}
-
-export async function getMomentsFromGist(
-	gistId: string,
-	fileName: string,
-): Promise<ExternalMoment[]> {
-	const content = await getGistContentRaw(gistId, fileName);
-	if (!content) {
-		return [];
-	}
-
-	try {
-		return JSON.parse(content);
-	} catch {
-		return [];
-	}
-}
-
-export async function updateMomentsInGist(
-	gistId: string,
-	fileName: string,
-	moments: ExternalMoment[],
-	token: string,
-): Promise<boolean> {
-	const content = JSON.stringify(moments, null, 2);
-	return updateGist(gistId, fileName, content, token);
 }
 
 export async function getNotebookFromGist(

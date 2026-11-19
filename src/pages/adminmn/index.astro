@@ -1,6 +1,6 @@
 ---
 // 后台管理入口 - 动画角色登录页
-import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
 ---
 <html lang="zh-CN">
 <head>
@@ -288,7 +288,7 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
       </div>
       <div class="left-footer">
         <a href="/">首页</a>
-        <a href="/moments/">说说</a>
+        <a href="/moments/">朋友圈</a>
         <a href="/life/notebooks/">笔记</a>
       </div>
     </div>
@@ -332,11 +332,6 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
         <p>选择要管理的功能</p>
       </div>
       <div class="admin-grid">
-        <a href="/adminmn/moments/" class="admin-card">
-          <div class="admin-card-icon">✍️</div>
-          <div class="admin-card-title">说说管理</div>
-          <div class="admin-card-desc">发布、编辑、删除说说</div>
-        </a>
         <a href="/adminmn/notebooks/" class="admin-card">
           <div class="admin-card-icon">📓</div>
           <div class="admin-card-title">笔记管理</div>
@@ -346,7 +341,7 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
     </div>
   </div>
   <button class="dark-fab" onclick="toggleDark()" title="切换暗色模式">🌙</button>
-  <script is:inline data-hash={externalMomentsConfig.adminPasswordHash || ""}>
+  <script is:inline data-hash={externalNotebooksConfig.adminPasswordHash || ""}>
     // ===== 工具 =====
     var passwordHash = document.currentScript.getAttribute("data-hash") || "";
     function $(id) { return document.getElementById(id); }

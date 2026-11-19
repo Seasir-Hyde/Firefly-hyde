@@ -1,4 +1,4 @@
-// 一次性给四类动态内容（说说 / 公告 / 一言 / 设备）灌入初始种子数据（Node，无第三方依赖）
+// 一次性给三类动态内容（公告 / 一言 / 设备）灌入初始种子数据（Node，无第三方依赖）
 //
 // 用途：阶段 4 前台改造后，博客首屏读的是构建快照、访客侧运行时刷新读的是 KV。
 // 若 KV 是空的（真机联调测完曾清空），前台就没有动态内容可显示。本脚本登录后台、
@@ -17,7 +17,7 @@
 // 幂等：默认不带 force，seed 端点见已有数据会跳过（返回 skipped）。
 //   加 --force：无视已有数据强制重种（会先清空再写，慎用于生产）。
 //
-// cookie / 重定向处理沿用 smoke-moments.mjs 的验证过的做法：
+// cookie / 重定向处理沿用 smoke-announcements-quotes.mjs 的验证过的做法：
 //   ① （可选）warm up：带 ?eo_token= 访问首页，跟随 302 拿 eo cookie（预设域名的访问保护）
 //   ② 登录 POST /api/auth/login 拿 JWT cookie（不跟随 302，直接读 Set-Cookie）
 //   ③ 合并 cookie 调 seed 端点；写请求不带 ?eo_token= 查询参数（避免 302 丢 body）
@@ -136,7 +136,6 @@ async function main() {
 
 	// ③ 依次 seed
 	const targets = [
-		{ name: "说说 moments", path: "/api/moments/seed" },
 		{ name: "公告 announcements", path: "/api/announcements/seed" },
 		{ name: "一言 quotes", path: "/api/quotes/seed" },
 		{ name: "设备 devices", path: "/api/devices/seed" },
@@ -167,7 +166,6 @@ async function main() {
 	console.log(`\n[seed] 完成：${ok} 成功 / ${bad} 失败`);
 	if (bad === 0) {
 		console.log("提示：可 curl 公开 API 确认前台可读：");
-		console.log(`  ${BASE}/api/public/moments`);
 		console.log(`  ${BASE}/api/public/announcements`);
 		console.log(`  ${BASE}/api/public/quotes`);
 		console.log(`  ${BASE}/api/public/devices`);

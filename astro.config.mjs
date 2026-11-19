@@ -256,9 +256,7 @@ export default defineConfig({
 					pathname === "/admin" ||
 					pathname.startsWith("/admin/") ||
 					pathname === "/anime" ||
-					pathname.startsWith("/anime/") ||
-					pathname === "/diary" ||
-					pathname.startsWith("/diary/")
+					pathname.startsWith("/anime/")
 				) {
 					return false;
 				}

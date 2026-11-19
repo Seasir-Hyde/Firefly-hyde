@@ -263,7 +263,7 @@ function SiteFlagsTab() {
 		<div style={{ maxWidth: 560 }}>
 			<Banner
 				type="info"
-				description="说说 / 公告 / 友链 / 设备 4 类动态数据采用「构建期快照 + 运行时 fetch 覆盖」模式。开启此开关后，这 4 类首屏不再使用构建期快照、仅靠运行时拉取（秒级新鲜、消除快照与实时不一致的闪烁，代价是这部分内容失去 SEO 索引）。关闭则保持现状。"
+				description="公告 / 友链 / 设备 3 类动态数据采用「构建期快照 + 运行时 fetch 覆盖」模式。开启此开关后，这 3 类首屏不再使用构建期快照、仅靠运行时拉取（秒级新鲜、消除快照与实时不一致的闪烁，代价是这部分内容失去 SEO 索引）。关闭则保持现状。"
 				style={{ marginBottom: 16 }}
 			/>
 
@@ -548,7 +548,7 @@ function ImageManageTab() {
 											</Text>
 											<Popconfirm
 												title="确认删除这张图片？"
-												content="删除后所有引用此图的地方（文章/说说/资料等）都会图裂，不可恢复！CDN 缓存可能让它短时间内仍可访问。"
+												content="删除后所有引用此图的地方（文章/资料等）都会图裂，不可恢复！CDN 缓存可能让它短时间内仍可访问。"
 												okType="danger"
 												okText="删除"
 												cancelText="取消"

@@ -6,7 +6,6 @@ import {
 	IconArticle,
 	IconBell,
 	IconBranch,
-	IconComment,
 	IconConfigStroked,
 	IconDesktop,
 	IconExit,
@@ -115,7 +114,6 @@ function buildNavItems(dirtyGroups: Set<string>): NavNode[] {
 	return [
 		{ itemKey: "/dashboard", text: "仪表盘", icon: <IconDesktop /> },
 		{ itemKey: "/posts", text: "文章管理", icon: <IconArticle /> },
-		{ itemKey: "/moments", text: "说说", icon: <IconComment /> },
 		{ itemKey: "/places", text: "足迹", icon: <IconMapPinStroked /> },
 		{ itemKey: "/announcements", text: "公告", icon: <IconBell /> },
 		{ itemKey: "/quotes", text: "每日一言", icon: <IconQuote /> },
@@ -189,7 +187,6 @@ export function AppLayout() {
 		const flatKeys = [
 			"/dashboard",
 			"/posts",
-			"/moments",
 			"/places",
 			"/announcements",
 			"/quotes",

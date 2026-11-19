@@ -2,7 +2,7 @@
  * POST /api/quotes/seed  每日一言存量数据导入（Edge Functions，Edge Runtime）
  *
  * 种子数据转自 src/content/ziyuan/quote.md（约 35 条 { text, author }）。
- * 幂等：默认已有数据则跳过；?force=1 强制重种。单文件、零本地 import（同 moments/seed.js）。
+ * 幂等：默认已有数据则跳过；?force=1 强制重种。单文件、零本地 import（同 announcements/seed.js）。
  */
 
 const SESSION_COOKIE = "firefly_admin_token";

@@ -227,12 +227,6 @@ export const siteSchema: ConfigDomainSchema = {
 					danger: "关闭页面后该路由返回 404，导航栏项消失",
 				},
 				{
-					key: "pages.diary",
-					label: "日记页",
-					control: "switch",
-					danger: "关闭页面后该路由返回 404，导航栏项消失",
-				},
-				{
 					key: "pages.dynamic",
 					label: "动态页",
 					control: "switch",
@@ -518,7 +512,6 @@ export const siteSchema: ConfigDomainSchema = {
 						control: "input",
 						placeholder: "可选，TMDB 列表 ID",
 					},
-				{ key: "diary.defaultAvatar", label: "日记默认头像", control: "imageUrl", placeholder: "头像路径或 URL" },
 				{
 					key: "rehypeCallouts.theme",
 					label: "Callouts 主题",

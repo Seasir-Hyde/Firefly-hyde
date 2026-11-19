@@ -89,9 +89,8 @@ KV namespace 绑定到 `firefly-xiangfeng` 项目，**绑定的变量名必须�
 
 | 路由 | 页面 | 说明 |
 |------|------|------|
-| `/dashboard` | 仪表盘 | 文章 / 说说 / 公告 / 每日一言统计、最近构建、快捷入口 |
+| `/dashboard` | 仪表盘 | 文章 / 公告 / 每日一言统计、最近构建、快捷入口 |
 | `/posts` `/posts/new` `/posts/edit` | 文章管理 | 列表、新建 / 编辑、存草稿（不构建）、保存并发布、批量发布草稿 |
-| `/moments` | 说说 | 列表 + 图片轮播 / 网格、CRUD（KV） |
 | `/announcements` | 公告 | 列表 + 可选链接、CRUD（KV） |
 | `/quotes` | 每日一言 | 列表、CRUD（KV） |
 | `/data` | 资料数据 | 友链 / 申请审核 / 项目 / 设备 / 技能 / 时间线 多 Tab |
@@ -102,7 +101,7 @@ KV namespace 绑定到 `firefly-xiangfeng` 项目，**绑定的变量名必须�
 
 ## 数据通道
 
-- **KV 通道（秒级生效，无需构建）**：说说、公告、每日一言、友链、设备、友链申请、动态数据快照开关（site-flags）
+- **KV 通道（秒级生效，无需构建）**：公告、每日一言、友链、设备、友链申请、动态数据快照开关（site-flags）
 - **Git 通道（写回仓库并触发构建，约 3-5 分钟生效）**：文章、项目、技能、时间线、站点配置
 
 ## 脚本
@@ -112,8 +111,7 @@ KV namespace 绑定到 `firefly-xiangfeng` 项目，**绑定的变量名必须�
 | `scripts/build-deploy-dist.mjs` | 组装 `deploy-dist/`（Vite 产物 + edge/cloud-functions + middleware + edgeone.json） |
 | `scripts/bundle-isomorphic-git.mjs` | 预打包 isomorphic-git 为自含 vendor bundle（写链路依赖，缺失部署后会 545） |
 | `scripts/generate-password-hash.mjs` | 生成登录密码 hash（PBKDF2-SHA256 / 10 万次） |
-| `scripts/seed-all.mjs` | 登录后台后给说说 / 公告 / 每日一言 / 设备灌初始种子数据（幂等，`--force` 强制重种） |
-| `scripts/smoke-moments.mjs` | 说说 CRUD 真机冒烟（会建 / 改 / 删测试数据） |
+| `scripts/seed-all.mjs` | 登录后台后给公告 / 每日一言 / 设备灌初始种子数据（幂等，`--force` 强制重种） |
 | `scripts/smoke-announcements-quotes.mjs` | 公告 / 每日一言 CRUD 冒烟 |
 
 ## 常见运维操作

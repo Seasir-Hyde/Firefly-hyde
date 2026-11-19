@@ -11,7 +11,6 @@ import { BuildsPage } from "@/pages/BuildsPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { DataPage } from "@/pages/DataPage";
 import { LoginPage } from "@/pages/LoginPage";
-import { MomentsPage } from "@/pages/MomentsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PagesPage } from "@/pages/PagesPage";
 import { PlacesPage } from "@/pages/PlacesPage";
@@ -54,7 +53,6 @@ export default function App() {
 								<Route path="posts" element={<PostsPage />} />
 								<Route path="posts/new" element={<PostEditorPage />} />
 								<Route path="posts/edit" element={<PostEditorPage />} />
-								<Route path="moments" element={<MomentsPage />} />
 								<Route path="places" element={<PlacesPage />} />
 								<Route path="announcements" element={<AnnouncementsPage />} />
 								<Route path="quotes" element={<QuotesPage />} />

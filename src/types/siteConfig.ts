@@ -121,12 +121,6 @@ export type SiteConfig = {
 		};
 	};
 
-	// 说说页面封面配置（微信朋友圈风格）
-	momentsCover?: {
-		enable: boolean;
-		image?: string;
-	};
-
 	// 分类导航栏开关
 	categoryBar?: boolean;
 

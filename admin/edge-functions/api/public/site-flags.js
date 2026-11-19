@@ -2,11 +2,11 @@
  * GET /api/public/site-flags  站点开关公开只读 API（Edge Functions，Edge Runtime）
  *
  * 无鉴权：middleware.js 白名单已放行 /api/public/*。供博客前台运行时读「动态数据快照开关」。
- * 响应头：CORS（PUBLIC_ALLOWED_ORIGIN）+ Cache-Control 60s（对齐 public/moments.js / announcements.js）。
+ * 响应头：CORS（PUBLIC_ALLOWED_ORIGIN）+ Cache-Control 60s（对齐 public/announcements.js）。
  *
  * 单文件、零本地 import。只读，不含 JWT/写逻辑。
  *
- * 返回扁平结构 { snapshotDisabled: boolean }，与公开 API 既有扁平风格（{ moments, total } 等）一致。
+ * 返回扁平结构 { snapshotDisabled: boolean }，与公开 API 既有扁平风格（{ announcements, total } 等）一致。
  * KV 未绑定时兜底返回默认值 { snapshotDisabled: false }（保持现状），而非 500——
  * 开关 API 故障时博客行为不受影响（开关本身是动态数据，永远走运行时读 KV，不受自己控制）。
  */

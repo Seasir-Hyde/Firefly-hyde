@@ -1,7 +1,7 @@
 /**
  * POST /api/announcements/seed  公告存量数据导入（Edge Functions，Edge Runtime）
  *
- * 同 moments/seed.js 的理由：KV 只有 Edge 能访问，存量数据经受保护端点写入。
+ * 同 quotes/seed.js 的理由：KV 只有 Edge 能访问，存量数据经受保护端点写入。
  * 幂等：默认已有数据（数组非空）则跳过；带 ?force=1 强制重种（清空后重写）。
  *
  * 种子数据：转自博客 src/config/announcementConfig.ts 的单条公告。

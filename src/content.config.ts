@@ -132,22 +132,6 @@ const placesCollection = defineCollection({
 	}),
 });
 
-const momentsCollection = defineCollection({
-	loader: glob({ pattern: "**/*.md", base: "./src/content/moments" }),
-	schema: z.object({
-		published: z.coerce.date(),
-		tags: z.array(z.string()).optional().default([]),
-		location: z.string().optional().default(""),
-		pinned: z.boolean().optional().default(false),
-		images: z
-			.union([z.string(), z.array(z.string())])
-			.optional(),
-		author: z.string().optional().default(""),
-		avatar: z.string().optional().default(""),
-		device: z.string().optional().default(""),
-	}),
-});
-
 const ziyuanCollection = defineCollection({
 	loader: glob({ pattern: "**/*.md", base: "./src/content/ziyuan" }),
 	schema: z.union([
@@ -210,7 +194,6 @@ export const collections: {
 	posts: typeof postsCollection;
 	spec: typeof specCollection;
 	places: typeof placesCollection;
-	moments: typeof momentsCollection;
 	ziyuan: typeof ziyuanCollection;
 	projects: typeof projectsCollection;
 } = {
@@ -218,7 +201,6 @@ export const collections: {
 	posts: postsCollection,
 	spec: specCollection,
 	places: placesCollection,
-	moments: momentsCollection,
 	ziyuan: ziyuanCollection,
 	projects: projectsCollection,
 };

@@ -4,7 +4,7 @@
  * 无鉴权：middleware.js 白名单已放行 /api/public/*。供博客前台运行时 fetch（阶段 4）。
  * 单 key `quotes_all` 存整个数组，整体读回。CORS + 60s 缓存。
  *
- * 单文件、零本地 import（同 public/moments.js）。只读，不含 JWT/写逻辑。
+ * 单文件、零本地 import（同 public/announcements.js）。只读，不含 JWT/写逻辑。
  */
 
 const DATA_KEY = "quotes_all";
