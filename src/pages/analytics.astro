@@ -760,31 +760,96 @@ const commentPathList = [...commentPaths, ...postPaths];
 				}
 				return payload;
 			}
-			// Twikoo 1.x 的 GET_RECENT_COMMENTS 在部分自托管实例上有 SQL 拼接缺陷，
-			// 改为按页面路径并行取 COMMENT_GET，再合并所有页面的评论按时间排序。
-			const postTwikoo = async (path) =>
-				fetchJson(`${serverURL}/api/comment`, {
-					method: "POST",
-					headers: {
-						Accept: "application/json",
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						event: "COMMENT_GET",
-						url: path,
-						pageSize: 20,
-					}),
-					signal,
-				});
+			// Twikoo 2.x 的公开接口在 envId 根路径，1.x 私有部署才用 /api/comment，
+			// 这里依次探测并缓存可用入口，避免接口升级后整块数据为空
+			let twikooApiUrl = "";
+			const postTwikoo = async (event, extra) => {
+				const candidates = twikooApiUrl
+					? [twikooApiUrl]
+					: [...new Set([serverURL, `${serverURL}/api/comment`])];
+				let lastError;
+				for (const endpoint of candidates) {
+					try {
+						const payload = await fetchJson(endpoint, {
+							method: "POST",
+							headers: {
+								Accept: "application/json",
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ event, ...extra }),
+							signal,
+						});
+						twikooApiUrl = endpoint;
+						return payload;
+					} catch (error) {
+						lastError = error;
+					}
+				}
+				throw lastError;
+			};
+
+			// COMMENT_GET 会返回 isSpam，可据此剔除后台隐藏的评论；
+			// 复核全部失败时返回原始列表，优先保证有内容可展示
+			const filterHiddenComments = async (rows) => {
+				const urls = [...new Set(rows.map((row) => row?.url).filter(Boolean))];
+				if (!urls.length) return rows;
+				const approved = new Set();
+				let verified = false;
+				for (let i = 0; i < urls.length; i += 4) {
+					const batch = urls.slice(i, i + 4);
+					const results = await Promise.all(
+						batch.map(async (target) => {
+							try {
+								const payload = await postTwikoo("COMMENT_GET", {
+									url: target,
+									pageSize: 50,
+								});
+								return Array.isArray(payload?.data) ? payload.data : null;
+							} catch {
+								return null;
+							}
+						}),
+					);
+					for (const list of results) {
+						if (!list) continue;
+						verified = true;
+						for (const row of list) {
+							if (!row?.isSpam && row?.id != null) approved.add(String(row.id));
+						}
+					}
+				}
+				if (!verified) return rows;
+				return rows.filter((row) => row?.id != null && approved.has(String(row.id)));
+			};
+
+			// Twikoo 2.x 的全局最近评论一次请求即可覆盖文章页，优先使用；
+			// 该接口不返回 isSpam，因此再用 COMMENT_GET 复核过滤隐藏评论
+			let merged = [];
+			let hasGlobalFeed = false;
+			try {
+				const recent = await postTwikoo("GET_RECENT_COMMENTS", { pageSize: 20 });
+				if (!Number(recent?.code) && Array.isArray(recent?.data)) {
+					const visible = await filterHiddenComments(recent.data);
+					merged = visible.map((row) => ({ ...row, __path: row?.url || "" }));
+					hasGlobalFeed = true;
+				}
+			} catch {
+				// 1.x 或旧实例不支持该事件，继续按路径聚合
+			}
 			// 单个路径失败不应影响其它路径，这里吞掉异常只取成功的结果
 			const fetchPaths = async (group) => {
 				const results = await Promise.all(
 					group.map(async (path) => {
 						try {
-							const payload = await postTwikoo(path);
+							const payload = await postTwikoo("COMMENT_GET", {
+								url: path,
+								pageSize: 20,
+							});
 							if (Number(payload?.code) > 0) return [];
 							const rows = Array.isArray(payload?.data) ? payload.data : [];
-							return rows.map((row) => ({ ...row, __path: row?.url || path }));
+							return rows
+								.filter((row) => !row?.isSpam)
+								.map((row) => ({ ...row, __path: row?.url || path }));
 						} catch {
 							return [];
 						}
@@ -792,13 +857,15 @@ const commentPathList = [...commentPaths, ...postPaths];
 				);
 				return results.flat();
 			};
-			const all = Array.isArray(paths) && paths.length ? paths : ["/guestbook"];
-			// 分批取：先取固定页面（留言板/友链等，评论最集中），
-			// 不足目标条数再补文章页，避免一次性打出大量并发请求
-			const target = 8;
-			let merged = await fetchPaths(all.slice(0, 6));
-			if (merged.length < target && all.length > 6) {
-				merged = merged.concat(await fetchPaths(all.slice(6)));
+			if (!hasGlobalFeed) {
+				const all = Array.isArray(paths) && paths.length ? paths : ["/guestbook"];
+				// 分批取：先取固定页面（留言板/友链等，评论最集中），
+				// 不足目标条数再补文章页，避免一次性打出大量并发请求
+				const target = 8;
+				merged = await fetchPaths(all.slice(0, 6));
+				if (merged.length < target && all.length > 6) {
+					merged = merged.concat(await fetchPaths(all.slice(6)));
+				}
 			}
 			// 去重（同一评论可能出现在多个路径结果里），再按创建时间倒序
 			const seen = new Set();

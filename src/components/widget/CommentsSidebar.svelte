@@ -41,6 +41,7 @@ interface TwikooRecentComment {
 	mailMd5?: string;
 	comment?: string;
 	created?: number;
+	isSpam?: number | boolean;
 }
 
 interface WalineRecentComment {
@@ -121,12 +122,26 @@ async function fetchRecentComments(): Promise<RecentComment[]> {
 	}
 }
 
-/** Twikoo：按页面路径并行聚合评论，逻辑与 analytics 页同源 */
+/** Twikoo：优先用全局最近评论接口，失败时回退按页面路径聚合 */
 async function fetchTwikoo(): Promise<RecentComment[]> {
 	const config = commentConfig.twikoo;
 	if (!config?.envId) return [];
 
 	const base = config.envId.replace(/\/+$/, "");
+
+	// Twikoo 2.x 的 GET_RECENT_COMMENTS 一次返回全站最新评论（含文章页），
+	// 比按路径逐页聚合更完整，也不会让文章页评论被固定页面挤掉。
+	// 但该接口不返回 isSpam，需用 COMMENT_GET 复核后剔除后台隐藏的评论
+	const recent = await fetchTwikooRecent(base);
+	if (recent) {
+		const verified = await verifyTwikooSpam(base, recent);
+		if (verified) {
+			return normalizeTwikooRows(
+				verified.map((row) => ({ ...row, __path: row.url || "" })),
+			);
+		}
+	}
+
 	const paths =
 		commentPaths.length > 0 ? commentPaths : DEFAULT_COMMENT_PATHS;
 
@@ -144,14 +159,21 @@ async function fetchTwikoo(): Promise<RecentComment[]> {
 		return batches.flat();
 	};
 
-	// 固定页面评论最集中，先取这一批；不足目标条数再补文章页，避免打满并发
+	// 回退方案：固定页面评论最集中，先取这一批；不足目标条数再补文章页
 	let merged = await collect(paths.slice(0, 6));
 	if (merged.length < limit && paths.length > 6) {
 		merged = merged.concat(await collect(paths.slice(6)));
 	}
 
+	return normalizeTwikooRows(merged);
+}
+
+/** 去重、按创建时间倒序，并映射成侧栏展示结构 */
+function normalizeTwikooRows(
+	rows: (TwikooRecentComment & { __path?: string })[],
+): RecentComment[] {
 	const seen = new Set<string>();
-	const unique = merged.filter((row) => {
+	const unique = rows.filter((row) => {
 		const key = String(row.id ?? `${row.nick}-${row.created}`);
 		if (seen.has(key)) return false;
 		seen.add(key);
@@ -172,27 +194,146 @@ async function fetchTwikoo(): Promise<RecentComment[]> {
 	);
 }
 
+// Twikoo 客户端直接向 envId 本身 POST，2.x 的公开接口就在根路径；
+// 1.x 私有部署则可能把入口放在 /api/comment，这里两种都探测并缓存可用地址
+let twikooApiEndpoint = "";
+
 async function fetchTwikooPage(
 	base: string,
 	path: string,
+	pageSize = 20,
 ): Promise<TwikooRecentComment[]> {
-	const response = await fetch(`${base}/api/comment`, {
-		method: "POST",
-		headers: {
-			Accept: "application/json",
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ event: "COMMENT_GET", url: path, pageSize: 20 }),
-		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+	const body = JSON.stringify({
+		event: "COMMENT_GET",
+		url: path,
+		pageSize,
 	});
-	if (!response.ok) return [];
+	const candidates = twikooApiEndpoint
+		? [twikooApiEndpoint]
+		: [...new Set([base, `${base}/api/comment`])];
 
-	const payload = (await response.json()) as {
-		code?: number;
-		data?: TwikooRecentComment[];
-	};
-	if (Number(payload?.code) > 0 || !Array.isArray(payload?.data)) return [];
-	return payload.data;
+	let lastError: unknown = null;
+	for (const endpoint of candidates) {
+		try {
+			const response = await fetch(endpoint, {
+				method: "POST",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json",
+				},
+				body,
+				signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+			});
+			if (!response.ok) {
+				throw new Error(`${endpoint} -> HTTP ${response.status}`);
+			}
+
+			const payload = (await response.json()) as {
+				code?: number;
+				data?: TwikooRecentComment[];
+			};
+			if (Number(payload?.code) > 0 || !Array.isArray(payload?.data)) {
+				throw new Error(`${endpoint} -> invalid payload`);
+			}
+
+			twikooApiEndpoint = endpoint;
+			// 后台“隐藏/垃圾”的评论在公开接口里仍会带 isSpam 返回，这里统一剔除
+			return payload.data.filter((row) => !row.isSpam);
+		} catch (error) {
+			lastError = error;
+		}
+	}
+
+	console.warn(`[CommentsSidebar] 拉取 ${path} 评论失败:`, lastError);
+	throw lastError ?? new Error(`COMMENT_GET ${path} failed`);
+}
+
+/**
+ * 用 COMMENT_GET 复核全局最近评论：该接口会返回 isSpam 标记，
+ * 可据此剔除后台隐藏的评论；复核全部失败时返回 null 交给调用方回退
+ */
+async function verifyTwikooSpam(
+	base: string,
+	rows: TwikooRecentComment[],
+): Promise<TwikooRecentComment[] | null> {
+	const urls = [...new Set(rows.map((row) => row.url || "").filter(Boolean))];
+	if (urls.length === 0) return rows;
+
+	const approved = new Set<string>();
+	let verifiedCount = 0;
+	const BATCH_SIZE = 4;
+
+	for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+		const batch = urls.slice(i, i + BATCH_SIZE);
+		const results = await Promise.all(
+			batch.map(async (target) => {
+				try {
+					return await fetchTwikooPage(base, target, 50);
+				} catch {
+					return null;
+				}
+			}),
+		);
+		for (const result of results) {
+			if (!result) continue;
+			verifiedCount += 1;
+			for (const row of result) {
+				if (row.isSpam || row.id == null) continue;
+				approved.add(String(row.id));
+			}
+		}
+	}
+
+	if (verifiedCount === 0) return null;
+	return rows.filter((row) => row.id != null && approved.has(String(row.id)));
+}
+
+/** Twikoo 2.x 全局最近评论；接口不可用时返回 null 交给调用方回退 */
+async function fetchTwikooRecent(
+	base: string,
+): Promise<TwikooRecentComment[] | null> {
+	const body = JSON.stringify({
+		event: "GET_RECENT_COMMENTS",
+		pageSize: Math.max(limit, 20),
+	});
+	const candidates = twikooApiEndpoint
+		? [twikooApiEndpoint]
+		: [...new Set([base, `${base}/api/comment`])];
+
+	for (const endpoint of candidates) {
+		try {
+			const response = await fetch(endpoint, {
+				method: "POST",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json",
+				},
+				body,
+				signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+			});
+			if (!response.ok) {
+				throw new Error(`${endpoint} -> HTTP ${response.status}`);
+			}
+
+			const payload = (await response.json()) as {
+				code?: number;
+				data?: TwikooRecentComment[];
+			};
+			if (Number(payload?.code) > 0 || !Array.isArray(payload?.data)) {
+				throw new Error(`${endpoint} -> invalid payload`);
+			}
+
+			twikooApiEndpoint = endpoint;
+			return payload.data;
+		} catch (error) {
+			console.warn(
+				"[CommentsSidebar] GET_RECENT_COMMENTS 不可用，回退路径聚合:",
+				error,
+			);
+		}
+	}
+
+	return null;
 }
 
 async function fetchWaline(): Promise<RecentComment[]> {
