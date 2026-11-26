@@ -3,7 +3,7 @@ title: ChronoFrame 私人相册部署教程
 published: 2026-11-14
 pinned: false
 
-image: "images/xueshan.webp"
+image: "api"
 slug: /ChronoFrame
 # 标签
 tags: ["ChronoFrame", "Docker"]

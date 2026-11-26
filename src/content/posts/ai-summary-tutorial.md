@@ -2,7 +2,7 @@
 title: AI 摘要实现
 published: 2026-07-27
 pinned: false
-image: "images/xueshan.webp"
+image: "api"
 
 slug: /ai-summary-tutorial
 tags: ["Firefly"]

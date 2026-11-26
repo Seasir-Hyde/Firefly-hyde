@@ -328,7 +328,7 @@ export const friendsConfig: FriendLink[] = [
 		desc: "死宅一枚",
 		siteurl: "https://naixv.netlify.app/",
 		imgurl:
-			"https://p26-sign.douyinpic.com/tos-cn-i-0813c001/oUvA5DiftEBdowAAX2Agf4i1n9IH9YcANA9qSC~tplv-dy-shrink:640:567.webp?lk3s=138a59ce&x-expires=1785560400&x-signature=YpoicADrwq9L59vNzo%2FXuDXBhoQ%3D&from=327834062&s=PackSourceEnum_DOUYIN_REFLOW&se=true&sh=640_567&sc=image&biz_tag=aweme_images&l=20260702135913037381C6C9813F40CA22",
+			"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2396953/capsule_616x353.jpg",
 		tags: ["Blog"],
 		weight: 0,
 		enabled: true,

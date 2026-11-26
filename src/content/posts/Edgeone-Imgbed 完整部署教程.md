@@ -2,7 +2,7 @@
 title: Edgeone-Imgbed 完整部署教程
 published: 2026-11-26
 pinned: false
-image: "images/xueshan.webp"
+image: "api"
 slug: /edgeone-imgbed-deploy
 tags: ["EdgeOne", "图床", "CDN", "Vue3", "无服务器"]
 category: 开源项目

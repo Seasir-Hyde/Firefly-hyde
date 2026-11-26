@@ -4,7 +4,7 @@ published: 2026-08-02
 updated: 2026-08-02
 pinned: false
 description: "解决PNPM 11+ 版本 升级安全策略后，CNB（Cloud Native Buildpacks）云构建环境依赖安装失败 的问题，同时明确临时兼容方案、长期安全最优方案、团队使用规范，兼顾项目构建可用性与供应链安全。\n适用场景：使用 PNPM 11+、CNB 流水线构建、项目存在带构建脚本的第三方依赖/私有依赖\n适配环境：本地开发环境、CNB 容器构建环境"
-image: "images/xueshan.webp"
+image: "api"
 category: "Firefly"
 slug: /pnpm-workspace
 tags: ["Firefly"]

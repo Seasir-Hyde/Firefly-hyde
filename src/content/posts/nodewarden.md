@@ -2,7 +2,7 @@
 title: 用 Cloudflare Workers 自建密码库
 published: 2026-09-17
 pinned: false
-image: "images/xueshan.webp"
+image: "api"
 
 slug: /nodewarden
 tags: ["NodeWarden", "Cloudflare"]

@@ -3,7 +3,7 @@ title: 用 EdgeOne 加速 Cloudflare 图床
 published: 2026-11-24
 pinned: false
 
-image: "images/xueshan.webp"
+image: "api"
 slug: /Cloudflare-Image
 # 标签
 tags: ["EdgeOne", "Cloudflare","ImgBed"]
