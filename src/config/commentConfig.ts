@@ -12,10 +12,11 @@ export const commentConfig: CommentConfig = {
 		// 是否启用文章访问量统计功能
 		visitorCount: true,
 		// Twikoo JS 文件地址，支持 CDN 链接
-		// 中国推荐1: https://registry.npmmirror.com/twikoo/2.0.17/files/dist/twikoo.min.js
-		// 中国推荐2: https://s4.zstatic.net/npm/twikoo@2.0.17/dist/twikoo.min.js
-		// 国际推荐: https://cdn.jsdelivr.net/npm/twikoo@2.0.17/dist/twikoo.min.js
-		jsUrl: "https://registry.npmmirror.com/twikoo/2.0.17/files/dist/twikoo.min.js",
+		// 备选1: https://registry.npmmirror.com/twikoo/2.0.17/files/dist/twikoo.min.js
+		//   注意：npmmirror 对带 Referer 的跨站 <script> 请求返回 403（防盗链），
+		//   单独打开正常、页面内加载失败，因此不用于生产。
+		// 备选2: https://cdn.jsdelivr.net/npm/twikoo@2.0.17/dist/twikoo.min.js
+		jsUrl: "https://s4.zstatic.net/npm/twikoo@2.0.17/dist/twikoo.min.js",
 		// Twikoo 自定义 CSS 文件地址，为空则不加载
 		cssUrl: "/assets/css/twikoo-custom.css",
 	},
