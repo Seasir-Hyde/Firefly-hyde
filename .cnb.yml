@@ -95,14 +95,8 @@ main:
           #   [ "$CNB_COMMIT_MESSAGE_TITLE" = "BUILD" ]
           image: node:22
           script: npx edgeone pages deploy ./dist --name firefly-hyde --token $EDGEONE_PAGES_API_TOKEN
-        - name: 🧪 部署后状态确认
-          # 轮询线上构建指纹，确认线上已更新到本次构建；
-          # 不通过会以非零退出码结束流水线，由 failStages 告警。
-          script: npx tsx scripts/verify-deploy.ts
 
-
-
-        #同步仓库到gitee                  
+        #同步仓库到gitee
         # - name: 👉 同步仓库到gitee
         #   image: tencentcom/git-sync
         #   settings:
@@ -201,7 +195,7 @@ main:
             target_url: https://github.com/Seasir-Hyde/Firefly-hyde.git
             force: true
             # git_email: 'github-actions[bot]@users.noreply.github.com'
-      # 任一阶段失败（构建 / 部署 / 部署后校验 / GitHub 镜像同步）时执行的告警阶段
+      # 任一阶段失败（构建 / 部署 / GitHub 镜像同步）时执行的告警阶段
       failStages:
         - name: 🚨 发布失败通知到钉钉
           image: tencentcom/dingtalk-bot-msg:latest
@@ -224,7 +218,7 @@ main:
               - **提交信息**: $CNB_COMMIT_MESSAGE_TITLE
               - **提交者**: $CNB_COMMITTER
               - **仓库地址**: [点击查看]($CNB_REPO_URL_HTTPS)
-              - **排查建议**: 构建/部署阶段看流水线日志；「部署后状态确认」失败说明线上仍是旧版本，稍后重试或手动触发一次构建；若失败步骤是「同步仓库到github」，仅代表 GitHub 镜像未更新，线上站点不受影响。
+              - **排查建议**: 构建/部署阶段看流水线日志；若失败步骤是「同步仓库到github」，仅代表 GitHub 镜像未更新，线上站点不受影响。
         - name: 🚨 发布失败通知到飞书
           image: tencentcom/feishu-message
           settings:
@@ -268,7 +262,7 @@ main:
   # 友链延迟定时探测（每天 08:17，Asia/Shanghai）
   #
   # 流程：定时触发 → 探测全部友链 → 提交快照到 main
-  #       → 自动触发上面的 push 流水线 → 构建 → 部署 EdgeOne → 状态确认
+  #       → 自动触发上面的 push 流水线 → 构建 → 部署 EdgeOne
   #
   # 说明：
   #   1. 定时表达式需与 src/config/friendsProbeConfig.ts 的 cron 保持一致

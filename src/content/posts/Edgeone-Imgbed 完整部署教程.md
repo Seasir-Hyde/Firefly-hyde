@@ -4,7 +4,7 @@ published: 2026-11-26
 pinned: false
 image: "api"
 slug: /edgeone-imgbed-deploy
-tags: ["EdgeOne", "图床", "CDN", "Vue3", "无服务器"]
+tags: ["EdgeOne", "图床"]
 category: 开源项目
 draft: false
 series: "开源项目"

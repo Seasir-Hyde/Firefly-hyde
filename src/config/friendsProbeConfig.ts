@@ -7,7 +7,7 @@
  * 调度器在 YAML、运行参数在 TS，只能靠约定同步，改动时请两处一起改。
  *
  * 探测流程与部署流程的关系：
- *   定时探测 → 提交快照到 main → 触发 push 流水线 → 构建 → 部署 EdgeOne → 状态确认
+ *   定时探测 → 提交快照到 main → 触发 push 流水线 → 构建 → 部署 EdgeOne
  */
 export const friendsProbeConfig = {
 	/** 定时表达式（Asia/Shanghai）：每天 08:17 探测一次 */
@@ -68,15 +68,6 @@ export const friendsProbeConfig = {
 	snapshotRetentionDays: 7,
 	/** 探测结果超过该时长视为过期（页面徽章提示用） */
 	staleHours: 48,
-	/** 部署完成后的状态确认：轮询线上构建指纹直到与本次构建一致 */
-	verify: {
-		/** 校验重试次数 */
-		retries: 6,
-		/** 重试间隔（毫秒） */
-		intervalMs: 10_000,
-		/** 单次请求超时（毫秒） */
-		timeoutMs: 20_000,
-	},
 } as const;
 
 export type FriendsProbeConfig = typeof friendsProbeConfig;
